@@ -1,4 +1,4 @@
-const CACHE_VERSION = 19;
+const CACHE_VERSION = 25;
 const CACHE_NAME = 'praxis-learn-v' + CACHE_VERSION;
 
 const PRECACHE_URLS = [

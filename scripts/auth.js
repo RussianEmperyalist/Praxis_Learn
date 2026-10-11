@@ -1,60 +1,77 @@
 /**
- * Praxis Learn — модуль авторизации.
- *
- * Аккаунты живут в data/db.json рядом с проектом: папку можно перенести
- * на другой компьютер вместе со всеми пользователями. В браузере хранится
- * только отметка о текущем входе.
+ * Praxis Learn — авторизация через IndexedDB + WebCrypto.
  */
-const LS_USER = 'praxis_user';
 
-/** Сервер отдаёт поле `name`, интерфейс ожидает `username` — приводим. */
+import { storage } from './storage.js';
+
+const PBKDF2_ITERATIONS = 150000;
+
+function toHex(buf) {
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function pbkdf2(password, saltHex, iterations = PBKDF2_ITERATIONS) {
+  const enc = new TextEncoder();
+  const salt = new Uint8Array(saltHex.match(/.{1,2}/g).map(h => parseInt(h, 16)));
+  const key = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', salt, iterations, hash: 'SHA-256' },
+    key, 256
+  );
+  return toHex(bits);
+}
+
+function randomHex(bytes = 16) {
+  const arr = new Uint8Array(bytes);
+  crypto.getRandomValues(arr);
+  return [...arr].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function uuid() {
+  return crypto.randomUUID ? crypto.randomUUID() : randomHex(16);
+}
+
 function normalize(user) {
   if (!user) return null;
   return { ...user, username: user.username || user.name || 'студент' };
 }
 
-async function call(path, body) {
-  let res;
-  try {
-    res = await fetch(path, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-  } catch {
-    throw new Error('Сервер недоступен. Запусти проект: node serve.mjs');
-  }
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || 'Операция не удалась');
-  return data;
-}
-
 export const auth = {
-  async register({ email, password, username }) {
-    const data = await call('/api/auth/register', { email, password, name: username });
-    const user = normalize(data.user);
-    localStorage.setItem(LS_USER, JSON.stringify(user));
-    return user;
+  async register({ email, username, password }) {
+    email = email.trim().toLowerCase();
+    username = (username || '').trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('Некорректный email');
+    if (username.length < 3) throw new Error('Имя пользователя минимум 3 символа');
+    if (password.length < 8) throw new Error('Пароль минимум 8 символов');
+
+    const existing = await storage.findUserByEmail(email);
+    if (existing) throw new Error('Пользователь с таким email уже существует');
+
+    const salt = randomHex(16);
+    const hash = await pbkdf2(password, salt);
+
+    const user = { id: uuid(), email, username, salt, hash, createdAt: Date.now() };
+    await storage.createUser(user);
+    await storage.saveSession({ userId: user.id, startedAt: Date.now() });
+    return normalize(user);
   },
 
   async login({ email, password }) {
-    const data = await call('/api/auth/login', { email, password });
-    const user = normalize(data.user);
-    localStorage.setItem(LS_USER, JSON.stringify(user));
-    return user;
+    email = email.trim().toLowerCase();
+    const user = await storage.findUserByEmail(email);
+    if (!user) throw new Error('Пользователь не найден');
+    const hash = await pbkdf2(password, user.salt);
+    if (hash !== user.hash) throw new Error('Неверный пароль');
+    await storage.saveSession({ userId: user.id, startedAt: Date.now() });
+    return normalize(user);
   },
 
-  logout() {
-    localStorage.removeItem(LS_USER);
-  },
+  async logout() { await storage.clearSession(); },
 
-  /** Всегда возвращает Promise — страницы ждут через await или .then(). */
   async current() {
-    try {
-      const raw = localStorage.getItem(LS_USER);
-      return raw ? normalize(JSON.parse(raw)) : null;
-    } catch {
-      return null;
-    }
+    const session = await storage.getSession();
+    if (!session) return null;
+    const user = await storage.getUser(session.userId);
+    return user ? normalize(user) : null;
   },
 };
