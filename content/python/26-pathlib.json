@@ -1,0 +1,290 @@
+{
+  "id": "python-26-pathlib",
+  "title": "Модуль pathlib",
+  "goal": "Работать с путями через pathlib.Path",
+  "prereq": [
+    "python-25-collections"
+  ],
+  "duration": 14,
+  "theory": [
+    {
+      "type": "hook",
+      "content": "V ищет конфиг в каталоге проекта. Где он? os.path.join ручной. pathlib.Path — объектно-ориентированный путь к файлам."
+    },
+    {
+      "type": "heading",
+      "content": "Path: объект пути"
+    },
+    {
+      "type": "text",
+      "content": "pathlib.Path(path) создаёт объект пути. Автоматически использует правильный разделитель (/ или \\). Работает одинаково на всех ОС."
+    },
+    {
+      "type": "code",
+      "content": "from pathlib import Path\np = Path('data')\nprint(p / 'file.txt')  # data/file.txt (или data\\file.txt на Windows)\nprint(p.exists())  # True/False\nprint(p.is_dir())  # True"
+    },
+    {
+      "type": "heading",
+      "content": "Операции с путями"
+    },
+    {
+      "type": "text",
+      "content": "Оператор / объединяет пути: Path('data') / 'file.txt'. Атрибуты: .name, .stem, .suffix, .parent. Методы: .exists(), .is_file(), .is_dir()."
+    },
+    {
+      "type": "code",
+      "content": "from pathlib import Path\np = Path('data/report.txt')\nprint(p.name)   # report.txt\nprint(p.stem)   # report\nprint(p.suffix)  # .txt\nprint(p.parent)  # data"
+    },
+    {
+      "type": "predict",
+      "code": "from pathlib import Path\np = Path('data/file.txt')\nprint(p.suffix)",
+      "question": "Что выведет?",
+      "options": [
+        ".txt",
+        "file.txt",
+        "file",
+        "Ошибка"
+      ],
+      "answer": 0,
+      "explain": "Path('data/file.txt').suffix возвращает расширение файла: '.txt'."
+    },
+    {
+      "type": "heading",
+      "content": "Чтение и запись файлов"
+    },
+    {
+      "type": "text",
+      "content": "Path.read_text() читает всё в строку. Path.read_text(encoding='utf-8') для кириллицы. Path.write_text('data') пишет. Path.write_text поверхностно перезаписывает."
+    },
+    {
+      "type": "code",
+      "content": "from pathlib import Path\np = Path('test.txt')\np.write_text('Hello, World!')\ncontent = p.read_text()\nprint(content)  # Hello, World!"
+    },
+    {
+      "type": "predict",
+      "code": "from pathlib import Path\np = Path('file.txt')\np.write_text('data')\nresult = p.read_text()\nprint(result)",
+      "question": "Что выведет?",
+      "options": [
+        "data",
+        "file.txt",
+        "Ошибка",
+        "None"
+      ],
+      "answer": 0,
+      "explain": "write_text('data') записывает 'data' в файл. read_text() читает 'data'. print('data') → data."
+    },
+    {
+      "type": "heading",
+      "content": "Итерация по каталогу: glob и iterdir"
+    },
+    {
+      "type": "text",
+      "content": "Path.glob('*.py') ищет файлы по шаблону. Path.iterdir() — все файлы в каталоге. Рекурсивный glob: rglob('*.py')."
+    },
+    {
+      "type": "code",
+      "content": "from pathlib import Path\np = Path('.')\nfor f in p.glob('*.json'):\n    print(f.name)\n\n# Рекурсивно\nfor f in p.rglob('*.py'):\n    print(f)"
+    },
+    {
+      "type": "note",
+      "content": "glob возвращает итератор. Можно использовать list(p.glob('*.json')) для списка."
+    },
+    {
+      "type": "warning",
+      "content": "• <b>write_text перезаписывает</b>: каждый вызов уничажает файл. Для добавления используйте режим 'a' или open().<br>• <b>Кодировка</b>: read_text без encoding использует locale. Добавляйте encoding='utf-8' для кириллицы.<br>• <b>Пути с ~</b>: Path('~/file') не раскрывает home. Используйте expanduser()."
+    },
+    {
+      "type": "warning",
+      "content": "• <b>Path не создаёт файлы</code>: <code>Path(\"file.txt\")</code> не создаёт файл. Используйте <code>.touch()</code> для создания и <code>.mkdir()</code> для директорий.<br>• <b>Относительные пути</code>: <code>Path(\"config.json\")</code> зависит от текущей директории. Используйте <code>Path(__file__).parent</code> для переносимости.<br>• <b>Path traversal</code> для пользователей: если путь приходит от пользователя, проверяйте, что он не выходит за пределы допустимой директории с помощью <code>.resolve()</code> и <code>.is_relative_to()</code>."
+    },
+    {
+      "type": "predict",
+      "code": "from pathlib import Path\np = Path('folder/file.txt')\nprint(p.parent / 'other.txt')",
+      "question": "Что выведет?",
+      "options": [
+        "folder/other.txt",
+        "folder/file.txt",
+        "other.txt",
+        "Ошибка"
+      ],
+      "answer": 0,
+      "explain": "p.parent — это 'folder'. folder / 'other.txt' = 'folder/other.txt'. Оператор / соединяет пути."
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t1",
+      "type": "guided",
+      "prompt": "Дополните: создайте Path('test.txt'), запишите 'hello' через write_text, прочитайте через read_text, выведите.",
+      "starter": "from pathlib import Path\np = Path('test.txt')\n# p.write_text('hello')\n# content = p.read_text()\n# print(content)\n",
+      "hints": [
+        "write_text('hello') пишет в файл",
+        "read_text() читает. print(content) → hello"
+      ],
+      "checks": [
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "stdout",
+          "equals": "hello"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t2",
+      "type": "from-scratch",
+      "prompt": "Создайте Path для 'data/report.txt'. F-строкой выведите: 'Файл: <name>, расширение: <suffix>'.",
+      "starter": "# Path('data/report.txt')\n# Вывод f-строкой с .name и .suffix\n",
+      "hints": [
+        "from pathlib import Path\np = Path('data/report.txt')",
+        "print(f'Файл: {p.name}, расширение: {p.suffix}')"
+      ],
+      "checks": [
+        {
+          "kind": "has-fstring"
+        },
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "stdout",
+          "equals": "Файл: report.txt, расширение: .txt"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t3",
+      "type": "guided",
+      "prompt": "Дополните: создайте Path('.') и найдите все .json файлы через glob. Выведите количество.",
+      "starter": "from pathlib import Path\np = Path('.')\n# files = list(p.glob('*.json'))\n# print(len(files))\n",
+      "hints": [
+        "list(p.glob('*.json')) — список файлов",
+        "print(len(files)) — количество"
+      ],
+      "checks": [
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "has-call",
+          "name": "glob"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t4",
+      "type": "debug",
+      "prompt": "UnicodeDecodeError: read_text без encoding. Добавьте encoding='utf-8'.",
+      "starter": "from pathlib import Path\ncontent = Path('file.txt').read_text()\nprint(content)",
+      "hints": [
+        "read_text(encoding='utf-8') для кириллицы",
+        "encoding='utf-8' устраняет UnicodeDecodeError"
+      ],
+      "checks": [
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "has-call",
+          "name": "read_text"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t5",
+      "type": "from-scratch",
+      "prompt": "Создайте каталог structure через mkdir и файл config.json внутри через write_text. F-строкой выведите: 'Путь: <path>'.",
+      "starter": "# Path('structure').mkdir(exist_ok=True)\n# (Path('structure') / 'config.json').write_text('{}')\n# Вывод f-строкой\n",
+      "hints": [
+        "from pathlib import Path\nd = Path('structure')\nd.mkdir(exist_ok=True)",
+        "f = d / 'config.json'\nf.write_text('{}')\nprint(f'Путь: {str(f)}')"
+      ],
+      "checks": [
+        {
+          "kind": "has-fstring"
+        },
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "stdout",
+          "equals": "Путь: structure/config.json"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    }
+  ],
+  "recap": [
+    "Path('path') — объект пути. / оператор объединяет пути. .name, .stem, .suffix, .parent",
+    "read_text()/write_text() читают/пишут файлы. encoding='utf-8' для кириллицы",
+    "glob('*.py') — поиск по шаблону. rglob() — рекурсивно. iterdir() — все файлы",
+    "exists(), is_file(), is_dir() — проверка свойств пути. expanduser() для ~",
+    "pathlib кроссплатформенен: одинаково работает на Windows, Linux, macOS"
+  ],
+  "quiz": [
+    {
+      "q": "Что делает Path('data') / 'file.txt'?",
+      "options": [
+        "Создаёт файл",
+        "Объединяет пути",
+        "Удаляет файл",
+        "Копирует"
+      ],
+      "answer": 1,
+      "explain": "Оператор / объединяет Path и строку в один путь: 'data/file.txt' или 'data\\file.txt'."
+    },
+    {
+      "q": "Что вернёт Path('file.txt').stem?",
+      "options": [
+        ".txt",
+        "file",
+        "file.txt",
+        "Ошибка"
+      ],
+      "answer": 1,
+      "explain": "Path('file.txt').stem возвращает имя без расширения: 'file'. .suffix возвращает '.txt'."
+    },
+    {
+      "q": "Какой метод ищет файлы по шаблону?",
+      "options": [
+        "glob",
+        "search",
+        "find",
+        "iterdir"
+      ],
+      "answer": 0,
+      "explain": "Path.glob('*.py') ищет файлы по шаблону. rglob() — рекурсивный поиск. iterdir() — все файлы без шаблона."
+    },
+    {
+      "q": "read_text или read()?",
+      "options": [
+        "Только read_text",
+        "read_text читает в строку, read в байты",
+        "они одинаковы",
+        "read_text медленнее"
+      ],
+      "answer": 1,
+      "explain": "Path.read_text() читает содержимое как строку. Path.read_bytes() читает как байты. Оба удобнее открытого файла."
+    }
+  ]
+}

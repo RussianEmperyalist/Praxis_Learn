@@ -1,0 +1,28 @@
+{
+  "id": "git-01-intro",
+  "title": "Что такое Git",
+  "theory": [
+    { "type": "text", "content": "Git — распределённая система контроля версий, созданная Линусом Торвальдсом в 2005 году для разработки ядра Linux." },
+    { "type": "heading", "content": "Зачем нужен Git" },
+    { "type": "text", "content": "Git позволяет: отслеживать изменения файлов, возвращаться к любой версии проекта, работать параллельно в ветках, сливать изменения и разрешать конфликты." },
+    { "type": "heading", "content": "Первая настройка" },
+    { "type": "code", "content": "git config --global user.name \"V\"\ngit config --global user.email \"v@nightcity.dev\"" },
+    { "type": "heading", "content": "Инициализация репозитория" },
+    { "type": "code", "content": "mkdir myproject && cd myproject\ngit init" },
+    { "type": "note", "content": "После <code>git init</code> в папке появится скрытая директория <code>.git</code> — это и есть локальный репозиторий." },
+    { "type": "tip", "content": "Проверить состояние репозитория можно командой <code>git status</code>." }
+  ],
+  "tasks": [],
+  "quiz": [
+    {
+      "q": "Какая команда инициализирует новый Git-репозиторий?",
+      "options": ["git start", "git init", "git new", "git create"],
+      "answer": 1
+    },
+    {
+      "q": "Кто создал Git?",
+      "options": ["Гвидо ван Россум", "Линус Торвальдс", "Джон Кармак", "Брендан Айк"],
+      "answer": 1
+    }
+  ]
+}

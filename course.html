@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Курс · Praxis Learn</title>
+  <link rel="stylesheet" href="./styles/cyberpunk.css">
+  <link rel="stylesheet" href="./styles/layout.css">
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="app-header"></header>
+
+  <div class="layout no-sidebar">
+    <main class="content wide">
+      <div id="courseHeader">
+        <div class="card"><span class="spinner"></span> Загрузка...</div>
+      </div>
+      <h2 style="margin-top:32px;">// Программа курса</h2>
+      <div id="lessonList"></div>
+    </main>
+  </div>
+
+  <div id="toasts"></div>
+
+  <script type="module">
+    import { renderHeader, getQuery, toast } from './scripts/app.js';
+    import { content } from './scripts/content.js';
+    import { auth } from './scripts/auth.js';
+    import { progress } from './scripts/progress.js';
+
+    renderHeader('home');
+
+    (async () => {
+      const courseId = getQuery('id');
+      if (!courseId) { location.href = './index.html'; return; }
+
+      try {
+        const course = await content.getCourse(courseId);
+        const idx = await content.getLessonsIndex(courseId);
+        const user = await auth.current();
+        const allProgress = user ? await progress.getAll(user.id) : [];
+        const map = new Map(allProgress.map(p => [p.lessonId, p]));
+
+        document.title = `${course.title} · Praxis Learn`;
+        document.getElementById('courseHeader').innerHTML = `
+          <div class="card" style="padding:32px;">
+            <div style="font-size:2.4rem; margin-bottom:8px;">${course.icon}</div>
+            <h1 style="margin:0 0 8px;">${course.title}</h1>
+            <p style="color:var(--text-dim); margin:0 0 16px;">${course.description}</p>
+            <div style="display:flex; gap:12px; align-items:center;">
+              <span class="badge">${course.level}</span>
+              <span class="badge">${idx.lessons.length} уроков</span>
+            </div>
+          </div>
+        `;
+
+        const list = document.getElementById('lessonList');
+        list.innerHTML = idx.lessons.map((l, i) => {
+          const p = map.get(l.id);
+          const cls = p?.status === 'completed' ? 'done' : p?.status === 'in-progress' ? 'active' : '';
+          const badge = p?.status === 'completed' ? '<span class="badge done">✓ готово</span>'
+                      : p?.status === 'in-progress' ? '<span class="badge active">в процессе</span>'
+                      : '<span class="badge locked">не начат</span>';
+          return `
+            <a href="./lesson.html?course=${courseId}&lesson=${l.id}" class="card" style="display:flex; align-items:center; gap:16px; margin-bottom:10px; text-decoration:none; padding:16px 20px;">
+              <span class="mono" style="color:var(--text-mute); font-size:.9rem; min-width:32px;">${String(i+1).padStart(2,'0')}</span>
+              <div style="flex:1;">
+                <div style="font-family:var(--font-display); color:var(--text); font-size:1.05rem;">${l.title}</div>
+                <div style="font-family:var(--font-mono); font-size:.75rem; color:var(--text-mute); margin-top:2px;">
+                  ${l.summary || ''}
+                </div>
+              </div>
+              ${badge}
+            </a>
+          `;
+        }).join('');
+      } catch (e) {
+        toast('Ошибка загрузки курса: ' + e.message, 'error');
+      }
+    })();
+  </script>
+</body>
+</html>

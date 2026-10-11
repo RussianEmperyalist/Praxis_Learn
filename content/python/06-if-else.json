@@ -1,0 +1,324 @@
+{
+  "id": "python-06-if-else",
+  "title": "Условия if/elif/else",
+  "goal": "Писать условия if/elif/else, использовать сравнения и понимать отступы",
+  "prereq": [
+    "python-05-input"
+  ],
+  "duration": 16,
+  "theory": [
+    {
+      "type": "hook",
+      "content": "V подходит к терминалу: если счет больше 10000 — открывать дверь, иначе — звонок. Программа должна выбирать: один путь или другой."
+    },
+    {
+      "type": "heading",
+      "content": "Зачем нужны условия"
+    },
+    {
+      "type": "text",
+      "content": "Без условий программа идёт по线у. С if — можно реагировать на ввод: если возраст < 18 — 'доступ запрещён', иначе — 'добро пожаловать'."
+    },
+    {
+      "type": "code",
+      "content": "# Без условия — одинаковый ответ всегда\nprint(\"Добро пожаловать!\")\n\n# С условием — реакция на данные\nage = int(input(\"Введите возраст: \"))\nif age < 18:\n    print(\"Доступ запрещён\")\nelse:\n    print(\"Добро пожаловать!\")"
+    },
+    {
+      "type": "heading",
+      "content": "Как работает if/else"
+    },
+    {
+      "type": "text",
+      "content": "if проверяет условие. Если True — выполняет блок. else — если False. Обратите внимание на <b>отступы</b>: все строки в блоке должны иметь 4 пробела."
+    },
+    {
+      "type": "code",
+      "content": "score = 85\nif score >= 90:\n    grade = \"A\"\nelif score >= 80:\n    grade = \"B\"\nelif score >= 70:\n    grade = \"C\"\nelse:\n    grade = \"F\"\nprint(grade)  # B"
+    },
+    {
+      "type": "note",
+      "content": "Отступы критичны! 3 пробела, 5 пробелов или таб — всё сломается. Только 4 пробела (стандарт PEP 8)."
+    },
+    {
+      "type": "heading",
+      "content": "Операторы сравнения"
+    },
+    {
+      "type": "text",
+      "content": "Сравнения возвращают bool: True или False. Python поддерживает цепочки: 18 <= age <= 65."
+    },
+    {
+      "type": "code",
+      "content": "age = 25\nprint(age >= 18)   # True\nprint(age < 65)    # True\nprint(age == 25)   # True — строгое равенство\nprint(age != 30)   # True\nprint(18 <= age <= 65) # True — цепочка"
+    },
+    {
+      "type": "predict",
+      "code": "x = 5\nif x > 3:\n    print(\"yes\")\nelse:\n    print(\"no\")",
+      "question": "Что выведет этот код?",
+      "options": [
+        "yes",
+        "no",
+        "Ошибка",
+        "True"
+      ],
+      "answer": 0,
+      "explain": "x = 5, условие x > 3 истинно (5 > 3 = True), поэтому вызывается первая ветка: print('yes')."
+    },
+    {
+      "type": "heading",
+      "content": "Логические операторы"
+    },
+    {
+      "type": "text",
+      "content": "and, or, not — комбинируют условия. and: оба True. or: хотя бы одно True. not: инвертирует."
+    },
+    {
+      "type": "code",
+      "content": "age = 25\nhas_pass = True\n\nif age >= 18 and has_pass:\n    print(\"Допускнут\")\n\nif age < 18 or not has_pass:\n    print(\"Отказ\")\nelse:\n    print(\"Ок\")"
+    },
+    {
+      "type": "note",
+      "content": "Короткое замыкание: and останавливается на первом False, or — на первом True. Экономит вычисления."
+    },
+    {
+      "type": "heading",
+      "content": "Вложенные условия"
+    },
+    {
+      "type": "text",
+      "content": "if внутри if — вложенность. Отступы растут: 4 пробела для основного блока, 8 — для вложенного."
+    },
+    {
+      "type": "code",
+      "content": "temp = 25\nif temp > 0:\n    if temp > 30:\n        print(\"Жарко\")\n    else:\n        print(\"Тепло\")\nelse:\n    print(\"Холодно\")"
+    },
+    {
+      "type": "predict",
+      "code": "x = 3\nif x % 2 == 0:\n    print(\"чет\")\nelse:\n    print(\"нечет\")",
+      "question": "Что выведет этот код?",
+      "options": [
+        "чет",
+        "нечет",
+        "Ошибка",
+        "3"
+      ],
+      "answer": 1,
+      "explain": "x = 3, x % 2 = 1 (остаток от деления 3 на 2). 1 == 0 — False, поэтому выполняется else: print('нечет')."
+    },
+    {
+      "type": "heading",
+      "content": "Типичные ошибки на старте"
+    },
+    {
+      "type": "warning",
+      "content": "• <b>Присваивание вместо сравнения</b>: <code>if x = 5:</code> — <b>SyntaxError</b>. Нужно <code>==</code>.<br>• <b>Неправильные отступы</b>: смешанные табы и пробелы — <b>IndentationError</b>.<br>• <b>Пропущенный else</b>: <code>elif</code> без <code>if</code> — <b>SyntaxError</b>. <code>elif</code> всегда после <code>if</code>."
+    },
+    {
+      "type": "warning",
+      "content": "• <b>else после return</b>: код в <code>else</code> после <code>return</code> в <code>if</code> недостижим, если он стоит после <code>return</code> в <code>if</code>. Это вводит в заблуждение.<br>• <b>Цепочка elif вместо dict</code>: для множества значений используйте <code>match/case</code> (Python 3.10+) или словарь вместо длинной цепочки <code>if/elif</code>.<br>• <b>Сравнение с is</code>: <code>is</code> используется для идентичности объектов (<code>None</code>), а не для сравнения значений. <code>\"да\" is \"да\"</code> может работать, но это реализация интернирования."
+    },
+    {
+      "type": "code",
+      "content": "# Правильно\nif score >= 90:\n    grade = \"A\"\nelif score >= 80:\n    grade = \"B\"\nelse:\n    grade = \"F\"\n\n# НЕ ПРАВИЛЬНО (SyntaxError)\n# if score = 90:\n#     grade = \"A\""
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t1",
+      "type": "guided",
+      "prompt": "Дополните код: если переменная balance больше или равна 10000 — выведите 'Одобрено', иначе — 'Отказано'.",
+      "starter": "balance = 15000\n# Добавьте условие if/else\n",
+      "hints": [
+        "if balance >= 10000: — оператор больше или равно",
+        "print(\"Одобрено\") в первой ветке, print(\"Отказано\") во второй"
+      ],
+      "checks": [
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "stdout",
+          "equals": "Одобрено"
+        },
+        {
+          "kind": "var",
+          "name": "balance",
+          "type": "int",
+          "equals": "15000"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t2",
+      "type": "from-scratch",
+      "prompt": "Запросите уровень кибернетических имплантов через input() (int). Если уровень ≥ 5 — выведите 'Продвинутый', иначе — 'Новичок'. F-строка не нужна.",
+      "starter": "# Запросите уровень имплантов через input()\n# Преобразуйте в int\n# Условие if/else\n",
+      "hints": [
+        "level = int(input(\"Введите уровень: \"))",
+        "if level >= 5: print(\"Продвинутый\")\nelse: print(\"Новичок\")"
+      ],
+      "checks": [
+        {
+          "kind": "has-call",
+          "name": "input"
+        },
+        {
+          "kind": "has-call",
+          "name": "int"
+        },
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "regex-stdout",
+          "pattern": "(Продвинутый|Новичок)"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t3",
+      "type": "guided",
+      "prompt": "Даны: temp = 25. Добавьте elif: если temp > 30 — 'Жарко', если temp > 20 — 'Тепло', иначе — 'Холодно'.",
+      "starter": "temp = 25\n# Добавьте if/elif/else\n# Если temp > 30 → 'Жарко'\n# Если temp > 20 → 'Тепло'\n# Иначе → 'Холодно'\n",
+      "hints": [
+        "Порядок важен: сначала проверяйте большее значение",
+        "if temp > 30:\n    print(\"Жарко\")\nelif temp > 20:\n    print(\"Тепло\")\nelse:\n    print(\"Холодно\")"
+      ],
+      "checks": [
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "stdout",
+          "equals": "Тепло"
+        },
+        {
+          "kind": "var",
+          "name": "temp",
+          "type": "int",
+          "equals": "25"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t4",
+      "type": "debug",
+      "prompt": "Код падает с SyntaxError: присваивание вместо сравнения. Исправьте, чтобы условие работало.",
+      "starter": "x = 10\nif x = 5:\n    print(\"равно\")\nelse:\n    print(\"не равно\")",
+      "hints": [
+        "В условии if нужно сравнение ==, а не присваивание =",
+        "Замените 'if x = 5' на 'if x == 5'"
+      ],
+      "checks": [
+        {
+          "kind": "stdout",
+          "equals": "не равно"
+        },
+        {
+          "kind": "var",
+          "name": "x",
+          "type": "int",
+          "equals": "10"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t5",
+      "type": "from-scratch",
+      "prompt": "Запросите балл экзамена через input() (int). Если балл ≥ 90 — 'A', ≥ 80 — 'B', ≥ 70 — 'C', иначе — 'F'. Выведите f-строкой: 'Оценка: <grade>'.",
+      "starter": "# Запросите балл через input()\n# Преобразуйте в int\n# if/elif/else для оценки\n# Вывод f-строкой\n",
+      "hints": [
+        "score = int(input(\"Введите балл: \"))",
+        "f\"Оценка: {grade}\" — переменная grade определяется через if/elif/else"
+      ],
+      "checks": [
+        {
+          "kind": "has-fstring"
+        },
+        {
+          "kind": "has-call",
+          "name": "input"
+        },
+        {
+          "kind": "has-call",
+          "name": "int"
+        },
+        {
+          "kind": "regex-stdout",
+          "pattern": "Оценка: [A-F]"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    }
+  ],
+  "recap": [
+    "if/elif/else — цепочка условий. Только один блок выполняется",
+    "Отступы 4 пробела — критичны. Смешанные табы/пробелы → IndentationError",
+    "Сравнения: == (равно), != (не равно), <, >, <=, >=. Цепочки: 18 <= age <= 65",
+    "and: оба True. or: хотя бы одно True. not: инверсия",
+    "Присваивание = и сравнение == — не одно и то же"
+  ],
+  "quiz": [
+    {
+      "q": "Что выведет: if 5 > 3: print('A') else: print('B')?",
+      "options": [
+        "A",
+        "B",
+        "True",
+        "Ошибка"
+      ],
+      "answer": 0,
+      "explain": "5 > 3 — True, поэтому выполняется первая ветка: print('A'). else не вызывается."
+    },
+    {
+      "q": "Какой оператор проверяет равенство?",
+      "options": [
+        "=",
+        "==",
+        "===",
+        "!="
+      ],
+      "answer": 1,
+      "explain": "= — присваивание, == — сравнение на равенство. === в Python не используется."
+    },
+    {
+      "q": "Что вернёт: True and False or True?",
+      "options": [
+        "True",
+        "False",
+        "Ошибка",
+        "None"
+      ],
+      "answer": 0,
+      "explain": "and выше приоритета than or. True and False = False. False or True = True. Итог: True."
+    },
+    {
+      "q": "Что выведет: if '5' == 5: print('да') else: print('нет')?",
+      "options": [
+        "да",
+        "нет",
+        "Ошибка",
+        "True"
+      ],
+      "answer": 1,
+      "explain": "'5' — строка, 5 — число. Разные типы не равны даже если выглядят одинаково. '5' == 5 → False."
+    }
+  ]
+}

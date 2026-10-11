@@ -1,0 +1,27 @@
+{
+  "id": "devops-01-docker",
+  "title": "Docker: базовые концепции",
+  "theory": [
+    { "type": "text", "content": "Docker — платформа для запуска приложений в изолированных контейнерах. Контейнер содержит код и все зависимости, что гарантирует одинаковое поведение на любой машине." },
+    { "type": "heading", "content": "Образ vs Контейнер" },
+    { "type": "text", "content": "<b>Образ (image)</b> — неизменяемый шаблон: файловая система + метаданные.<br><b>Контейнер</b> — запущенный экземпляр образа. Один образ → много контейнеров." },
+    { "type": "code", "content": "docker pull python:3.12-slim\ndocker run -it --rm python:3.12-slim python --version\ndocker ps\ndocker images" },
+    { "type": "heading", "content": "Dockerfile" },
+    { "type": "code", "content": "FROM python:3.12-slim\nWORKDIR /app\nCOPY requirements.txt .\nRUN pip install --no-cache-dir -r requirements.txt\nCOPY . .\nCMD [\"python\", \"app.py\"]" },
+    { "type": "note", "content": "Сборка образа: <code>docker build -t myapp .</code><br>Запуск: <code>docker run myapp</code>" },
+    { "type": "warning", "content": "Не храните секреты (пароли, токены) в Dockerfile. Используйте <code>--env-file</code> или Docker secrets." }
+  ],
+  "tasks": [],
+  "quiz": [
+    {
+      "q": "Что такое образ Docker?",
+      "options": ["Запущенный процесс", "Неизменяемый шаблон ФС и метаданных", "Docker-файл", "Виртуальная машина"],
+      "answer": 1
+    },
+    {
+      "q": "Какая команда собирает образ из Dockerfile?",
+      "options": ["docker run", "docker build", "docker make", "docker compile"],
+      "answer": 1
+    }
+  ]
+}

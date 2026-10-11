@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Кабинет · Praxis Learn</title>
+  <link rel="stylesheet" href="./styles/cyberpunk.css">
+  <link rel="stylesheet" href="./styles/layout.css">
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="app-header"></header>
+
+  <div class="layout no-sidebar">
+    <main class="content wide">
+      <h1 id="greeting">Загрузка...</h1>
+      <div class="stats-grid" id="stats"></div>
+      <h2>// Прогресс по курсам</h2>
+      <div id="coursesProgress"></div>
+    </main>
+  </div>
+
+  <div id="toasts"></div>
+
+  <script type="module">
+    import { renderHeader } from './scripts/app.js';
+    import { auth } from './scripts/auth.js';
+    import { content } from './scripts/content.js';
+    import { progress } from './scripts/progress.js';
+
+    renderHeader('dash');
+
+    (async () => {
+      const user = await auth.current();
+      if (!user) { location.href = './login.html'; return; }
+
+      document.getElementById('greeting').innerHTML =
+        `> Привет, <span style="color:var(--cyan)">${user.username}</span>`;
+
+      const courses = await content.getCourses();
+      const allProgress = await progress.getAll(user.id);
+
+      const totalCompleted = allProgress.filter(p => p.status === 'completed').length;
+      const totalInProgress = allProgress.filter(p => p.status === 'in-progress').length;
+      const totalTasks = allProgress.reduce((s, p) =>
+        s + Object.values(p.tasks || {}).filter(t => t.passed).length, 0);
+      const totalQuiz = allProgress.reduce((s, p) =>
+        s + Object.values(p.quiz || {}).filter(q => q.correct).length, 0);
+
+      document.getElementById('stats').innerHTML = `
+        <div class="stat"><div class="value">${totalCompleted}</div><div class="label">Уроков завершено</div></div>
+        <div class="stat"><div class="value">${totalInProgress}</div><div class="label">В процессе</div></div>
+        <div class="stat"><div class="value">${totalTasks}</div><div class="label">Задач решено</div></div>
+        <div class="stat"><div class="value">${totalQuiz}</div><div class="label">Квизов пройдено</div></div>
+      `;
+
+      const wrap = document.getElementById('coursesProgress');
+      wrap.innerHTML = '';
+
+      for (const c of courses) {
+        let idx;
+        try { idx = await content.getLessonsIndex(c.id); }
+        catch { continue; }
+        const lessonIds = idx.lessons.map(l => l.id);
+        const stats = await progress.courseStats(user.id, c.id, lessonIds);
+
+        const el = document.createElement('div');
+        el.className = 'card';
+        el.style.marginBottom = '16px';
+        el.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <div>
+              <h3 style="margin:0;">${c.icon} ${c.title}</h3>
+              <div style="font-family:var(--font-mono); font-size:.8rem; color:var(--text-mute); margin-top:4px;">
+                ${stats.completed} / ${stats.total} уроков · ${stats.percent}%
+              </div>
+            </div>
+            <a href="./course.html?id=${c.id}" class="btn btn-ghost" style="padding:8px 18px;">Открыть →</a>
+          </div>
+          <div class="progress"><div style="width:${stats.percent}%"></div></div>
+        `;
+        wrap.appendChild(el);
+      }
+    })();
+  </script>
+</body>
+</html>

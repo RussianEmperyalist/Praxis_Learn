@@ -1,0 +1,331 @@
+{
+  "id": "python-04-strings",
+  "title": "Строки",
+  "goal": "Работать со строками: индексация, срезы, len(), методы upper/lower/strip/replace и экранирование",
+  "prereq": [
+    "python-03-numbers"
+  ],
+  "duration": 15,
+  "theory": [
+    {
+      "type": "hook",
+      "content": "Почему 'hello' != 'Hello'? А как вытащить имя из строки 'Иванов, Иван Иванович' — без split() и регулярок?"
+    },
+    {
+      "type": "heading",
+      "content": "Зачем нужны строки в Python"
+    },
+    {
+      "type": "text",
+      "content": "Строка — это текст. Её можно искать, вырезать кусочки, менять регистр. Без методов приходится писать костыли — ручной цикл вместо .upper()."
+    },
+    {
+      "type": "code",
+      "content": "# Плохо — ручной перебор\ntext = \"hello\"\nresult = \"\"\nfor c in text:\n    result += c.upper()\n\n# Хорошо — один вызов метода\ntext = \"hello\"\nresult = text.upper()\nprint(result)"
+    },
+    {
+      "type": "heading",
+      "content": "Индексация: доступ к символу"
+    },
+    {
+      "type": "text",
+      "content": "Строка — последовательность символов. Доступ по индексу: <b>s[0]</b> — первый символ, <b>s[-1]</b> — последний, <b>s[-2]</b> — предпоследний."
+    },
+    {
+      "type": "code",
+      "content": "s = \"Python\"\nprint(s[0])    # P\nprint(s[1])    # y\nprint(s[-1])   # n\nprint(s[-2])   # o"
+    },
+    {
+      "type": "note",
+      "content": "Индекс выходит за границы — IndexError. s[100] у строки из 5 символов упадёт. Сначала проверяйте длину через len()."
+    },
+    {
+      "type": "heading",
+      "content": "Срезы: вырезать часть строки"
+    },
+    {
+      "type": "text",
+      "content": "Срез <code>s[start:end:step]</code> — берёт символы с <code>start</code> до <code>end</code> (не включительно), с шагом <code>step</code>. Если step=2 — каждый второй символ."
+    },
+    {
+      "type": "code",
+      "content": "s = \"Python\"\nprint(s[0:3])     # Pyt\nprint(s[2:5])     # tho\nprint(s[::2])     # Pto\nprint(s[::-1])    # nohtyP (перевёрнутая)"
+    },
+    {
+      "type": "predict",
+      "code": "print(\"Python\"[1:4])",
+      "question": "Что выведет этот код?",
+      "options": [
+        "yth",
+        "Pyt",
+        "thon",
+        "Ошибка"
+      ],
+      "answer": 0,
+      "explain": "Срез [1:4] берёт символы с индекса 1 до 4 (не включительно 4): y, t, h. Результат — 'yth'."
+    },
+    {
+      "type": "heading",
+      "content": "len() — длина строки"
+    },
+    {
+      "type": "text",
+      "content": "<code>len()</code> считает символы. <code>len('hello')</code> = 5. Удобно для проверки: <code>if len(text) > 100</code>."
+    },
+    {
+      "type": "code",
+      "content": "s = \"hello\"\nprint(len(s))       # 5\nprint(len(s) > 3)   # True\nprint(len(\"\"))      # 0"
+    },
+    {
+      "type": "heading",
+      "content": "Методы: upper, lower, strip, replace"
+    },
+    {
+      "type": "text",
+      "content": "Строки <b>неизменяемы</b> — методы возвращают новую строку, не меняя оригинал. Поэтому результат нужно сохранять или выводить."
+    },
+    {
+      "type": "code",
+      "content": "email = \"  USER@MAIL.COM  \"\nprint(email.strip())          # USER@MAIL.COM\nprint(email.lower())           #   user@mail.com  \nprint(email.strip().lower())    # user@mail.com\nprint(email.replace('O', '0'))  #   USER@MAIL.CM  "
+    },
+    {
+      "type": "note",
+      "content": "Методы можно 'цепочкой': s.strip().lower() — сначала strip() отработает, затем .lower() применится к результату strip()."
+    },
+    {
+      "type": "heading",
+      "content": "Экранирование: специальные символы"
+    },
+    {
+      "type": "text",
+      "content": "Специальные символы через обратный слеш: <code>\\n</code> — перенос строки, <code>\\t</code> — таб, <code>\\\\</code> — слеш, <code>\"</code> — кавычка."
+    },
+    {
+      "type": "code",
+      "content": "# \\n — перенос строки\nprint(\"Строка 1\\nСтрока 2\")\n# Вывод:\n# Строка 1\n# Строка 2\n\n# \\t — таб\nprint(\"Колонка\\tЗначение\")\n\n# \\\\ — экранирование слеша\nprint(\"Путь: C:\\\\Users\\\\Admin\")\n\n# \\\" — кавычка внутри строки\nprint(\"Он сказал: \\\"Привет\\\"\")"
+    },
+    {
+      "type": "predict",
+      "code": "print(len(\"  hello  \".strip()))",
+      "question": "Что выведет этот код?",
+      "options": [
+        "5",
+        "7",
+        "8",
+        "10"
+      ],
+      "answer": 0,
+      "explain": "Сначала .strip() убирает пробелы: '  hello  ' → 'hello' (5 символов). Затем len('hello') = 5."
+    },
+    {
+      "type": "heading",
+      "content": "Типичные ошибки на старте"
+    },
+    {
+      "type": "warning",
+      "content": "• <b>Изменение символа по индексу</b>: <code>s = \"python\"</code>; <code>s[0] = \"P\"</code> — <b>TypeError</b>. Строки неизменяимы. Нужно создавать новую строку.<br>• <b>Индекс вне диапазона</b>: <code>\"hi\"[5]</code> — <b>IndexError</b>. Индекс 5 не существует в строке из 2 символов.<br>• <b>Русские кавычки</b>: <code>print(«привет»)</code> — <b>SyntaxError</b>. Только прямые \" или '."
+    },
+    {
+      "type": "warning",
+      "content": "• <b>Строки неизменяемы</b>: попытка <code>s[0] = \"X\"</code> вызовет <code>TypeError</code>. Используйте <code>s = \"X\" + s[1:]</code> или <code>s.replace()</code>.<br>• <b>Экранирование</b>: в строках с <code>\n</code>, <code>\t</code> спецсимволы интерпретируются. Используйте <code>r\"...\"</code> для сырых строк.<br>• <b>f-строки и кавычки</code>: внутри <code>f\"...{expr}...\"</code> нельзя использовать те же кавычки для строковых литералов внутри <code>{expr}</code> (до Python 3.12)."
+    },
+    {
+      "type": "code",
+      "content": "# Правильно — через срез и конкатенацию\ns = \"python\"\ns = \"P\" + s[1:]\nprint(s)  # Python\n\n# Правильно — через .replace()\ns = \"python\".replace(\"p\", \"P\")\nprint(s)  # Python\n\n# Правильно — .capitalize()\ns = \"python\".capitalize()\nprint(s)  # Python"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t1",
+      "type": "guided",
+      "prompt": "Создана переменная word = \"Python\". Выведите последний символ через print(word[-1]).",
+      "starter": "word = \"Python\"\n# Выведите последний символ через индексацию\n",
+      "hints": [
+        "Последний символ — индекс -1",
+        "print(word[-1]) — без кавычек вокруг переменной"
+      ],
+      "checks": [
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "stdout",
+          "equals": "n"
+        },
+        {
+          "kind": "var",
+          "name": "word",
+          "type": "str",
+          "equals": "'Python'"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t2",
+      "type": "from-scratch",
+      "prompt": "Создайте переменную raw = \"  hello  \". Очистите пробелы через .strip(), переведите в верхний регистр через .upper() и выведите f-строкой: 'HELLO'.",
+      "starter": "# Создайте переменную raw\n# Очистите и переведите в верхний регистр\n# Выведите через f-строку\n",
+      "hints": [
+        "Методы можно цепочкой: raw.strip().upper()",
+        "f\"{raw.strip().upper()}\""
+      ],
+      "checks": [
+        {
+          "kind": "has-fstring"
+        },
+        {
+          "kind": "stdout",
+          "equals": "HELLO"
+        },
+        {
+          "kind": "var",
+          "name": "raw",
+          "type": "str",
+          "equals": "'  hello  '"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t3",
+      "type": "guided",
+      "prompt": "Дана строка code = \"Python\". Выделите первые три символа через срез [0:3] и выведите.",
+      "starter": "code = \"Python\"\n# Выделите срезом [0:3] и выведите\n",
+      "hints": [
+        "Срез [0:3] берёт индексы 0, 1, 2",
+        "print(code[0:3])"
+      ],
+      "checks": [
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "stdout",
+          "equals": "Pyt"
+        },
+        {
+          "kind": "var",
+          "name": "code",
+          "type": "str",
+          "equals": "'Python'"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t4",
+      "type": "debug",
+      "prompt": "Код падает с TypeError: строки неизменяимы. Перезапишите переменную word так, чтобы она содержала 'Python', и выведите её.",
+      "starter": "word = \"python\"\nword[0] = \"P\"\nprint(word)",
+      "hints": [
+        "word[0] = 'P' не работает — строки неизменяимы",
+        "Создайте новую строку: word = 'P' + word[1:]"
+      ],
+      "checks": [
+        {
+          "kind": "stdout",
+          "equals": "Python"
+        },
+        {
+          "kind": "var",
+          "name": "word",
+          "type": "str",
+          "equals": "'Python'"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t5",
+      "type": "from-scratch",
+      "prompt": "Клиент прислал email = \"  USER@MAIL.COM  \". Очистите через .strip(), переведите в нижний регистр через .lower(), замените @ на « at » через .replace() и выведите f-строкой: 'user at mail.com'.",
+      "starter": "email = \"  USER@MAIL.COM  \"\n# Очистите, измените регистр, замените @\n# Выведите через f-строку\n",
+      "hints": [
+        "Методы цепочкой: email.strip().lower().replace('@', ' at ')",
+        "f\"{email.strip().lower().replace('@', ' at ')}\""
+      ],
+      "checks": [
+        {
+          "kind": "has-fstring"
+        },
+        {
+          "kind": "stdout",
+          "equals": "user at mail.com"
+        },
+        {
+          "kind": "var",
+          "name": "email",
+          "type": "str",
+          "equals": "'  USER@MAIL.COM  '"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    }
+  ],
+  "recap": [
+    "Строка — последовательность символов. Доступ по индексу: s[0] — первый, s[-1] — последний",
+    "Срез s[start:end:step] — вырезает часть строки. s[::-1] переворачивает",
+    "len(s) — длина строки. Методы upper/lower/strip/replace возвращают новую строку",
+    "Строки неизменяимы: s[0] = 'X' → TypeError. Используйте конкатенацию или методы",
+    "Экранирование: \\n, \\t, \\\\, \" — специальные символы через обратный слеш"
+  ],
+  "quiz": [
+    {
+      "q": "Что вернёт \"Python\"[2]?",
+      "options": [
+        "t",
+        "h",
+        "P",
+        "Ошибка"
+      ],
+      "answer": 0,
+      "explain": "Индексация начинается с 0. s[0]='P', s[1]='y', s[2]='t'. Третий символ строки 'Python' — это 't'."
+    },
+    {
+      "q": "Что выведет: print(\"hello\"[::-1])?",
+      "options": [
+        "olleh",
+        "hello",
+        "Ошибка",
+        "h"
+      ],
+      "answer": 0,
+      "explain": "Срез с шагом -1 [::-1] переворачивает строку. 'hello' → 'olleh'."
+    },
+    {
+      "q": "Что вернёт len(\"  hello  \") без .strip()?",
+      "options": [
+        "5",
+        "7",
+        "9",
+        "10"
+      ],
+      "answer": 2,
+      "explain": "len() считает все символы включая пробелы. '  hello  ' = 2 пробела + 5 букв + 2 пробела = 9 символов. Метод .strip() убирает пробелы, но len() его не вызывает."
+    },
+    {
+      "q": "Какой метод удалит пробелы вокруг строки?",
+      "options": [
+        ".replace()",
+        ".strip()",
+        ".clean()",
+        ".trim()"
+      ],
+      "answer": 1,
+      "explain": ".strip() убирает пробелы в начале и конце строки. .replace() заменяет конкретные символы."
+    }
+  ]
+}

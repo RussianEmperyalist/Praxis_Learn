@@ -1,0 +1,307 @@
+{
+  "id": "python-16-oop-basics",
+  "title": "Классы и объекты",
+  "goal": "Создавать классы через class, писать __init__ и методы, использовать self",
+  "prereq": [
+    "python-15-file-io"
+  ],
+  "duration": 18,
+  "theory": [
+    {
+      "type": "hook",
+      "content": "V управляет дроном. Каждый дрон — объект с параметрами: модель, заряд, статус. Класс описывает структуру, объекты — конкретные дроны."
+    },
+    {
+      "type": "heading",
+      "content": "Что такое ООП"
+    },
+    {
+      "type": "text",
+      "content": "Объектно-ориентированное программирование — стиль, где сущности описываются как классы и объекты. Класс — шаблон. Объект — экземпляр класса."
+    },
+    {
+      "type": "code",
+      "content": "class Drone:\n    model = \"А\"\n\nd1 = Drone()\nprint(d1.model)  # А"
+    },
+    {
+      "type": "heading",
+      "content": "Метод __init__ и self"
+    },
+    {
+      "type": "text",
+      "content": "__init__ — конструктор, вызывается при создании объекта. self — ссылка на текущий объект. Первый параметр любого метода — self."
+    },
+    {
+      "type": "code",
+      "content": "class Drone:\n    def __init__(self, model, battery):\n        self.model = model\n        self.battery = battery\n\nd1 = Drone(\"V-9\", 100)\nprint(d1.model)\nprint(d1.battery)"
+    },
+    {
+      "type": "predict",
+      "code": "class Point:\n    def __init__(self, x, y):\n        self.x = x\n        self.y = y\n\np = Point(3, 7)\nprint(p.x + p.y)",
+      "question": "Что выведет этот код?",
+      "options": [
+        "10",
+        "3",
+        "7",
+        "Ошибка"
+      ],
+      "answer": 0,
+      "explain": "Point(3, 7) создаёт объект с x=3, y=7. p.x + p.y = 10."
+    },
+    {
+      "type": "heading",
+      "content": "Методы класса"
+    },
+    {
+      "type": "text",
+      "content": "Методы — функции внутри класса. Первый параметр self. Вызываются через объект: obj.method(). Могут читать и изменять атрибуты через self."
+    },
+    {
+      "type": "code",
+      "content": "class Agent:\n    def __init__(self, name):\n        self.name = name\n        self.hp = 100\n\n    def take_damage(self, damage):\n        self.hp -= damage\n        return self.hp\n\na = Agent(\"V\")\nprint(a.take_damage(30))  # 70\nprint(a.hp)  # 70"
+    },
+    {
+      "type": "predict",
+      "code": "class Counter:\n    def __init__(self):\n        self.count = 0\n    def increment(self):\n        self.count += 1\n\nc = Counter()\nc.increment()\nc.increment()\nprint(c.count)",
+      "question": "Что выведет этот код?",
+      "options": [
+        "0",
+        "1",
+        "2",
+        "Ошибка"
+      ],
+      "answer": 2,
+      "explain": "Создаётся объект с count=0. increment() вызывается дважды, count = 2."
+    },
+    {
+      "type": "heading",
+      "content": "Атрибуты: классовые vs экземпляра"
+    },
+    {
+      "type": "text",
+      "content": "Классовый атрибут — в классе, общий для всех. Экземпляра — через self в __init__, уникален для каждого объекта."
+    },
+    {
+      "type": "code",
+      "content": "class Config:\n    version = \"1.0\"\n    def __init__(self, name):\n        self.name = name\n\nc1 = Config(\"db\")\nc2 = Config(\"cache\")\nprint(Config.version)  # 1.0\nprint(c1.name)  # db"
+    },
+    {
+      "type": "note",
+      "content": "Классовый атрибут доступен через класс: Config.version. Экземплярный — через self: self.name."
+    },
+    {
+      "type": "heading",
+      "content": "Строковое представление: __str__"
+    },
+    {
+      "type": "text",
+      "content": "__str__ возвращает человекочитаемую строку. __repr__ — формальное. print() использует __str__."
+    },
+    {
+      "type": "code",
+      "content": "class Agent:\n    def __init__(self, name):\n        self.name = name\n    def __str__(self):\n        return f\"Agent({self.name})\"\n\na = Agent(\"V\")\nprint(str(a))  # Agent(V)"
+    },
+    {
+      "type": "warning",
+      "content": "• <b>Забыть self</b>: метод без self → ошибка. <br>• <b>AttributeError</b>: обращение к несуществующему атрибуту. <br>• <b>Классовый vs экземплярный</b>: изменение через объект создаёт экземплярный, а не меняет классовый."
+    },
+    {
+      "type": "warning",
+      "content": "• <b>Атрибут класса vs экземпляра</code>: атрибуты класса (<code>class X: items = []</code>) разделяются между экземплярами. Для атрибутов экземпляра используйте <code>self.items</code> в <code>__init__</code>.<br>• <b>Изменяемый атрибут класса</code>: если атрибут класса — список, изменение его в одном экземпляре изменит его во всех.<br>• <b>Не определять __init__</code>: если методы работают с атрибутами, которые никогда не инициализируются, вы получите <code>AttributeError</code>."
+    },
+    {
+      "type": "predict",
+      "code": "class Cat:\n    def __init__(self, name):\n        self.name = name\n    def speak(self):\n        return f\"{self.name} мяукает\"\n\nc = Cat(\"Барсик\")\nprint(c.speak())",
+      "question": "Что выведет этот код?",
+      "options": [
+        "Барсик мяукает",
+        "мяукает",
+        "Ошибка",
+        "None"
+      ],
+      "answer": 0,
+      "explain": "Cat('Барсик') создаёт объект с name='Барсик'. speak() возвращает 'Барсик мяукает'. print выводит: Барсик мяукает."
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t1",
+      "type": "guided",
+      "prompt": "Дополните: создайте класс Agent с атрибутом name='V'. Создайте объект и выведите name.",
+      "starter": "class Agent:\n    name = \"V\"\n\n# Создайте объект a\n# Выведите a.name через print\n",
+      "hints": [
+        "a = Agent() — создание объекта",
+        "print(a.name) — выводит V"
+      ],
+      "checks": [
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "stdout",
+          "equals": "V"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t2",
+      "type": "from-scratch",
+      "prompt": "Создайте класс Drone с __init__(self, model, battery). Создайте объект с model='X-5', battery=90. F-строкой выведите: 'Дрон: <model>, батарея: <battery>%'.",
+      "starter": "# class Drone с __init__\n# Создайте объект\n# Вывод f-строкой\n",
+      "hints": [
+        "class Drone:\n    def __init__(self, model, battery):\n        self.model = model\n        self.battery = battery",
+        "d = Drone('X-5', 90)\nprint(f\"Дрон: {d.model}, батарея: {d.battery}%\")"
+      ],
+      "checks": [
+        {
+          "kind": "has-fstring"
+        },
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "stdout",
+          "equals": "Дрон: X-5, батарея: 90%"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t3",
+      "type": "guided",
+      "prompt": "Дополните класс Agent: добавьте метод take_damage(dmg), который уменьшает self.hp на dmg и возвращает новый hp. Создайте объект с hp=100, вызовите take_damage(40), выведите результат.",
+      "starter": "class Agent:\n    def __init__(self, name):\n        self.name = name\n        self.hp = 100\n\n    def take_damage(self, dmg):\n        # Уменьшите self.hp на dmg\n        # Верните self.hp\n\n# Создайте объект a = Agent(\"V\")\n# Вызовите a.take_damage(40) и выведите через print\n",
+      "hints": [
+        "self.hp -= dmg\n return self.hp",
+        "print(a.take_damage(40)) — выведет 60"
+      ],
+      "checks": [
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "stdout",
+          "equals": "60"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t4",
+      "type": "debug",
+      "prompt": "AttributeError: переменная name не является атрибутом объекта. Исправьте, чтобы __init__ принимал name.",
+      "starter": "class Bot:\n    def activate(self):\n        self.is_active = True\n\nb = Bot()\nprint(b.name)",
+      "hints": [
+        "Добавьте __init__(self, name), который сохраняет self.name = name",
+        "Bot('Worker') — передача name в конструктор"
+      ],
+      "checks": [
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "has-call",
+          "name": "__init__"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t5",
+      "type": "from-scratch",
+      "prompt": "Создайте класс Shield с __init__(self, points). Метод reduce(amount) уменьшает points. Метод is_active() возвращает True если points > 0. Создайте объект с 50, вызовите reduce(30), выведите f-строкой: 'Активен: <bool>, осталось: <points>'.",
+      "starter": "# class Shield с __init__ и методами reduce/is_active\n# Создайте объект, вызовите reduce(30)\n# Вывод f-строкой\n",
+      "hints": [
+        "def reduce(self, amount):\n    self.points -= amount",
+        "def is_active(self):\n    return self.points > 0",
+        "s = Shield(50); s.reduce(30); print(f'Активен: {s.is_active()}, осталось: {s.points}')"
+      ],
+      "checks": [
+        {
+          "kind": "has-fstring"
+        },
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "has-call",
+          "name": "reduce"
+        },
+        {
+          "kind": "stdout",
+          "equals": "Активен: True, осталось: 20"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    }
+  ],
+  "recap": [
+    "class Имя: — определение класса. obj = Class() — создание объекта",
+    "__init__(self, ...) — конструктор, вызывается при создании. self ссылается на текущий объект",
+    "Методы — функции внутри класса, первый параметр self. Атрибуты через self.attr",
+    "Классовые атрибуты общие для всех объектов. Экземпляра — уникальны (self.x)",
+    "__str__ возвращает строковое представление объекта для print()"
+  ],
+  "quiz": [
+    {
+      "q": "Что делает __init__?",
+      "options": [
+        "Удаляет объект",
+        "Инициализирует объект при создании",
+        "Импортирует класс",
+        "Закрывает файл"
+      ],
+      "answer": 1,
+      "explain": "__init__ — конструктор. Вызывается автоматически при создании объекта через Class(). Используется для инициализации атрибутов."
+    },
+    {
+      "q": "Зачем нужен self?",
+      "options": [
+        "Ссылка на текущий объект",
+        "Импорт модуля",
+        "Константа",
+        "Функция"
+      ],
+      "answer": 0,
+      "explain": "self — ссылка на текущий экземпляр класса. Позволяет обращаться к атрибутам и методам объекта через self.attr."
+    },
+    {
+      "q": "Что произойдёт: a = Agent(); a.model = 'X'; b = Agent()?",
+      "options": [
+        "b.model = 'X'",
+        "b.model — AttributeError",
+        "b.model = None",
+        "Ошибка"
+      ],
+      "answer": 1,
+      "explain": "a.model = 'X' создаёт атрибут только для объекта a. b — другой объект, у него нет model. b.model → AttributeError."
+    },
+    {
+      "q": "Что вернёт __str__?",
+      "options": [
+        "Строку",
+        "int",
+        "None",
+        "bool"
+      ],
+      "answer": 0,
+      "explain": "__str__ должен возвращать строку. Это метод для str() и print(). Если не определить — используется базовая реализация."
+    }
+  ]
+}

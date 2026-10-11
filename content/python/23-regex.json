@@ -1,0 +1,306 @@
+{
+  "id": "python-23-regex",
+  "title": "Регулярные выражения",
+  "goal": "Использовать re.match/re.search/re.findall, группы захвата",
+  "prereq": [
+    "python-22-json"
+  ],
+  "duration": 17,
+  "theory": [
+    {
+      "type": "hook",
+      "content": "V анализирует логи кибер-атаки. Нужно найти IP-адреса, email, токены. Регулярные выражения — маска поиска в строке."
+    },
+    {
+      "type": "heading",
+      "content": "Основы regex"
+    },
+    {
+      "type": "text",
+      "content": "Регулярное выражение — шаблон для поиска в строке. re — модуль. . — любой символ. * — ноль или больше. + — один или больше. ? — ноль или один."
+    },
+    {
+      "type": "code",
+      "content": "import re\npattern = r'\\d+'  # одна или больше цифр\nresult = re.findall(pattern, 'V9500')\nprint(result)  # ['9500']"
+    },
+    {
+      "type": "heading",
+      "content": "re.search vs re.match"
+    },
+    {
+      "type": "text",
+      "content": "re.match ищет в начале строки. re.search ищет в любом месте. re.match('abc', 'xabc') → None. re.search('abc', 'xabc') → Match."
+    },
+    {
+      "type": "code",
+      "content": "import re\ns = 'Привет, V!'\nm = re.search(r'V', s)\nprint(m.group())  # V\n\npos = re.search(r'V', s)\nprint(pos.start())  # 17 — позиция"
+    },
+    {
+      "type": "predict",
+      "code": "import re\nm = re.match(r'\\d+', 'abc123')\nprint(m)",
+      "question": "Что выведет?",
+      "options": [
+        "Match",
+        "None",
+        "['123']",
+        "Ошибка"
+      ],
+      "answer": 1,
+      "explain": "re.match ищет в начале строки. 'abc123' начинается с 'abc', а не цифры. match → None."
+    },
+    {
+      "type": "heading",
+      "content": "re.findall: все совпадения"
+    },
+    {
+      "type": "text",
+      "content": "re.findall(pattern, string) возвращает список всех совпадений. Если есть группы — возвращает список кортежей с захваченными группами."
+    },
+    {
+      "type": "code",
+      "content": "import re\nnums = re.findall(r'\\d+', '12 и 34 и 56')\nprint(nums)  # ['12', '34', '56']\n\ndates = re.findall(r'(\\d{2})/(\\d{2})/(\\d{4})', '15/08/2025')\nprint(dates)  # [('15', '08', '2025')]"
+    },
+    {
+      "type": "note",
+      "content": "r'...' — сырая строка. Обратный слеш не экранируется. r'\\d' = шаблон для цифры. Без r: '\\\\d' — двойной экранирование."
+    },
+    {
+      "type": "predict",
+      "code": "import re\nmails = re.findall(r'@\\w+', 'test@mail.ru')\nprint(mails)",
+      "question": "Что выведет?",
+      "options": [
+        "['@mail']",
+        "['mail.ru']",
+        "['@mail.ru']",
+        "[]"
+      ],
+      "answer": 2,
+      "explain": "r'@\\w+' ищет @ followed by word characters. '@mail' — \\w+ не захватывает точку. Но '\\w+' останавливается на '.'."
+    },
+    {
+      "type": "heading",
+      "content": "Группы захвата"
+    },
+    {
+      "type": "text",
+      "content": "() — группа захвата. Называется по номеру: group(1), group(2). ?P<name> — именованная группа."
+    },
+    {
+      "type": "code",
+      "content": "import re\ns = 'V:9500'\nm = re.search(r'(\\w+):(\\d+)', s)\nprint(m.group(1))  # V\nprint(m.group(2))  # 9500\n\n# Именованная группа\nm2 = re.search(r'(?P<name>\\w+):(?P<score>\\d+)', s)\nprint(m2.group('name'))  # V"
+    },
+    {
+      "type": "heading",
+      "content": "re.sub: замена по шаблону"
+    },
+    {
+      "type": "text",
+      "content": "re.sub(pattern, replacement, string) заменяет все совпадения. Можно использовать backreference: r'\\1' для первой группы."
+    },
+    {
+      "type": "code",
+      "content": "import re\nphone = '+1-555-123-4567'\n# Удалить все, кроме цифр и +\nmasked = re.sub(r'[^\\d+]', '', phone)\nprint(masked)  # +15551234567"
+    },
+    {
+      "type": "warning",
+      "content": "• <b>Экранирование</b>: r'\\d' (сырой строкой). '\\\\d' в обычной строке — тоже работает, но путан.<br>• <b>* и + жадные</b>: 'a+' в 'aaa' захватит все три. Для нежадного: 'a+?'<br>• <br>re.match ищет только с начала строки. Для поиска в любом месте используйте re.search."
+    },
+    {
+      "type": "warning",
+      "content": "• <b>Catastrophic backtracking</code>: паттерн <code>(a+)+</code> на строке <code>aaaa...b</code> может работать экспоненциально долго. Используйте атомарные группы <code>(?>...)</code> или ограничения длины.<br>• <b>Экранирование спецсимволов</code>: точка, плюс, скобки в паттерне соответствуют любому символу, а не буквальным. Используйте <code>re.escape()</code> для литерального поиска.<br>• <b>findall и группы</code>: если паттерн содержит группы, <code>findall</code> возвращает только их. Используйте <code>finditer</code> для доступа к полным совпадениям."
+    },
+    {
+      "type": "note",
+      "content": "re.compile(pattern) компилирует шаблон для многократного использования. Быстрее при множественных поисках."
+    },
+    {
+      "type": "predict",
+      "code": "import re\nresult = re.sub(r'\\s+', '-', 'a b  c')\nprint(result)",
+      "question": "Что выведет?",
+      "options": [
+        "a-b-c",
+        "a -b - c",
+        "abc",
+        "a-b  c"
+      ],
+      "answer": 0,
+      "explain": "re.sub(r'\\s+', '-', 'a b  c') заменяет все пробельные символы на '-'. 'a b  c' → 'a-b-c'. Жадный + захватывает '  ' (два пробела) и заменяет на один '-'."
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t1",
+      "type": "guided",
+      "prompt": "Дополните: найдите все цифры в строке 'V9500' через re.findall(r'\\d+', s). Выведите.",
+      "starter": "import re\ns = \"V9500\"\n# nums = re.findall(r'\\d+', s)\n# print(nums)\n",
+      "hints": [
+        "re.findall ищет все совпадения",
+        "print(nums) — выводит ['9500']"
+      ],
+      "checks": [
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "stdout",
+          "equals": "['9500']"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t2",
+      "type": "from-scratch",
+      "prompt": "Найдите email в строке 'Контакт: admin@corp.io'. F-строкой выведите: 'Email: <email>'.",
+      "starter": "# import re\n# re.search для email\n# Вывод f-строкой\n",
+      "hints": [
+        "import re\ns = 'Контакт: admin@corp.io'\nm = re.search(r'\\S+@\\S+', s)",
+        "print(f'Email: {m.group()}')"
+      ],
+      "checks": [
+        {
+          "kind": "has-fstring"
+        },
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "stdout",
+          "equals": "Email: admin@corp.io"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t3",
+      "type": "guided",
+      "prompt": "Дополните: извлеките имя и возраст из 'V:28' через re.search с группами. Выведите name.",
+      "starter": "import re\ns = \"V:28\"\n# m = re.search(r'(\\w+):(\\d+)', s)\n# print(m.group(1))\n",
+      "hints": [
+        "m.group(1) — первая захваченная группа (имя)",
+        "print(...) — выводит V"
+      ],
+      "checks": [
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "stdout",
+          "equals": "V"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t4",
+      "type": "debug",
+      "prompt": "re.match не находит 'abc' в начале 'xabc'. Исправьте на re.search.",
+      "starter": "import re\ns = 'xabc'\nm = re.match(r'abc', s)\nif m:\n    print(m.group())",
+      "hints": [
+        "re.match ищет с начала строки",
+        "re.search ищет в любом месте строки"
+      ],
+      "checks": [
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "stdout",
+          "equals": "abc"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t5",
+      "type": "from-scratch",
+      "prompt": "Замените все пробелы и лишние символы в строке 'V 95 00' через re.sub на '-'. F-строкой выведите: 'Очищено: <result>'.",
+      "starter": "# re.sub для замены пробелов\n# Вывод f-строкой\n",
+      "hints": [
+        "import re\ns = 'V 95 00'\nresult = re.sub(r'\\s+', '-', s)",
+        "print(f'Очищено: {result}')"
+      ],
+      "checks": [
+        {
+          "kind": "has-fstring"
+        },
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "stdout",
+          "equals": "Очищено: V-95-00"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    }
+  ],
+  "recap": [
+    "re.findall(pattern, string) — все совпадения. re.search — первое в любом месте. re.match — только с начала",
+    "Группы (): group(1) по номеру, ?P<name> по имени. Используются для извлечения данных",
+    "re.sub(pattern, replacement, string) — замена всех совпадений",
+    "r'...' — сырая строка. \\d — цифра, \\w — word char, \\s — пробел. Жадные квантипы * и +",
+    "re.compile(pattern) для многократного использования. [] — класс символов, ^/для исключения"
+  ],
+  "quiz": [
+    {
+      "q": "Что вернёт re.search(r'\\d+', 'V9500')?",
+      "options": [
+        "['9500']",
+        "Match object",
+        "9500",
+        "None"
+      ],
+      "answer": 1,
+      "explain": "re.search возвращает объект Match, а не список. Для получения строки нужно .group()."
+    },
+    {
+      "q": "Чем match от search?",
+      "options": [
+        "match быстрее",
+        "match ищет с начала строки",
+        "они одинаковы",
+        "search не работает с regex"
+      ],
+      "answer": 1,
+      "explain": "re.match ищет ТОЛЬКО в начале строки. re.search ищет в любом месте. re.match('abc', 'xabc') → None."
+    },
+    {
+      "q": "Что вернёт r'\\d+'?",
+      "options": [
+        "Одна цифра",
+        "Одна или больше цифр",
+        "Строго две цифры",
+        "Ни одной цифры"
+      ],
+      "answer": 1,
+      "explain": "Дио: \\d — одна цифра. + — одна или больше. Поэтому \\d+ соответствует одной или более цифрам."
+    },
+    {
+      "q": "Для чего re.sub?",
+      "options": [
+        "Поиск",
+        "Замена совпадений",
+        "Компиляция",
+        "Группы"
+      ],
+      "answer": 1,
+      "explain": "re.sub(pattern, replacement, string) заменяет все совпадения шаблона на replacement."
+    }
+  ]
+}

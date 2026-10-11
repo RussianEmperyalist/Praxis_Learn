@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Praxis Learn — Изучай код как нетраннер</title>
+  <meta name="theme-color" content="#05070a">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles/cyberpunk.css">
+  <link rel="stylesheet" href="./styles/layout.css">
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <script src="./js/highlighter.js" defer></script>
+</head>
+<body>
+  <header class="app-header"></header>
+
+  <section class="hero">
+    <h1 class="glitch" data-text="> SYSTEM ONLINE">> SYSTEM ONLINE</h1>
+    <p class="subtitle">// платформа для изучения Python · Git · DevOps до уровня Junior+</p>
+    <div class="cta">
+      <a href="#courses" class="btn btn-primary">Начать обучение →</a>
+      <a href="./login.html" class="btn btn-ghost">Войти в систему</a>
+    </div>
+  </section>
+
+  <h2 style="text-align:center; padding-top:20px;">// Доступные модули</h2>
+  <div class="cards-grid" id="coursesGrid">
+    <div class="card course-card"><span class="spinner"></span> Загрузка...</div>
+  </div>
+
+  <footer style="text-align:center; padding:60px 24px 40px; color:var(--text-mute); font-family:var(--font-mono); font-size:.78rem;">
+    PRAXIS LEARN v0.1 · данные хранятся локально в <code>data/db.json</code><br>
+  </footer>
+
+  <div id="toasts"></div>
+
+  <script type="module">
+    import { renderHeader, toast } from './scripts/app.js';
+    import { content } from './scripts/content.js';
+
+    renderHeader('home');
+
+    (async () => {
+      try {
+        const courses = await content.getCourses();
+        const grid = document.getElementById('coursesGrid');
+        grid.innerHTML = courses.map(c => `
+          <a class="card course-card" href="./course.html?id=${c.id}">
+            <div class="icon">${c.icon}</div>
+            <h3>${c.title}</h3>
+            <p>${c.description}</p>
+            <div class="meta">
+              <span>${c.lessons} уроков</span>
+              <span class="badge">${c.level}</span>
+            </div>
+          </a>
+        `).join('');
+      } catch (e) {
+        toast('Не удалось загрузить курсы: ' + e.message, 'error');
+      }
+    })();
+  </script>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./service-worker.js');
+    }
+  </script>
+</body>
+</html>

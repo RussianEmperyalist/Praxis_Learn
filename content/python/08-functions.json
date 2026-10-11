@@ -1,0 +1,308 @@
+{
+  "id": "python-08-functions",
+  "title": "Функции",
+  "goal": "Создавать функции через def, передавать параметры, возвращать значения через return",
+  "prereq": [
+    "python-07-while-loops"
+  ],
+  "duration": 17,
+  "theory": [
+    {
+      "type": "hook",
+      "content": "V пишет три раза один и тот же код для трёх кибернетических агентов. Пора вынести в функцию — определить один раз, вызвать трижды."
+    },
+    {
+      "type": "heading",
+      "content": "Зачем нужны функции"
+    },
+    {
+      "type": "text",
+      "content": "Функция — именованный блок кода, который можно вызвать повторно. Убирает дублирование, делает код читаемым."
+    },
+    {
+      "type": "code",
+      "content": "# Дублирование — плохо (писать 3 раза)\n# def — создать функцию один раз, вызвать трижды\ndef hello_agent():\n    print(\"Привет, агент!\")\n\nhello_agent()\nhello_agent()\nhello_agent()"
+    },
+    {
+      "type": "heading",
+      "content": "Параметры и аргументы"
+    },
+    {
+      "type": "text",
+      "content": "Параметры — переменные в определении функции. Аргументы — реальные значения при вызове. Передаются по позиции или по имени."
+    },
+    {
+      "type": "code",
+      "content": "def greet(name, rank):\n    print(f\"{rank} {name}, прибыл\")\n\ngreet(\"V\", \"Агент\")      # Агент V, прибыл\ngreet(\"Rex\", \"Лейтенант\")  # Лейтенант Rex, прибыл"
+    },
+    {
+      "type": "note",
+      "content": "Аргументы передаются по позиции: первый параметр = первый аргумент. Можно передавать по имени: greet(name=\"V\", rank=\"Агент\")."
+    },
+    {
+      "type": "heading",
+      "content": "Возврат значения через return"
+    },
+    {
+      "type": "text",
+      "content": "return завершает функцию и возвращает значение. Без return — функция возвращает None. Можно возвращать несколько значений через кортеж."
+    },
+    {
+      "type": "code",
+      "content": "def add(a, b):\n    return a + b\n\nresult = add(3, 5)\nprint(result)  # 8\n\n# Возврат нескольких значений через кортеж\ndef stats(nums):\n    return sum(nums), len(nums)\n\ntotal, count = stats([10, 20, 30])"
+    },
+    {
+      "type": "predict",
+      "code": "def f(x):\n    if x > 0:\n        return 'positive'\n    return 'negative'\n\nprint(f(-5))",
+      "question": "Что выведет этот код?",
+      "options": [
+        "negative",
+        "positive",
+        "None",
+        "Ошибка"
+      ],
+      "answer": 0,
+      "explain": "f(-5): x = -5, x > 0 → False, пропускается return 'positive'. Выполняется return 'negative'. print('negative') → выводит 'negative'."
+    },
+    {
+      "type": "heading",
+      "content": "Аргументы по умолчанию"
+    },
+    {
+      "type": "text",
+      "content": "Параметр может иметь значение по умолчанию: def f(a, b=10). При вызове b можно опустить. Позиционные аргументы всегда левее."
+    },
+    {
+      "type": "code",
+      "content": "def power(base, exp=2):\n    return base ** exp\n\nprint(power(5))     # 25 — exp=2 по умолчанию\nprint(power(2, 10)) # 1024 — exp=10"
+    },
+    {
+      "type": "predict",
+      "code": "def greet(name='Гость'):\n    return f'Привет, {name}'\n\nprint(greet())",
+      "question": "Что выведет этот код?",
+      "options": [
+        "Привет, Гость",
+        "Привет,",
+        "Ошибка",
+        "None"
+      ],
+      "answer": 0,
+      "explain": "greet() вызывается без аргументов, поэтому name использует значение по умолчанию 'Гость'. f'Привет, {name}' → 'Привет, Гость'."
+    },
+    {
+      "type": "heading",
+      "content": "Глобальные и локальные переменные"
+    },
+    {
+      "type": "text",
+      "content": "Переменные, созданные внутри функции — локальные. Глобальные нужны global, чтобы изменить. Считать глобальную можно, изменить — только через global."
+    },
+    {
+      "type": "code",
+      "content": "count = 0\n\ndef increment():\n    global count\n    count += 1\n\nincrement()\nprint(count)  # 1\n\n# Без global — ошибка\n# def bad():\n#     count += 1  # UnboundLocalError: local variable 'count' referenced before assignment"
+    },
+    {
+      "type": "warning",
+      "content": "<b>UnboundLocalError</b> — самая частая ошибка новичков. Если внутри функции есть <code>count += 1</code>, Python считает count локальной. Чтобы изменить глобальную — нужен <code>global count</code>. Или передавайте значение через параметр и возвращайте результат."
+    },
+    {
+      "type": "warning",
+      "content": "• <b>Изменяемые аргументы по умолчанию</b>: <code>def f(items=[])</code> создаёт список один раз при определении функции. Все вызовы разделяют один и тот же список. Используйте <code>None</code> и создаёйте объект внутри.<br>• <b>Глобальные переменные</code>: <code>global</code> делает код трудно поддерживаемым. Возвращайте значения вместо изменения глобального состояния.<br>• <b>Забыть return</code>: функция без <code>return</code> возвращает <code>None</code>, что часто вызывает ошибки."
+    },
+    {
+      "type": "note",
+      "content": "Хорошая функция: одна задача, понятное имя, 1-3 параметра. Хороший return — один путь к значению."
+    },
+    {
+      "type": "heading",
+      "content": "Докстринги: документируем функции"
+    },
+    {
+      "type": "text",
+      "content": "Докстринг (docstring) — строка сразу после def. Описывает назначение. Доступен через __doc__."
+    },
+    {
+      "type": "code",
+      "content": "def encrypt(data):\n    \"\"\"Шифрует данные по алгориткту В-28.\"\"\"\n    return data[::-1]\n\nprint(encrypt.__doc__)\n# Шифрует данные по алгориткту В-28."
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t1",
+      "type": "guided",
+      "prompt": "Дополните функцию: создайте def square(x), которая возвращает x ** 2. Затем выведите square(7).",
+      "starter": "# Дополните функцию square\ndef square(x):\n    return x ** 2\n\nsquare(7)\n",
+      "hints": [
+        "def square(x): — функция с одним параметром",
+        "return x ** 2 — возвращает квадрат; print(square(7)) — выводит результат"
+      ],
+      "checks": [
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "stdout",
+          "equals": "49"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t2",
+      "type": "from-scratch",
+      "prompt": "Создайте функцию max_of(a, b), возвращающую большее число. F-строкой выведите: 'Максимум: <max>'.",
+      "starter": "# Функция max_of(a, b)\n# Используйте if/else или max()\n# Вывод f-строкой\n",
+      "hints": [
+        "def max_of(a, b):\n    if a > b:\n        return a\n    else:\n        return b",
+        "result = max_of(10, 25)\nprint(f\"Максимум: {result}\")"
+      ],
+      "checks": [
+        {
+          "kind": "has-fstring"
+        },
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "stdout",
+          "equals": "Максимум: 25"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t3",
+      "type": "guided",
+      "prompt": "Дополните функцию: def greet(name='Гость'), возвращает f'Привет, {name}!'. Вызовите без аргументов.",
+      "starter": "def greet(name='Гость'):\n    # Возвращает f-строку\n\n# print(greet())\n",
+      "hints": [
+        "return f'Привет, {name}!' — f-строка с переменной",
+        "greet() без аргументов использует 'Гость'"
+      ],
+      "checks": [
+        {
+          "kind": "has-fstring"
+        },
+        {
+          "kind": "stdout",
+          "equals": "Привет, Гость!"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t4",
+      "type": "debug",
+      "prompt": "UnboundLocalError: функция пытается += в глобальную переменную без global. Исправьте.",
+      "starter": "counter = 10\n\ndef add_five():\n    counter += 5\n\nadd_five()\nprint(counter)",
+      "hints": [
+        "Добавьте global counter внутри функции",
+        "Или передайте counter как параметр и возвращайте результат"
+      ],
+      "checks": [
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "stdout",
+          "equals": "15"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t5",
+      "type": "from-scratch",
+      "prompt": "Создайте функцию is_password_valid(length), возвращающую True если length >= 8, иначе False. Запросите длину через input() (int), вызовите функцию, выведите f-строкой: 'Пароль: <result>'.",
+      "starter": "# Функция is_password_valid(length) -> bool\n# Запросите длину через input()\n# Вызовите функцию, выведите f-строкой\n",
+      "hints": [
+        "def is_password_valid(length):\n    return length >= 8",
+        "n = int(input(\"Введите длину: \"))\nvalid = is_password_valid(n)\nprint(f\"Пароль: {valid}\")"
+      ],
+      "checks": [
+        {
+          "kind": "has-fstring"
+        },
+        {
+          "kind": "has-call",
+          "name": "input"
+        },
+        {
+          "kind": "has-call",
+          "name": "int"
+        },
+        {
+          "kind": "regex-stdout",
+          "pattern": "Пароль: (True|False)"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    }
+  ],
+  "recap": [
+    "def имя(параметры): — создаёт функцию. Вызов через имя с аргументами",
+    "return завершает функцию и возвращает значение. Без return → None",
+    "Аргументы передаются по позиции или по имени (keyword). Позиционные левее относительно значений по умолчанию",
+    "global нужен чтобы изменить глобальную переменную внутри функции — иначе UnboundLocalError",
+    "Докстринг после def описывает функцию, доступен через __doc__"
+  ],
+  "quiz": [
+    {
+      "q": "Что вернёт функция без return?",
+      "options": [
+        "0",
+        "''",
+        "None",
+        "Ошибка"
+      ],
+      "answer": 2,
+      "explain": "Функция без return возвращает None (пустота). Это не ошибка, а ожидаемое поведение в Python."
+    },
+    {
+      "q": "Что выведет: def f(a, b=5): print(a, b)\\nf(10)?",
+      "options": [
+        "10 5",
+        "15",
+        "10",
+        "Ошибка"
+      ],
+      "answer": 0,
+      "explain": "a=10 (позиционный аргумент), b=5 (по умолчанию). print(10, 5) выводит '10 5'."
+    },
+    {
+      "q": "Какой результат: def f(): return 1, 2, 3\\nf()?",
+      "options": [
+        "(1, 2, 3)",
+        "[1, 2, 3]",
+        "1 2 3",
+        "1"
+      ],
+      "answer": 0,
+      "explain": "return 1, 2, 3 возвращает кортеж (1, 2, 3). В Python это синтаксис упаковки в кортеж."
+    },
+    {
+      "q": "Что будет при вызове без global: def f(): x += 1 для глобальной x?",
+      "options": [
+        "x увеличится",
+        "UnboundLocalError",
+        "SyntaxError",
+        "x станет 0"
+      ],
+      "answer": 1,
+      "explain": "Python видит x += 1 внутри функции и считает x локальной переменной. Но локальная x не определена, поэтому UnboundLocalError: local variable 'x' referenced before assignment."
+    }
+  ]
+}

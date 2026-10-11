@@ -1,0 +1,11 @@
+{
+  "name": "praxis-learn",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node serve.mjs"
+  },
+  "engines": {
+    "node": ">=16"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "courses": [
+    {
+      "id": "python",
+      "title": "Python",
+      "description": "Основы Python: от print() до ООП",
+      "icon": "🐍",
+      "level": "Начальный",
+      "lessons": 3
+    },
+    {
+      "id": "git",
+      "title": "Git",
+      "description": "Контроль версий, ветки, PR, merge-конфликты",
+      "icon": "🔀",
+      "level": "Начальный",
+      "lessons": 1
+    },
+    {
+      "id": "devops",
+      "title": "DevOps",
+      "description": "Docker, CI/CD, деплой приложений",
+      "icon": "🐳",
+      "level": "Продвинутый",
+      "lessons": 1
+    }
+  ]
+}

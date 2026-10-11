@@ -1,0 +1,624 @@
+:root {
+  --bg-0: #05070a;
+  --bg-1: #0a0e14;
+  --bg-2: #11151c;
+  --bg-3: #1a1f2e;
+  --bg-4: #232a3d;
+  --border: rgba(0, 240, 255, 0.15);
+  --border-strong: rgba(0, 240, 255, 0.4);
+  --cyan: #00f0ff;
+  --cyan-dim: #00b8cc;
+  --red: #ff003c;
+  --red-dim: #b3002a;
+  --yellow: #fcee0a;
+  --green: #00ff9f;
+  --text: #e0e6f0;
+  --text-dim: #7a8294;
+  --text-mute: #4a5468;
+  --code-bg: #0d1117;
+  --font-display: 'Rajdhani', 'Orbitron', 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  --font-body: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --glow-cyan: 0 0 8px rgba(0, 240, 255, .55), 0 0 20px rgba(0, 240, 255, .25);
+  --glow-red: 0 0 8px rgba(255, 0, 60, .55), 0 0 20px rgba(255, 0, 60, .25);
+  --glow-yellow: 0 0 8px rgba(252, 238, 10, .5), 0 0 22px rgba(252, 238, 10, .22);
+}
+
+/* Глобально: не резать содержимое контейнеров */
+.app-header,
+.app-header *,
+.card,
+.card *,
+.content,
+.content *,
+.lesson-progress-card,
+.toc,
+.sidebar {
+  overflow-wrap: anywhere;
+}
+
+/* Точечно разрешаем overflow только там, где он нужен */
+.sidebar { overflow-x: hidden; overflow-y: auto; }
+.toc { overflow-x: hidden; overflow-y: auto; }
+pre { overflow-x: auto; }
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg-0);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* Фоновые сканлайны — фирменный эффект Cyberpunk */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 240, 255, 0.02) 0px,
+    rgba(0, 240, 255, 0.02) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  z-index: 9999;
+  mix-blend-mode: overlay;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 20% 0%, rgba(0, 240, 255, 0.05), transparent 45%),
+              radial-gradient(circle at 90% 100%, rgba(255, 0, 60, 0.06), transparent 45%);
+  z-index: 0;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--text);
+  margin: 0 0 0.6em;
+}
+
+h1 { font-size: 2.2rem; text-shadow: var(--glow-cyan); }
+h2 { font-size: 1.6rem; color: var(--cyan); }
+h3 { font-size: 1.2rem; color: var(--text); }
+
+p { color: var(--text); }
+a { color: var(--cyan); text-decoration: none; transition: all .15s; }
+a:hover { color: var(--yellow); text-shadow: var(--glow-yellow); }
+
+code, pre, .mono { font-family: var(--font-mono); font-size: 0.92em; }
+
+pre {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--cyan);
+  padding: 28px 20px 16px;
+  border-radius: 4px;
+  overflow-x: auto;
+  color: #d5e4ff;
+  position: relative;
+  max-width: 100%;
+}
+pre code {
+  display: block;
+  white-space: pre;
+  overflow-x: visible;
+  word-break: normal;
+}
+
+pre::before {
+  content: '◆ CODE';
+  position: absolute;
+  top: 8px;
+  left: 12px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  color: var(--cyan);
+  background: transparent;
+  padding: 0;
+  border-radius: 2px;
+}
+
+code:not(pre code) {
+  background: rgba(0, 240, 255, 0.08);
+  border: 1px solid var(--border);
+  padding: 2px 6px;
+  border-radius: 3px;
+  color: var(--cyan);
+  font-size: 0.88em;
+}
+
+/* Подсветка синтаксиса (tokenizer) */
+.token.keyword     { color: #ff79c6; }
+.token.string      { color: #fcee0a; }
+.token.number      { color: #00f0ff; }
+.token.function    { color: #00ff9f; }
+.token.comment     { color: #4a5468; font-style: italic; }
+.token.operator    { color: #00f0ff; }
+.token.builtin     { color: #ff003c; }
+.token.boolean     { color: #ff003c; }
+.token.punctuation { color: #a0a8b8; }
+
+/* Кнопки — со скошенным углом и неоновым свечением */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  background: transparent;
+  border: 1px solid var(--cyan);
+  color: var(--cyan);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all .18s ease;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  position: relative;
+  text-decoration: none;
+}
+
+.btn:hover {
+  background: rgba(0, 240, 255, 0.12);
+  box-shadow: var(--glow-cyan);
+  color: var(--yellow);
+  border-color: var(--yellow);
+  text-shadow: var(--glow-yellow);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, rgba(0, 240, 255, .15), rgba(0, 240, 255, .02));
+  box-shadow: inset 0 0 20px rgba(0, 240, 255, .1);
+}
+
+.btn-danger {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.btn-danger:hover {
+  background: rgba(255, 0, 60, .15);
+  box-shadow: var(--glow-red);
+  border-color: var(--red);
+  color: var(--red);
+  text-shadow: none;
+}
+
+.btn-ghost {
+  border-color: var(--text-mute);
+  color: var(--text-dim);
+}
+.btn-ghost:hover {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  box-shadow: var(--glow-cyan);
+}
+
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Поля ввода */
+input[type="text"], input[type="email"], input[type="password"], textarea, select {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  border-radius: 3px;
+  outline: none;
+  transition: all .15s;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: var(--cyan);
+  box-shadow: var(--glow-cyan);
+}
+
+label {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+
+/* Карточки */
+.card {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 24px;
+  position: relative;
+  transition: all .2s;
+}
+
+.card:hover {
+  border-color: var(--border-strong);
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.12);
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 40px; height: 2px;
+  background: var(--cyan);
+  box-shadow: var(--glow-cyan);
+}
+
+/* Бейджи */
+.badge {
+  display: inline-block;
+  padding: 2px 10px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: 1px solid var(--border-strong);
+  color: var(--cyan);
+  border-radius: 2px;
+  background: rgba(0, 240, 255, 0.05);
+}
+
+.badge.done   { color: var(--green); border-color: var(--green); background: rgba(0,255,159,.08); }
+.badge.active { color: var(--yellow); border-color: var(--yellow); background: rgba(252,238,10,.08); }
+.badge.locked { color: var(--text-mute); border-color: var(--text-mute); }
+
+/* Прогресс-бар */
+.progress {
+  height: 6px;
+  background: var(--bg-3);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress > div {
+  height: 100%;
+  background: linear-gradient(90deg, var(--cyan), var(--yellow));
+  box-shadow: var(--glow-cyan);
+  transition: width .5s ease;
+}
+
+/* Глитч-логотип */
+.glitch {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.4rem;
+  letter-spacing: 0.1em;
+  color: var(--text);
+  position: relative;
+  text-transform: uppercase;
+  overflow: visible;
+  white-space: nowrap;
+}
+
+.glitch::before,
+.glitch::after {
+  overflow: visible;
+}
+
+.glitch::before {
+  color: var(--cyan);
+  clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
+  animation: glitch-1 2.5s infinite linear alternate-reverse;
+}
+
+.glitch::after {
+  color: var(--red);
+  clip-path: polygon(0 55%, 100% 55%, 100% 100%, 0 100%);
+  animation: glitch-2 3s infinite linear alternate-reverse;
+}
+
+@keyframes glitch-1 {
+  0%, 92%, 100% { transform: translate(0); }
+  93% { transform: translate(-2px, -1px); }
+  95% { transform: translate(2px, 1px); }
+  97% { transform: translate(-1px, 0); }
+}
+
+@keyframes glitch-2 {
+  0%, 90%, 100% { transform: translate(0); }
+  91% { transform: translate(2px, 1px); }
+  94% { transform: translate(-2px, -1px); }
+  96% { transform: translate(1px, 2px); }
+}
+
+/* Note / Warning блоки в уроках */
+.note, .warning, .tip {
+  border-left: 3px solid var(--cyan);
+  background: rgba(0, 240, 255, 0.05);
+  padding: 14px 18px;
+  margin: 16px 0;
+  border-radius: 0 4px 4px 0;
+}
+
+.warning { border-color: var(--red); background: rgba(255, 0, 60, .06); }
+.tip     { border-color: var(--yellow); background: rgba(252, 238, 10, .05); }
+
+.note strong { color: var(--cyan); }
+.warning strong { color: var(--red); }
+.tip strong { color: var(--yellow); }
+
+/* Hook / Hero question */
+.hero-question {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  color: var(--yellow);
+  text-shadow: var(--glow-yellow);
+  border-left: 3px solid var(--yellow);
+  padding: 12px 20px;
+  margin: 20px 0;
+  background: rgba(252,238,10,.05);
+  border-radius: 0 4px 4px 0;
+}
+
+/* Hints внутри задачи */
+.playground-hints {
+  padding: 0 16px;
+  background: var(--bg-2);
+  border-top: 1px solid var(--border);
+}
+.playground-hints .hint {
+  padding: 10px 0;
+  color: var(--yellow);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  border-bottom: 1px dashed var(--border);
+}
+.playground-hints .hint:last-child { border-bottom: none; }
+
+/* Check-list для отображения результатов проверок */
+.check-list {
+  margin-top: 10px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+.check-list .fail { color: var(--red); }
+.check-list .pass { color: var(--green); }
+
+/* Predict — интерактивный блок */
+.predict-block {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 20px;
+  margin: 20px 0;
+  background: var(--bg-1);
+  position: relative;
+}
+.predict-block::before {
+  content: '◆ ПРОВЕРЬ СЕБЯ';
+  position: absolute;
+  top: 8px;
+  left: 16px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  color: var(--yellow);
+  background: var(--bg-0);
+  padding: 0 8px;
+}
+.predict-block pre { margin: 0 0 16px 0; }
+.predict-block pre code { display: block; }
+.predict-block .predict-question {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  margin: 8px 0 14px;
+}
+.predict-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.predict-option {
+  display: block;
+  padding: 12px 16px;
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  color: var(--text);
+  cursor: pointer;
+  transition: all .15s;
+}
+.predict-option:hover { border-color: var(--cyan); background: var(--bg-2); }
+.predict-option.correct { border-color: var(--green); background: rgba(0,255,159,.08); color: var(--green); }
+.predict-option.wrong { border-color: var(--red); background: rgba(255,0,60,.08); color: var(--red); }
+.predict-block .predict-explain {
+  margin-top: 12px;
+  padding: 12px 16px;
+  background: rgba(0,240,255,.05);
+  border-left: 3px solid var(--cyan);
+  font-size: 0.9rem;
+  border-radius: 0 4px 4px 0;
+}
+
+/* Recap */
+#recap h2 { color: var(--cyan); }
+.recap-item {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-dim);
+}
+.recap-item:last-child { border-bottom: none; }
+
+/* Терминальные окна вывода */
+.terminal {
+  background: #000;
+  border: 1px solid var(--border);
+  padding: 16px;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  color: var(--green);
+  border-radius: 4px;
+  min-height: 80px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.terminal .err { color: var(--red); }
+.terminal .ok  { color: var(--green); }
+
+/* Скроллбар */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--bg-1); }
+::-webkit-scrollbar-thumb {
+  background: var(--bg-4);
+  border-radius: 4px;
+  border: 2px solid var(--bg-1);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--cyan-dim); }
+
+/* Тост-уведомления */
+#toasts {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.toast {
+  padding: 12px 20px;
+  background: var(--bg-3);
+  border: 1px solid var(--cyan);
+  border-left: 3px solid var(--cyan);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  border-radius: 3px;
+  box-shadow: var(--glow-cyan);
+  animation: slideIn .3s ease;
+  max-width: 360px;
+}
+
+.toast.error { border-color: var(--red); box-shadow: var(--glow-red); }
+.toast.success { border-color: var(--green); }
+.toast.warn { border-color: var(--yellow); box-shadow: var(--glow-yellow); }
+
+@keyframes slideIn {
+  from { transform: translateX(120%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+/* Загрузчик */
+.spinner {
+  display: inline-block;
+  width: 14px; height: 14px;
+  border: 2px solid var(--border-strong);
+  border-top-color: var(--cyan);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  vertical-align: middle;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Разделитель */
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-strong), transparent);
+  margin: 24px 0;
+}
+
+/* ============================================
+   ГЛОБАЛЬНЫЙ ФИКС ОБРЕЗОК — v2
+   Не резать содержимое нигде, где не нужно
+   ============================================ */
+
+/* Все абсолютные бейджи внутри relative-родителей */
+.app-header,
+.app-header *,
+.card,
+.card > *,
+.content,
+.content > *,
+.toc,
+.toc *,
+.sidebar,
+.sidebar *,
+.lesson-progress-card,
+.lesson-progress-card *,
+.playground,
+.playground *,
+.quiz-option,
+.stat,
+.stat * {
+  overflow-wrap: anywhere;
+}
+
+/* Разрешаем скролл только там, где он нужен */
+.sidebar { overflow-x: hidden !important; overflow-y: auto; }
+.toc { overflow-x: hidden !important; overflow-y: auto; }
+pre { overflow-x: auto !important; overflow-y: visible; }
+
+/* Бейдж CODE — всегда внутри pre */
+pre {
+  position: relative !important;
+  padding-top: 28px !important;
+  padding-left: 20px !important;
+}
+pre::before {
+  top: 8px !important;
+  left: 12px !important;
+  background: transparent !important;
+}
+
+/* Хедер и логотип */
+.app-header { overflow: visible !important; }
+.glitch,
+.glitch::before,
+.glitch::after {
+  overflow: visible !important;
+  pointer-events: none;
+}
+
+/* Заголовки и параграфы — переносим, а не режем */
+h1, h2, h3, h4 {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+p, li, td, .stat-row, .card * {
+  overflow-wrap: anywhere;
+}
+
+/* TOC-ссылки — перенос, не обрезка */
+.toc a {
+  white-space: normal !important;
+  word-break: break-word;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+
+/* Сайдбар — только для длинных названий режем с ellipsis, 
+   но не для коротких */
+.sidebar a {
+  overflow: visible !important;
+  white-space: normal !important;
+  text-overflow: clip !important;
+  min-width: 0;
+}
+.sidebar a .num { flex-shrink: 0; }

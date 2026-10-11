@@ -1,0 +1,294 @@
+{
+  "id": "python-28-sqlite",
+  "title": "SQLite и SQL",
+  "goal": "Выполнять SQL-запросы через sqlite3, CRUD-операции",
+  "prereq": [
+    "python-27-http"
+  ],
+  "duration": 18,
+  "theory": [
+    {
+      "type": "hook",
+      "content": "V хранит данные об агентах в SQLite — локальная база данных в одном файле. CREATE TABLE, INSERT, SELECT — стандартный SQL."
+    },
+    {
+      "type": "heading",
+      "content": "Модуль sqlite3"
+    },
+    {
+      "type": "text",
+      "content": "sqlite3 — встроенный модуль для работы с SQLite. connect(path) открывает БД. Для новой БД создаёт файл. cursor.execute(sql) выполняет запросы."
+    },
+    {
+      "type": "code",
+      "content": "import sqlite3\nconn = sqlite3.connect(':memory:')  # in-memory БД\ncursor = conn.cursor()\ncursor.execute('CREATE TABLE agents (name TEXT, level INTEGER)')\nconn.commit()\nconn.close()"
+    },
+    {
+      "type": "heading",
+      "content": "CREATE TABLE и INSERT"
+    },
+    {
+      "type": "text",
+      "content": "CREATE TABLE имя (колонка тип, ...). INSERT INTO имя VALUES (...). commit() сохраняет изменения. Параметризованные запросы: execute('INSERT INTO t VALUES (?, ?)', (val1, val2))."
+    },
+    {
+      "type": "code",
+      "content": "import sqlite3\nconn = sqlite3.connect('agents.db')\ncur = conn.cursor()\ncur.execute('CREATE TABLE IF NOT EXISTS agents (name TEXT, score INTEGER)')\ncur.execute('INSERT INTO agents VALUES (?, ?)', ('V', 9500))\nconn.commit()\nconn.close()"
+    },
+    {
+      "type": "predict",
+      "code": "import sqlite3\nconn = sqlite3.connect(':memory:')\ncur = conn.cursor()\ncur.execute('CREATE TABLE t (x INTEGER)')\ncur.execute('INSERT INTO t VALUES (?)', (42,))\nconn.commit()\ncur.execute('SELECT * FROM t')\nprint(cur.fetchone())",
+      "question": "Что выведет?",
+      "options": [
+        "(42,)",
+        "[42]",
+        "42",
+        "Ошибка"
+      ],
+      "answer": 0,
+      "explain": "INSERT добавляет (42,). fetchone() возвращает первую строку кортежом: (42,)."
+    },
+    {
+      "type": "heading",
+      "content": "SELECT: чтение данных"
+    },
+    {
+      "type": "text",
+      "content": "SELECT * FROM table — все строки. SELECT col FROM table — колонки. fetchone() одна строка, fetchall() все. WHERE — фильтр. ORDER BY — сортировка."
+    },
+    {
+      "type": "code",
+      "content": "import sqlite3\nconn = sqlite3.connect('agents.db')\ncur = conn.cursor()\ncur.execute('SELECT name, score FROM agents WHERE score > 5000')\nrows = cur.fetchall()\nfor row in rows:\n    print(row[0], row[1])\nconn.close()"
+    },
+    {
+      "type": "note",
+      "content": "fetchall() загружает все строки в память. Для больших таблиц используйте итерацию по cursor: for row in cur.execute('SELECT...')."
+    },
+    {
+      "type": "predict",
+      "code": "import sqlite3\nconn = sqlite3.connect(':memory:')\ncur = conn.cursor()\ncur.execute('CREATE TABLE t (x INTEGER)')\ncur.executemany('INSERT INTO t VALUES (?)', [(1,), (2,), (3,)])\nconn.commit()\ncur.execute('SELECT COUNT(*) FROM t')\nprint(cur.fetchone()[0])",
+      "question": "Что выведет?",
+      "options": [
+        "1",
+        "3",
+        "[1, 2, 3]",
+        "Ошибка"
+      ],
+      "answer": 1,
+      "explain": "executemany вставляет 3 строки. SELECT COUNT(*) подсчитывает строки: 3. fetchone()[0] = 3."
+    },
+    {
+      "type": "heading",
+      "content": "Параметризованные запросы"
+    },
+    {
+      "type": "text",
+      "content": "NEVER используйте f-string или + для SQL! Используйте ? placeholders. Это безопасно от SQL-инъекций. execute('SELECT FROM t WHERE id=?', (user_id,))."
+    },
+    {
+      "type": "code",
+      "content": "import sqlite3\nconn = sqlite3.connect(':memory:')\ncur = conn.cursor()\ncur.execute('CREATE TABLE t (name TEXT, score INTEGER)')\nname = 'V'\nscore = 95\ncur.execute('INSERT INTO t VALUES (?, ?)', (name, score))\nconn.commit()\ncur.execute('SELECT * FROM t WHERE name = ?', (name,))\nprint(cur.fetchone())"
+    },
+    {
+      "type": "warning",
+      "content": "• <b>SQL-инъекции</b>: <code>f\"SELECT * FROM t WHERE id={user_input}\"</code> — опасно! Используйте <code>?</code> placeholders.<br>• <b>Не commit</b>: без commit изменения не сохраняются.<br>• <b>Закрытие соединения</b>: используйте with conn: для автоматического commit."
+    },
+    {
+      "type": "warning",
+      "content": "• <b>SQL injection</code>: никогда не используйте f-строки для построения запросов (<code>f\"SELECT * FROM t WHERE id={user_id}\"</code>). Используйте параметризованные запросы с <code>?</code>.<br>• <b>Не закрывать соединение</code>: <code>sqlite3.connect</code> открывает соединение. Используйте <code>with conn:</code> или <code>finally: conn.close()</code>.<br>• <b>COMMIT неявный</code>: <code>with conn:</code> делает COMMIT при успехе и ROLLBACK при исключении, но только для DML. Схема таблиц требует явного <code>conn.commit()</code>."
+    },
+    {
+      "type": "predict",
+      "code": "import sqlite3\nwith sqlite3.connect(':memory:') as conn:\n    cur = conn.cursor()\n    cur.execute('CREATE TABLE t (x INTEGER)')",
+      "question": "Что делает этот код?",
+      "options": [
+        "Создаёт таблицу",
+        "Ошибка",
+        "Ничего",
+        "Удаляет БД"
+      ],
+      "answer": 0,
+      "explain": "with sqlite3.connect(...) — контекстный менеджер. Автоматически commit и закрытие. CREATE TABLE создаёт таблицу t с колонкой x."
+    },
+    {
+      "type": "note",
+      "content": "sqlite3 поддерживает row_factory для доступа по имени колонки: conn.row_factory = sqlite3.Row. Тогда row['name'] вместо row[0]."
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t1",
+      "type": "guided",
+      "prompt": "Дополните: создайте in-memory БД с таблицей agents (name, score). Вставьте ('V', 95) через INSERT.",
+      "starter": "import sqlite3\nconn = sqlite3.connect(':memory:')\ncur = conn.cursor()\n# cur.execute('CREATE TABLE agents (name TEXT, score INTEGER)')\n# cur.execute('INSERT INTO agents VALUES (?, ?)', ('V', 95))\n# conn.commit()\n# print('OK')\n",
+      "hints": [
+        "execute CREATE TABLE с типами TEXT и INTEGER",
+        "Параметризованный INSERT с ?"
+      ],
+      "checks": [
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "has-call",
+          "name": "sqlite3.connect"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t2",
+      "type": "from-scratch",
+      "prompt": "Создайте БД с таблицей users (id, name). Добавьте ('V', 'Admin') через executemany с кортежом. SELECT всех, выведите f-строкой: 'Пользователь: <row>'.",
+      "starter": "# sqlite3.connect\n# CREATE TABLE users\n# INSERT через executemany\n# SELECT и вывод f-строкой\n",
+      "hints": [
+        "cur.executemany('INSERT INTO users VALUES (?, ?)', [(1, 'V')])",
+        "for row in cur.execute('SELECT * FROM users'): print(f'Пользователь: {row[1]}')"
+      ],
+      "checks": [
+        {
+          "kind": "has-fstring"
+        },
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "stdout",
+          "equals": "Пользователь: V"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t3",
+      "type": "guided",
+      "prompt": "Дополните: создайте таблицу scores. Вставьте ('V', 95), ('Rex', 88). SELECT с WHERE score > 90.",
+      "starter": "import sqlite3\nconn = sqlite3.connect(':memory:')\ncur = conn.cursor()\ncur.execute('CREATE TABLE scores (name TEXT, score INTEGER)')\ncur.execute('INSERT INTO scores VALUES (?, ?)', ('V', 95))\ncur.execute('INSERT INTO scores VALUES (?, ?)', ('Rex', 88))\nconn.commit()\n# cur.execute('SELECT * FROM scores WHERE score > ?', (90,))\n# print(cur.fetchall())\n",
+      "hints": [
+        "WHERE score > ? — фильтр по параметру",
+        "fetchall() — все подходящие строки"
+      ],
+      "checks": [
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "has-call",
+          "name": "fetchall"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t4",
+      "type": "debug",
+      "prompt": "SQL-инъекция: f-string в SQL. Исправьте на параметризованный запрос с ?.",
+      "starter": "import sqlite3\nconn = sqlite3.connect(':memory:')\ncur = conn.cursor()\ncur.execute('CREATE TABLE t (name TEXT)')\n\nuser_input = 'V'\ncur.execute(f\"SELECT * FROM t WHERE name='{user_input}'\")\nprint(cur.fetchall())",
+      "hints": [
+        "REPLACE f-string SQL с ? placeholder",
+        "execute('SELECT * FROM t WHERE name=?', (user_input,))"
+      ],
+      "checks": [
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "has-call",
+          "name": "cur.execute"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t5",
+      "type": "from-scratch",
+      "prompt": "Создайте БД с таблицей items (id, name, price). INSERT (1, 'Drone', 5000) и (2, 'Bot', 3000). SELECT с ORDER BY price DESC. F-строкой выведите: 'Товар: <name>'.",
+      "starter": "# Таблица items с price\n# INSERT через executemany\n# SELECT ORDER BY price DESC\n# Вывод f-строкой\n",
+      "hints": [
+        "cur.execute('CREATE TABLE items (id INTEGER, name TEXT, price INTEGER)')",
+        "cur.execute('SELECT * FROM items ORDER BY price DESC')"
+      ],
+      "checks": [
+        {
+          "kind": "has-fstring"
+        },
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "stdout",
+          "equals": "Товар: Drone"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    }
+  ],
+  "recap": [
+    "sqlite3.connect(path) — in-memory ':memory:' или файл 'db.sqlite'. cursor.execute(sql, params) выполняет запросы",
+    "CREATE TABLE, INSERT, SELECT, WHERE, ORDER BY — стандартный SQL. commit() сохраняет изменения",
+    "Параметризованные запросы с ? — защита от SQL-инъекций. NEVER f-string в SQL",
+    "fetchall() все строки, fetchone() одна строка, executemany() для множественной вставки",
+    "with sqlite3.connect(...) — автоматический commit и закрытие. row_factory для доступа по имени"
+  ],
+  "quiz": [
+    {
+      "q": "Что такое sqlite3?",
+      "options": [
+        "Библиотека для CSV",
+        "Встроенный модуль для SQLite БД",
+        "Модуль для JSON",
+        "Библиотека для запросов"
+      ],
+      "answer": 1,
+      "explain": "sqlite3 — встроенный модуль Python для работы с базами данных SQLite. Не требует установки сервера."
+    },
+    {
+      "q": "Для чего ? в SQL?",
+      "options": [
+        "Логический И",
+        "Placeholder для параметров",
+        "Комментарий",
+        "LIKE-оператор"
+      ],
+      "answer": 1,
+      "explain": "? — placeholder для параметризованных запросов. execute('SELECT * WHERE id=?', (user_id,)) предотвращает SQL-инъекции."
+    },
+    {
+      "q": "Что делает commit()?",
+      "options": [
+        "Откатывает изменения",
+        "Сохраняет изменения в БД",
+        "Закрывает соединение",
+        "Создаёт таблицу"
+      ],
+      "answer": 1,
+      "explain": "commit() сохраняет изменения (INSERT, UPDATE, DELETE) в базе данных. Без commit изменения не сохранятся."
+    },
+    {
+      "q": "Что возвращает fetchall()?",
+      "options": [
+        "Одну строку",
+        "Список строк (список кортежей)",
+        "dict",
+        "int"
+      ],
+      "answer": 1,
+      "explain": "fetchall() возвращает список кортежей — все строки результата запроса. Если пусто, возвращает пустой список []."
+    }
+  ]
+}

@@ -1,0 +1,310 @@
+{
+  "id": "python-14-modules",
+  "title": "Модули и пакеты",
+  "goal": "Импортировать модули через import и from, использовать pip, создавать свои модули",
+  "prereq": [
+    "python-13-error-handling"
+  ],
+  "duration": 16,
+  "theory": [
+    {
+      "type": "hook",
+      "content": "V пишет код для шифрования. Встроенных функций мало — нужно подключить модуль. import math, from random import randint."
+    },
+    {
+      "type": "heading",
+      "content": "Что такое модуль"
+    },
+    {
+      "type": "text",
+      "content": "Модуль — это файл .py с функциями и переменными. import имя_модуля подключает его. Стандартная библиотека: math, random, os, datetime."
+    },
+    {
+      "type": "code",
+      "content": "import math\nprint(math.sqrt(16))  # 4.0\nprint(math.pi)\n\nimport random\nprint(random.randint(1, 10))"
+    },
+    {
+      "type": "heading",
+      "content": "import vs from"
+    },
+    {
+      "type": "text",
+      "content": "import module — используете module.func(). from module import func — прямой доступ к func(). from module import * — импортирует всё (не рекомендуется)."
+    },
+    {
+      "type": "code",
+      "content": "# import\nimport math\nprint(math.pi)\n\n# from\nfrom math import pi, sqrt\nprint(pi)\nprint(sqrt(25))\n\n# alias\nimport numpy as np\nresult = np.array([1, 2, 3])"
+    },
+    {
+      "type": "predict",
+      "code": "import math\nprint(math.floor(3.7))",
+      "question": "Что выведет этот код?",
+      "options": [
+        "3",
+        "4",
+        "3.7",
+        "Ошибка"
+      ],
+      "answer": 0,
+      "explain": "math.floor(3.7) округляет вниз до ближайшего целого. 3.7 → 3. Импорт math даёт доступ к math.floor."
+    },
+    {
+      "type": "heading",
+      "content": "Создание своего модуля"
+    },
+    {
+      "type": "text",
+      "content": "Любой файл .py становится модулем. Чтобы подключить: import имя_файла. В том же каталоге — простая связь. Для проверки используйте if __name__ == '__main__'."
+    },
+    {
+      "type": "code",
+      "content": "# mymodule.py\ndef encrypt(data):\n    return data[::-1]\n\nif __name__ == '__main__':\n    print(encrypt('hello'))\n\n# main.py\n# import mymodule\n# print(mymodule.encrypt('hello'))  # olleh"
+    },
+    {
+      "type": "note",
+      "content": "__name__ == '__main__' выполняется только если файл запущен напрямую, а не импортирован. Это стандартный шаблон для модулей."
+    },
+    {
+      "type": "heading",
+      "content": "pip: установка пакетов"
+    },
+    {
+      "type": "text",
+      "content": "pip — менеджер пакетов. pip install package устанавливает. pip list — список. pip show package — информация. Требования в requirements.txt."
+    },
+    {
+      "type": "code",
+      "content": "# requirements.txt\nrequests==2.28.0\nnumpy>=1.21.0\n\n# Установка\n# pip install requests==2.28.0\n# pip install -r requirements.txt"
+    },
+    {
+      "type": "predict",
+      "code": "from math import sqrt, pi\nprint(sqrt(4), pi)",
+      "question": "Что выведет этот код?",
+      "options": [
+        "2.0 3.14",
+        "2 3.14159265",
+        "Ошибка",
+        "None None"
+      ],
+      "answer": 0,
+      "explain": "from math import sqrt, pi — импорт square root и pi. sqrt(4) = 2.0, pi = 3.14159... print выводит через пробел."
+    },
+    {
+      "type": "heading",
+      "content": "Стандартные модули"
+    },
+    {
+      "type": "text",
+      "content": "math: sqrt, pow, pi. random: randint, choice, shuffle. os: path, listdir, getcwd. sys: argv, exit. json: dumps, loads."
+    },
+    {
+      "type": "code",
+      "content": "import os\nprint(os.getcwd())\nprint(os.listdir('.'))\n\nimport json\ndata = json.dumps({'key': 'value'})\nprint(data)"
+    },
+    {
+      "type": "warning",
+      "content": "• <b>ImportError</b>: модуль не найден. Проверьте установлен ли пакет через pip.<br>• <b>Namespace pollution</b>: from module import * загрязняет пространство имён. Используйте явные импорты.<br>• <b>Циклический импорт</b>: a.py импортирует b.py, b.py импортирует a.py — ImportError."
+    },
+    {
+      "type": "warning",
+      "content": "• <b>Циркулярный импорт</code>: если модуль А импортирует Б, а Б импортирует А, вы получите <code>ImportError</code> или частично инициализированный объект. Рефакторьте общую логику в третий модуль.<br>• <b>from module import *</code>: загрязняет пространство имён и скрывает, откуда импортированы имена. Используйте явный импорт.<br>• <b>Системный путь</code>: <code>import sys; sys.path.append(...)</code> работает, но лучше использовать <code>PYTHONPATH</code> или относительные импорты."
+    },
+    {
+      "type": "note",
+      "content": "Стандартная библиотека Python (stdlib) входит в установку. Нет необходимости pip install math — он уже есть."
+    },
+    {
+      "type": "predict",
+      "code": "import os\nprint(type(os.getcwd()))",
+      "question": "Что вернёт type(os.getcwd())?",
+      "options": [
+        "<class 'str'>",
+        "<class 'int'>",
+        "<class 'list'>",
+        "Ошибка"
+      ],
+      "answer": 0,
+      "explain": "os.getcwd() возвращает строку с путём к текущей директории. type(str) → <class 'str'>."
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t1",
+      "type": "guided",
+      "prompt": "Дополните код: import math, выведите math.sqrt(25).",
+      "starter": "import math\n# Выведите math.sqrt(25)\n",
+      "hints": [
+        "math.sqrt(25) — квадратный корень из 25",
+        "print(math.sqrt(25)) — выводит 5.0"
+      ],
+      "checks": [
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "stdout",
+          "equals": "5.0"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t2",
+      "type": "from-scratch",
+      "prompt": "Используя from random import randint, создайте list из 3 случайных чисел 1-100 через цикл for и list comprehension. F-строкой выведите: 'Случайные: <list>'.",
+      "starter": "# from random import randint\n# list comprehension с 3 числами\n# Вывод f-строкой\n",
+      "hints": [
+        "from random import randint\nnums = [randint(1, 100) for _ in range(3)]",
+        "print(f\"Случайные: {nums}\")"
+      ],
+      "checks": [
+        {
+          "kind": "has-fstring"
+        },
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "has-call",
+          "name": "randint"
+        },
+        {
+          "kind": "regex-stdout",
+          "pattern": "Случайные: \\["
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t3",
+      "type": "guided",
+      "prompt": "Дополните код: from math import ceil, floor. Выведите ceil(4.3) и floor(4.8).",
+      "starter": "from math import ceil, floor\n# Выведите ceil(4.3)\n# Выведите floor(4.8)\n",
+      "hints": [
+        "ceil(4.3) = 5 (округление вверх), floor(4.8) = 4 (вниз)",
+        "from math import ceil, floor — импорт двух функций сразу"
+      ],
+      "checks": [
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "stdout",
+          "equals": "5\n4"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t4",
+      "type": "debug",
+      "prompt": "ModuleNotFoundError: модуль mytools не найден. Это встроенный модуль? Исправьте на math.",
+      "starter": "import mytools\nprint(mytools.sqrt(9))",
+      "hints": [
+        "mytools — нестандартный модуль. math.sqrt(9) работает",
+        "import math; print(math.sqrt(9))"
+      ],
+      "checks": [
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "stdout",
+          "equals": "3.0"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t5",
+      "type": "from-scratch",
+      "prompt": "Создайте переменную pi через from math import pi. F-строкой выведите: 'pi = <pi>'.",
+      "starter": "# from math import pi\n# Вывод f-строкой\n",
+      "hints": [
+        "from math import pi",
+        "print(f'pi = {pi}')"
+      ],
+      "checks": [
+        {
+          "kind": "has-fstring"
+        },
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "stdout",
+          "equals": "pi = 3.141592653589793"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    }
+  ],
+  "recap": [
+    "import module — module.func(). from module import func — прямой доступ к func",
+    "pip install/package для внешних пакетов. requirements.txt для зависимостей",
+    "__name__ == '__main__' проверяет прямой запуск vs импорт",
+    "Стандартная библиотека (stdlib) входит в Python: math, random, os, sys, json",
+    "ImportError — модуль не найден. Circular import — модули ссылаются друг на друга"
+  ],
+  "quiz": [
+    {
+      "q": "Что вернёт: import math; math.sqrt(16)?",
+      "options": [
+        "4",
+        "4.0",
+        "16",
+        "Ошибка"
+      ],
+      "answer": 1,
+      "explain": "math.sqrt(16) возвращает float: 4.0. Даже если результат целый, sqrt возвращает float."
+    },
+    {
+      "q": "Разница между 'import m' и 'from m import f'?",
+      "options": [
+        "нет разницы",
+        "m.f() vs f() напрямую",
+        "только для pip",
+        "только для stdlib"
+      ],
+      "answer": 1,
+      "explain": "import m — обращение через m.f(). from m import f — прямой вызов f() без префикса. Выбор стиля — префикс или нет."
+    },
+    {
+      "q": "Когда выполняется if __name__ == '__main__'?",
+      "options": [
+        "При импорте модуля",
+        "При прямом запуске",
+        "Всегда",
+        "Никогда"
+      ],
+      "answer": 1,
+      "explain": "Блок выполняется только при прямом запуске файла. При импорте __name__ равно имени модуля, а '__main__' — это имя основного скрипта."
+    },
+    {
+      "q": "Что делает pip install package?",
+      "options": [
+        "Удаляет пакет",
+        "Устанавливает пакет",
+        "Обновляет Python",
+        "Запускает скрипт"
+      ],
+      "answer": 1,
+      "explain": "pip — менеджер пакетов Python. pip install package скачивает и устанавливает пакет из PyPI."
+    }
+  ]
+}

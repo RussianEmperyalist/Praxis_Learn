@@ -1,0 +1,298 @@
+{
+  "id": "python-25-collections",
+  "title": "Модуль collections",
+  "goal": "Использовать Counter, defaultdict, deque из модуля collections",
+  "prereq": [
+    "python-24-datetime"
+  ],
+  "duration": 16,
+  "theory": [
+    {
+      "type": "hook",
+      "content": "V анализирует 10000 логов. Сколько раз каждый IP встречается? Counter подсчитывает. defaultdict не бросает KeyError для новых ключей."
+    },
+    {
+      "type": "heading",
+      "content": "Counter: счётчик элементов"
+    },
+    {
+      "type": "text",
+      "content": "Counter(iterable) считает количество каждого элемента. Возвращает словарь {элемент: количество}. most_common(n) — топ-N."
+    },
+    {
+      "type": "code",
+      "content": "from collections import Counter\nnums = [1, 2, 2, 3, 3, 3]\nc = Counter(nums)\nprint(c)  # Counter({3: 3, 2: 2, 1: 1})\nprint(c.most_common(2))  # [(3, 3), (2, 2)]"
+    },
+    {
+      "type": "predict",
+      "code": "from collections import Counter\nc = Counter('hello')\nprint(c['l'])",
+      "question": "Что выведет?",
+      "options": [
+        "1",
+        "2",
+        "0",
+        "None"
+      ],
+      "answer": 1,
+      "explain": "Counter('hello') подсчитывает: h=1, e=1, l=2, o=1. c['l'] = 2."
+    },
+    {
+      "type": "heading",
+      "content": "defaultdict: словарь без KeyError"
+    },
+    {
+      "type": "text",
+      "content": "defaultdict(default_factory) создаёт значения по умолчанию для новых ключей. defaultdict(list) → []. defaultdict(int) → 0."
+    },
+    {
+      "type": "code",
+      "content": "from collections import defaultdict\ngroups = defaultdict(list)\ngroups['admins'].append('V')\ngroups['users'].append('Rex')\nprint(groups['admins'])  # ['V']\nprint(groups['missing'])  # [] — без KeyError"
+    },
+    {
+      "type": "note",
+      "content": "defaultdict(int) удобен для подсчётов: counts[word] += 1 не бросает KeyError для новых слов."
+    },
+    {
+      "type": "predict",
+      "code": "from collections import defaultdict\nd = defaultdict(int)\nd['a'] += 1\nd['a'] += 1\nprint(d['a'])",
+      "question": "Что выведет?",
+      "options": [
+        "0",
+        "1",
+        "2",
+        "Ошибка"
+      ],
+      "answer": 2,
+      "explain": "defaultdict(int) создаёт 0 для новых ключей. d['a'] += 1 дважды: 0 → 1 → 2. Результат: 2."
+    },
+    {
+      "type": "heading",
+      "content": "deque: двусторонняя очередь"
+    },
+    {
+      "type": "text",
+      "content": "deque — двусторонняя очередь. append/appendleft, pop/popleft. Быстрее list для добавления/удаления в начало."
+    },
+    {
+      "type": "code",
+      "content": "from collections import deque\nq = deque([1, 2, 3])\nq.appendleft(0)\nq.append(4)\nprint(list(q))  # [0, 1, 2, 3, 4]\n\nq.pop()\nq.popleft()\nprint(list(q))  # [1, 2, 3]"
+    },
+    {
+      "type": "heading",
+      "content": "namedtuple: именованный кортеж"
+    },
+    {
+      "type": "text",
+      "content": "namedtuple('Name', ['field1', 'field2']) создаёт класс-кортеж с именованными полями. Доступ по имени и по индексу."
+    },
+    {
+      "type": "code",
+      "content": "from collections import namedtuple\nPoint = namedtuple('Point', ['x', 'y'])\np = Point(100, 200)\nprint(p.x)  # 100\nprint(p[0])  # 100\nprint(p)  # Point(x=100, y=200)"
+    },
+    {
+      "type": "warning",
+      "content": "• <b>Counter vs dict</b>: Counter возвращает 0 для несуществующих ключей. dict бросает KeyError.<br>• <b>deque ограниченный</b>: maxlen=N — очередь с фиксированной длиной. Старые элементы удаляются.<br>• <b>namedtuple неизменяем</b>: как и кортеж, неизменяем после создания."
+    },
+    {
+      "type": "warning",
+      "content": "• <b>Counter и отрицательные значения</code>: <code>Counter</code> может хранить отрицательные и нулевые значения, но <code>most_common()</code> их включает.<br>• <b>defaultdict и неизменяемые типы</code>: <code>defaultdict(list)</code> создаёт новый список при первом доступе к ключу. Используйте <code>lambda: 0</code> для счётчиков.<br>• <b>deque как очередь</code>: <code>appendleft</code> и <code>popleft</code> работают за O(1). Для больших очередей используйте <code>deque</code> вместо списка."
+    },
+    {
+      "type": "predict",
+      "code": "from collections import Counter\nc = Counter('mississippi')\nprint(c.most_common(1))",
+      "question": "Что выведет?",
+      "options": [
+        "[('i', 4)]",
+        "[('s', 4)]",
+        "[('p', 2)]",
+        "[]"
+      ],
+      "answer": 0,
+      "explain": "Counter('mississippi'): i=4, s=4, p=2, m=1. most_common(1) возвращает топ-1: [('i', 4)] или [('s', 4)] (оба 4, зависит от порядка)."
+    },
+    {
+      "type": "note",
+      "content": "Counter поддерживает арифметику: c1 + c2 объединяет, c1 - c2 вычитает. Полезно для сравнения распределений."
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t1",
+      "type": "guided",
+      "prompt": "Дополните: создайте Counter из 'hello'. Выведите количество 'l'.",
+      "starter": "from collections import Counter\nc = Counter('hello')\n# print(c['l'])\n",
+      "hints": [
+        "c['l'] — количество символов l",
+        "print(c['l']) — выводит 2"
+      ],
+      "checks": [
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "stdout",
+          "equals": "2"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t2",
+      "type": "from-scratch",
+      "prompt": "Создайте defaultdict(list). Добавьте 'V' в группу 'admins' через append. F-строкой выведите: 'Админ: <list>'.",
+      "starter": "# from collections import defaultdict\ndd = defaultdict(list)\n# Добавьте 'V' в 'admins'\n# Вывод f-строкой\n",
+      "hints": [
+        "dd['admins'].append('V')",
+        "print(f\"Админ: {dd['admins']}\")"
+      ],
+      "checks": [
+        {
+          "kind": "has-fstring"
+        },
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "stdout",
+          "equals": "Админ: ['V']"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t3",
+      "type": "guided",
+      "prompt": "Дополните: создайте deque из [1,2,3]. appendleft(0), append(4). Выведите через list() и print().",
+      "starter": "from collections import deque\nq = deque([1, 2, 3])\n# q.appendleft(0)\n# q.append(4)\n# print(list(q))\n",
+      "hints": [
+        "appendleft(0) добавляет в начало, append(4) — в конец",
+        "print(list(q)) — [0, 1, 2, 3, 4]"
+      ],
+      "checks": [
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "stdout",
+          "equals": "[0, 1, 2, 3, 4]"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t4",
+      "type": "debug",
+      "prompt": "KeyError: dict['new'] падает. Исправьте через defaultdict(int), чтобы counts['new'] += 1 работало.",
+      "starter": "counts = {}\ncounts['new'] += 1\nprint(counts['new'])",
+      "hints": [
+        "defaultdict(int) создаёт 0 для новых ключей",
+        "from collections import defaultdict\ncounts = defaultdict(int)"
+      ],
+      "checks": [
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "stdout",
+          "equals": "1"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t5",
+      "type": "from-scratch",
+      "prompt": "Создайте Counter из слов 'cat dog cat bird cat'. F-строкой выведите: 'Счётчик: <Counter>', затем most_common(2).",
+      "starter": "# Counter из строки со словами\n# Вывод f-строкой\n# most_common(2)\n",
+      "hints": [
+        "from collections import Counter\nwords = 'cat dog cat bird cat'.split()\nc = Counter(words)",
+        "print(f'Счётчик: {c}')"
+      ],
+      "checks": [
+        {
+          "kind": "has-fstring"
+        },
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "has-call",
+          "name": "Counter"
+        },
+        {
+          "kind": "stdout",
+          "equals": "Счётчик: Counter({'cat': 3, 'dog': 1, 'bird': 1})"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    }
+  ],
+  "recap": [
+    "Counter(iterable) считает элементы. most_common(n) — топ-N. Возвращает 0 для новых ключей",
+    "defaultdict(factory) создаёт значения по умолчанию. list → [], int → 0. Нет KeyError",
+    "deque — двусторонняя очередь. appendleft/append, popleft/pop. Быстрее list для начала списка",
+    "namedtuple('Name', ['x', 'y']) — именованный кортеж. Доступ по имени и индексу",
+    "Counter поддерживает арифметику: + объединяет, - вычитает. defaultdict удобен для группировки"
+  ],
+  "quiz": [
+    {
+      "q": "Что вернёт Counter('aab')?",
+      "options": [
+        "Counter({'a': 2, 'b': 1})",
+        "Counter({'b': 1, 'a': 2})",
+        "['a', 'a', 'b']",
+        "{'a': 2, 'b': 1}"
+      ],
+      "answer": 0,
+      "explain": "Counter('aab') считает: a=2, b=1. Возвращает Counter({'a': 2, 'b': 1}). Порядок может варьироваться."
+    },
+    {
+      "q": "Для чего defaultdict(list)?",
+      "options": [
+        "Список по умолчанию",
+        "Избегает KeyError для новых ключей, создаёт []",
+        "Сортировка",
+        "Фильтр"
+      ],
+      "answer": 1,
+      "explain": "defaultdict(list) создаёт пустой список [] для новых ключей. dd['new'].append(x) работает без KeyError."
+    },
+    {
+      "q": "Что быстрее: list.insert(0, x) или deque.appendleft(x)?",
+      "options": [
+        "list",
+        "deque",
+        "одинаково",
+        "list быстрее"
+      ],
+      "answer": 1,
+      "explain": "deque оптимизирован для двусторонних операций. list.insert(0, x) сдвигает все элементы — O(n). deque.appendleft — O(1)."
+    },
+    {
+      "q": "Что возвращает namedtuple?",
+      "options": [
+        "Класс",
+        "Словарь",
+        "Список",
+        "Функция"
+      ],
+      "answer": 0,
+      "explain": "namedtuple возвращает класс, похожий на кортеж. Можно создавать экземпляры: Point = namedtuple('Point', ['x', 'y']); p = Point(1, 2)."
+    }
+  ]
+}

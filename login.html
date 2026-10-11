@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Вход · Praxis Learn</title>
+  <link rel="stylesheet" href="./styles/cyberpunk.css">
+  <link rel="stylesheet" href="./styles/layout.css">
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="auth-page">
+    <div class="auth-box">
+      <h2 class="glitch" data-text="ACCESS PORT">ACCESS PORT</h2>
+
+      <div class="auth-tabs">
+        <button data-tab="login" class="active">Вход</button>
+        <button data-tab="register">Регистрация</button>
+      </div>
+
+      <form id="authForm">
+        <div class="form-group" id="usernameGroup" style="display:none;">
+          <label for="username">Позывной</label>
+          <input type="text" id="username" autocomplete="username" minlength="3">
+        </div>
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" required autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label for="password">Пароль</label>
+          <input type="password" id="password" required minlength="8" autocomplete="current-password">
+        </div>
+        <div class="error-msg" id="err"></div>
+        <button class="btn btn-primary" type="submit" id="submitBtn" style="width:100%; justify-content:center; margin-top:8px;">
+          Подключиться
+        </button>
+      </form>
+
+      <p style="text-align:center; margin-top:20px; color:var(--text-mute); font-size:.8rem; font-family:var(--font-mono);">
+        // Аккаунты и прогресс хранятся в data/db.json рядом с программой
+      </p>
+    </div>
+  </div>
+
+  <div id="toasts"></div>
+
+  <script type="module">
+    import { auth } from './scripts/auth.js';
+    import { toast } from './scripts/app.js';
+
+    let mode = 'login';
+
+    document.querySelectorAll('.auth-tabs button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        mode = btn.dataset.tab;
+        document.querySelectorAll('.auth-tabs button').forEach(b => b.classList.toggle('active', b === btn));
+        document.getElementById('usernameGroup').style.display = mode === 'register' ? 'block' : 'none';
+        document.getElementById('submitBtn').textContent = mode === 'register' ? 'Создать аккаунт' : 'Подключиться';
+        document.getElementById('err').textContent = '';
+      });
+    });
+
+    document.getElementById('authForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const err = document.getElementById('err');
+      const btn = document.getElementById('submitBtn');
+      err.textContent = '';
+      btn.disabled = true;
+
+      try {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+
+        if (mode === 'register') {
+          const username = document.getElementById('username').value;
+          await auth.register({ email, username, password });
+          toast('Аккаунт создан', 'success');
+        } else {
+          await auth.login({ email, password });
+          toast('Подключено', 'success');
+        }
+        location.href = './dashboard.html';
+      } catch (e) {
+        err.textContent = '> ' + e.message;
+        btn.disabled = false;
+      }
+    });
+
+    // Если уже залогинен — редирект
+    auth.current().then(u => { if (u) location.href = './dashboard.html'; });
+  </script>
+</body>
+</html>

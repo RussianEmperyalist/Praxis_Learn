@@ -1,0 +1,307 @@
+{
+  "id": "python-17-oop-inheritance",
+  "title": "Наследование и полиморфизм",
+  "goal": "Создавать дочерние классы через наследование, переопределять методы, использовать super()",
+  "prereq": [
+    "python-16-oop-basics"
+  ],
+  "duration": 19,
+  "theory": [
+    {
+      "type": "hook",
+      "content": "V — базовый шаблон для всех кибернетических агентов. Но есть специальные: шпион, тяжёлый десант. У них свои навыки, но они агенты в общем."
+    },
+    {
+      "type": "heading",
+      "content": "Что такое наследование"
+    },
+    {
+      "type": "text",
+      "content": "Наследование — дочерний класс унаследовал атрибуты и методы родительского. class Child(Parent). Child получает всё от Parent и может переопределять."
+    },
+    {
+      "type": "code",
+      "content": "class Agent:\n    def __init__(self, name):\n        self.name = name\n    def greet(self):\n        return f\"Агент {self.name}\"\n\nclass Spy(Agent):\n    def greet(self):\n        return f\"Тихо. {self.name}\"\n\na = Agent(\"V\")\ns = Spy(\"Ричард\")\nprint(a.greet())\nprint(s.greet())"
+    },
+    {
+      "type": "predict",
+      "code": "class A:\n    def f(self):\n        return 1\nclass B(A):\n    def f(self):\n        return 2\n\nb = B()\nprint(b.f())",
+      "question": "Что выведет этот код?",
+      "options": [
+        "1",
+        "2",
+        "Ошибка",
+        "None"
+      ],
+      "answer": 1,
+      "explain": "B наследуется от A. В B переопределён метод f(), возвращает 2. b.f() вызывает B.f. Результат: 2."
+    },
+    {
+      "type": "heading",
+      "content": "super(): вызов родительского метода"
+    },
+    {
+      "type": "text",
+      "content": "super() вызывает метод родительского класса. Используется в __init__ дочернего для инициализации унаследованных атрибутов: super().__init__(name)."
+    },
+    {
+      "type": "code",
+      "content": "class Agent:\n    def __init__(self, name):\n        self.name = name\n\nclass Spy(Agent):\n    def __init__(self, name, code):\n        super().__init__(name)\n        self.code = code\n\ns = Spy(\"Ричард\", 7)\nprint(s.name)\nprint(s.code)"
+    },
+    {
+      "type": "heading",
+      "content": "Полиморфизм: один интерфейс — разное поведение"
+    },
+    {
+      "type": "text",
+      "content": "Полиморфизм — объекты разных классов обрабатываются одинаково, если имеют общий интерфейс. Перебор списка и вызов метода у каждого объекта."
+    },
+    {
+      "type": "code",
+      "content": "agents = [Agent(\"V\"), Spy(\"Ричард\")]\nfor a in agents:\n    print(a.greet())\n\nprint(isinstance(agents[1], Agent))"
+    },
+    {
+      "type": "predict",
+      "code": "class Animal:\n    def sound(self):\n        return \"звук\"\nclass Cat(Animal):\n    def sound(self):\n        return \"мяу\"\n\nanimals = [Cat(), Animal()]\nfor a in animals:\n    print(a.sound())",
+      "question": "Что выведет этот код?",
+      "options": [
+        "мяу\nзвук",
+        "звук\nмяу",
+        "мяу",
+        "Ошибка"
+      ],
+      "answer": 0,
+      "explain": "animals = [Cat(), Animal()]. Cat.sound() = 'мяу', Animal.sound() = 'звук'. Порядок: мяу, звук."
+    },
+    {
+      "type": "heading",
+      "content": "Переопределение методов"
+    },
+    {
+      "type": "text",
+      "content": "Дочерний класс может переопределить метод родительского. Если нужно вызвать родительскую версию — через super().method()."
+    },
+    {
+      "type": "code",
+      "content": "class Agent:\n    def status(self):\n        return \"боевой\"\n\nclass Elite(Agent):\n    def status(self):\n        parent = super().status()\n        return parent + \" (элитный)\"\n\ne = Elite()\nprint(e.status())  # боевной (элитный)"
+    },
+    {
+      "type": "note",
+      "content": "super() без аргументов работает в Python 3. В Python 2 нужно super(ClassName, self)."
+    },
+    {
+      "type": "heading",
+      "content": "Множественное наследование"
+    },
+    {
+      "type": "text",
+      "content": "Класс может наследоваться от нескольких родителей: class Child(A, B). MRO (Method Resolution Order) определяет порядок поиска методов."
+    },
+    {
+      "type": "code",
+      "content": "class Fly:\n    def move(self):\n        return \"летает\"\n\nclass Swim:\n    def move(self):\n        return \"плывёт\"\n\nclass Duck(Fly, Swim):\n    pass\n\nd = Duck()\nprint(d.move())  # летает — первый в MRO\nprint(Duck.__mro__)"
+    },
+    {
+      "type": "warning",
+      "content": "• <b>Не вызван super()</b>: если __init__ родителя не вызван, родительские атрибуты не инициализируются.<br>• <b>Циклическое наследование</b>: A наследуется от B, B — от A → TypeError.<br>• <b>Глубокая иерархия</b>: более 2-3 уровней — плохой дизайн."
+    },
+    {
+      "type": "warning",
+      "content": "• <b>super() и MRO</code>: при множественном наследовании метод разрешения порядка (MRO) определяет порядок вызова. <code>super()</code> следует использовать вместо прямого обращения к родительскому классу.<br>• <b>Перезапись родительского метода</code>: если вы переопределяете метод, но не вызываете <code>super()</code>, логика родителя будет пропущена.<br>• <b>isinstance vs type</code>: используйте <code>isinstance(obj, Parent)</code> для проверки принадлежности к типу, учитывающей наследование. <code>type(obj) is Parent</code> не учитывает наследников."
+    },
+    {
+      "type": "note",
+      "content": "isinstance(obj, Class) проверяет тип с учётом наследования. isinstance(Spy(), Agent) → True, даже если Spy наследуется от Agent."
+    },
+    {
+      "type": "predict",
+      "code": "class Base:\n    def hello(self):\n        return \"Base\"\nclass Derived(Base):\n    pass\n\nd = Derived()\nprint(d.hello())",
+      "question": "Что выведет этот код?",
+      "options": [
+        "Base",
+        "Derived",
+        "None",
+        "Ошибка"
+      ],
+      "answer": 0,
+      "explain": "Derived наследуется от Base, но не переопределяет hello(). d.hello() вызывает унаследованный Base.hello(). Результат: 'Base'."
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t1",
+      "type": "guided",
+      "prompt": "Дополните: класс HeavyAgent наследуется от Agent, добавляет armor=100 через super().__init__.",
+      "starter": "class Agent:\n    def __init__(self, name):\n        self.name = name\n\nclass HeavyAgent(Agent):\n    def __init__(self, name, armor):\n        super().__init__(name)\n        self.armor = armor\n\n# Создайте h = HeavyAgent(\"Танк\", 100)\n# print(h.name, h.armor)\n",
+      "hints": [
+        "super().__init__(name) инициализирует name из родительского класса",
+        "print(h.name, h.armor) выведет: Танк 100"
+      ],
+      "checks": [
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "stdout",
+          "equals": "Танк 100"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t2",
+      "type": "from-scratch",
+      "prompt": "Создайте базовый класс Weapon с damage=10. Создайте дочерний класс LaserWeapon, переопределяющий damage на 50. Создайте объект и выведите f-строкой: 'Урон: <damage>'.",
+      "starter": "# class Weapon с damage\n# class LaserWeapon(Weapon) с переопределением damage\n# Создайте объект, выведите f-строкой\n",
+      "hints": [
+        "class Weapon: damage = 10\nclass LaserWeapon(Weapon): damage = 50",
+        "w = LaserWeapon()\nprint(f\"Урон: {w.damage}\")"
+      ],
+      "checks": [
+        {
+          "kind": "has-fstring"
+        },
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "stdout",
+          "equals": "Урон: 50"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t3",
+      "type": "guided",
+      "prompt": "Дополните: класс Animal с методом sound() → 'звук'. Класс Dog(Animal) переопределяет sound() → 'лай'. Создайте объект и выведите.",
+      "starter": "class Animal:\n    def sound(self):\n        return \"звук\"\n\nclass Dog(Animal):\n    def sound(self):\n        return \"лай\"\n\n# Создайте объект d = Dog()\n# print(d.sound())\n",
+      "hints": [
+        "Dog переопределяет sound() родительский",
+        "print(d.sound()) выведет: лай"
+      ],
+      "checks": [
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "stdout",
+          "equals": "лай"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t4",
+      "type": "debug",
+      "prompt": "Атрибут name не инициализирован — super().__init__ не вызван. Исправьте дочерний класс.",
+      "starter": "class Agent:\n    def __init__(self, name):\n        self.name = name\n\nclass Spy(Agent):\n    def __init__(self, code):\n        self.code = code\n\ns = Spy(\"V\", 7)\nprint(s.name)",
+      "hints": [
+        "Spy.__init__ принимает name и code, вызывает super().__init__(name)",
+        "s = Spy('V', 7) и s.name будет доступен"
+      ],
+      "checks": [
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "stdout",
+          "equals": "V"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t5",
+      "type": "from-scratch",
+      "prompt": "Создайте класс Vehicle с методом move() → 'движется'. Дочерний Car переопределяет move() → 'едет'. Дочерний Bike переопределяет move() → 'катится'. Создайте объекты, выведите f-строкой: 'Транспорт: <move>'.",
+      "starter": "# class Vehicle с move()\n# class Car(vehicle) и class Bike(vehicle) с переопределением\n# Создайте объекты, выведите f-строкой\n",
+      "hints": [
+        "class Vehicle: def move(self): return 'движется'",
+        "class Car(Vehicle): def move(self): return 'едет'",
+        "c = Car(); print(f\"Транспорт: {c.move}\")"
+      ],
+      "checks": [
+        {
+          "kind": "has-fstring"
+        },
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "stdout",
+          "equals": "Транспорт: едет"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    }
+  ],
+  "recap": [
+    "class Child(Parent) — наследование. Child получает атрибуты и методы Parent автоматически",
+    "super().__init__(args) — вызов конструктора родителя из дочернего класса",
+    "Полиморфизм: объекты разных классов обрабатываются одинаково через общий интерфейс",
+    "Переопределение — дочерний класс заменяет метод родителя. Можно вызвать через super().method()",
+    "isinstance(obj, Class) проверяет тип с учётом наследования — True для дочерних классов"
+  ],
+  "quiz": [
+    {
+      "q": "Что наследует дочерний класс от родительского?",
+      "options": [
+        "Всё: атрибуты и методы",
+        "Только атрибуты",
+        "Только методы",
+        "Ничего"
+      ],
+      "answer": 0,
+      "explain": "Дочерний класс унаследовывает все атрибуты и методы родительского класса. Может переопределять или добавлять новые."
+    },
+    {
+      "q": "Зачем нужен super()?",
+      "options": [
+        "Удаляет родителя",
+        "Вызывает метод родительского класса",
+        "Создаёт объект",
+        "Импортирует модуль"
+      ],
+      "answer": 1,
+      "explain": "super() позволяет вызвать метод родительского класса, обычно в __init__ дочернего, чтобы инициализировать унаследованные атрибуты."
+    },
+    {
+      "q": "Что вернёт: isinstance(Spy(), Agent) если Spy(Animal)?",
+      "options": [
+        "True",
+        "False",
+        "None",
+        "Ошибка"
+      ],
+      "answer": 0,
+      "explain": "isinstance проверяет тип с учётом наследования. Если Spy наследуется от Agent (прямо или косвенно), результат True."
+    },
+    {
+      "q": "Что произойдёт при полиморфизме?",
+      "options": [
+        "Ошибка",
+        "Каждый объект использует свой метод",
+        "Все используют родительский",
+        "Ни один не использует метод"
+      ],
+      "answer": 1,
+      "explain": "Полиморфизм позволяет объектам разных классов использовать один и тот же интерфейс. Каждый объект вызывает свой переопределённый метод, даже если они имеют общего предка."
+    }
+  ]
+}

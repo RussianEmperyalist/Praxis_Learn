@@ -1,0 +1,331 @@
+{
+  "id": "python-09-lists",
+  "title": "Списки",
+  "goal": "Создавать списки, индексировать, срезать, применять методы append/pop, использовать len()",
+  "prereq": [
+    "python-08-functions"
+  ],
+  "duration": 16,
+  "theory": [
+    {
+      "type": "hook",
+      "content": "V управляет кибернетическими агентами. Одного не хватает — добавить в список. Два лишних — убрать. Список хранит любые типы в порядке."
+    },
+    {
+      "type": "heading",
+      "content": "Что такое список"
+    },
+    {
+      "type": "text",
+      "content": "Список (list) — упорядоченная изменяемая коллекция. Элементы в квадратных скобках через запятую. Индекс с 0. Любые типы: числа, строки, даже другие списки."
+    },
+    {
+      "type": "code",
+      "content": "agents = [\"V\", \"Rex\", \"Ghost\"]\nprint(agents[0])   # V — индекс с 0\nprint(agents[-1])  # Ghost — с конца\n\nmixed = [1, \"два\", True, [1, 2, 3]]\nprint(len(mixed))  # 4 — длина списка"
+    },
+    {
+      "type": "heading",
+      "content": "Изменение и срезы"
+    },
+    {
+      "type": "text",
+      "content": "Элемент по индексу можно изменить. Срез [start:stop:step] извлекает подпоследовательность. step опционален."
+    },
+    {
+      "type": "code",
+      "content": "agents = [\"V\", \"Rex\", \"Ghost\"]\nagents[1] = \"Nova\"  # замена\nprint(agents)        # ['V', 'Nova', 'Ghost']\n\n# Срез: от индекса 1 до 3 (не включая)\nprint(agents[1:3])   # ['Nova', 'Ghost']\n\n# Срез с шагом 2\nprint(agents[::2])   # ['V', 'Ghost']"
+    },
+    {
+      "type": "note",
+      "content": "Срез никогда не выходит за границы. agents[5:10] вернёт [], а не ошибку. Полезно для безопасного извлечения."
+    },
+    {
+      "type": "heading",
+      "content": "Методы списков"
+    },
+    {
+      "type": "text",
+      "content": "append() добавляет в конец, pop() удаляет и возвращает по индексу (по умолчанию последний), remove() удаляет по значению. Меняют список in-place."
+    },
+    {
+      "type": "code",
+      "content": "agents = [\"V\"]\nagents.append(\"Rex\")   # ['V', 'Rex']\nremoved = agents.pop()   # ['V'] — удаляет 'Rex'\nprint(removed)           # Rex\n\nagents.append(\"Ghost\")\nagents.remove(\"Ghost\")  # удаляет по значению\nprint(agents)            # ['V']"
+    },
+    {
+      "type": "predict",
+      "code": "nums = [1, 2, 3]\nnums.append(4)\nnums.pop(0)\nprint(nums)",
+      "question": "Что выведет этот код?",
+      "options": [
+        "[2, 3, 4]",
+        "[1, 2, 3, 4]",
+        "[4]",
+        "[1, 2, 3]"
+      ],
+      "answer": 0,
+      "explain": "append(4) → [1, 2, 3, 4]. pop(0) удаляет и возвращает элемент с индексом 0 (число 1). Итог: [2, 3, 4]."
+    },
+    {
+      "type": "heading",
+      "content": "Сортировка и индекс"
+    },
+    {
+      "type": "text",
+      "content": "sort() сортирует in-place, sorted() возвращает новый. index() находит позицию, in проверяет принадлежность. count() считает вхождения."
+    },
+    {
+      "type": "code",
+      "content": "nums = [3, 1, 4, 1, 5]\nnums.sort()              # [1, 1, 3, 4, 5]\nprint(nums.index(4))   # 2 — первый индекс 4\nprint(3 in nums)       # True\nprint(nums.count(1))   # 2 — сколько единиц\n\n# sorted() не меняет исходный\nprint(sorted([3, 1, 2]))  # [1, 2, 3]"
+    },
+    {
+      "type": "note",
+      "content": "sort() возвращает None и меняет список. sorted() возвращает новый список. Частая ошибка: sorted_list = nums.sort() — sorted_list будет None!"
+    },
+    {
+      "type": "heading",
+      "content": "Вложенные списки"
+    },
+    {
+      "type": "text",
+      "content": "Список может содержать другие списки — матрица. Доступ через двойной индекс: matrix[row][col]."
+    },
+    {
+      "type": "code",
+      "content": "matrix = [\n    [1, 2, 3],\n    [4, 5, 6],\n    [7, 8, 9]\n]\nprint(matrix[1])      # [4, 5, 6]\nprint(matrix[1][2])   # 6\n\n# Сумма по строкам\nfor row in matrix:\n    print(sum(row))   # 6, 15, 24"
+    },
+    {
+      "type": "predict",
+      "code": "a = [1, 2, 3]\nb = a\nb.append(4)\nprint(a)",
+      "question": "Что выведет этот код?",
+      "options": [
+        "[1, 2, 3]",
+        "[1, 2, 3, 4]",
+        "Ошибка",
+        "[4]"
+      ],
+      "answer": 1,
+      "explain": "b = a создаёт ссылку на тот же список, а не копию. b.append(4) изменяет список, и a видит изменения. Результат: [1, 2, 3, 4]."
+    },
+    {
+      "type": "heading",
+      "content": "Копирование списка"
+    },
+    {
+      "type": "text",
+      "content": "Чтобы копировать, а не ссылаться: list(spisok), spisok.copy(), или срез [::-1] для копии с разворотом. Ссылка изменяет оригинал."
+    },
+    {
+      "type": "code",
+      "content": "original = [1, 2, 3]\ncopy1 = original.copy()  # копия\ncopy2 = original[:]   # копия через срез\ncopy3 = list(original) # копия через list()\n\ncopy1.append(4)\nprint(original)  # [1, 2, 3] — не изменился\nprint(copy1)     # [1, 2, 3, 4]"
+    },
+    {
+      "type": "warning",
+      "content": "<b>Ссылка vs копия</b>: <code>b = a</code> — это ссылка, а не копия. Изменения через b отражаются на a. Для копии используйте <code>a.copy()</code> или <code>a[:]</code>.<br>• <b>index() и ValueNotFoundError</b>: nums.index(99) если 99 нет — ValueError. Сначала проверяйте in."
+    },
+    {
+      "type": "warning",
+      "content": "• <b>Ссылка на список</b>: <code>b = a</code> не копирует список, а создаёт ссылку. Используйте <code>a.copy()</code> или <code>list(a)</code> для поверхностного копирования, <code>copy.deepcopy()</code> для глубокого.<br>• <b>Список как аргумент по умолчанию</code>: <code>def f(x=[])</code> — изменяемый объект создаётся один раз.<br>• <b>Срезы</code>: <code>a[1:3]</code> не включает индекс 3. <code>a[-1]</code> — последний элемент, <code>a[:-1]</code> — все, кроме последнего."
+    },
+    {
+      "type": "note",
+      "content": "Список — изменяемый тип. Это значит: можно менять элементы, добавлять, удалять. А строка (str) — неизменяемая: с ней нельзя = менять символы."
+    },
+    {
+      "type": "heading",
+      "content": "Создание пустого списка и заполнение"
+    },
+    {
+      "type": "text",
+      "content": "Пустой список: [] или list(). Добавляйте через append() или расширяйте через +=. extend() добавляет все элементы из другого списка."
+    },
+    {
+      "type": "code",
+      "content": "items = []\nitems.append(1)\nitems.append(2)\nprint(items)  # [1, 2]\n\nitems.extend([3, 4, 5])\nprint(items)  # [1, 2, 3, 4, 5]\n\n# Или через +=\nother = [6, 7]\nitems += other\nprint(items)  # [1, 2, 3, 4, 5, 6, 7]"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t1",
+      "type": "guided",
+      "prompt": "Дополните код: создайте список agents с элементами 'V', 'Rex'. Добавьте 'Ghost' через append, удалите через pop и выведите через print().",
+      "starter": "agents = ['V', 'Rex']\n# append('Ghost')\n# pop()\n# print(agents)\n",
+      "hints": [
+        "agents.append('Ghost') — добавляет в конец",
+        "agents.pop() удаляет и возвращает последний элемент"
+      ],
+      "checks": [
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "stdout",
+          "equals": "['V', 'Rex']"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t2",
+      "type": "from-scratch",
+      "prompt": "Создайте список numbers с числами 10, 20, 30, 40, 50. Выведите f-строкой: 'Сумма: <sum>, Длина: <len>'.",
+      "starter": "# Список numbers\n# Вывод f-строкой через sum() и len()\n",
+      "hints": [
+        "numbers = [10, 20, 30, 40, 50]",
+        "print(f\"Сумма: {sum(numbers)}, Длина: {len(numbers)}\")"
+      ],
+      "checks": [
+        {
+          "kind": "has-fstring"
+        },
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "stdout",
+          "equals": "Сумма: 150, Длина: 5"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t3",
+      "type": "guided",
+      "prompt": "Дополните код: список data = [1, 2, 3, 4, 5]. Сделайте срез [1:4] и запишите в sub. Выведите sub.",
+      "starter": "data = [1, 2, 3, 4, 5]\n# Срез [1:4] в переменную sub\n# print(sub)\n",
+      "hints": [
+        "sub = data[1:4] — срез от индекса 1 до 4 (не включая)",
+        "print(sub) — выведет [2, 3, 4]"
+      ],
+      "checks": [
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "stdout",
+          "equals": "[2, 3, 4]"
+        },
+        {
+          "kind": "var",
+          "name": "sub",
+          "type": "list",
+          "equals": "[2, 3, 4]"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t4",
+      "type": "debug",
+      "prompt": "Ошибка: sort() возвращает None. Исправьте, чтобы вывести отсортированный список.",
+      "starter": "nums = [3, 1, 4, 1, 5]\nsorted_nums = nums.sort()\nprint(sorted_nums)",
+      "hints": [
+        "sort() меняет список in-place и возвращает None",
+        "Используйте sorted(nums) или nums.sort() + print(nums)"
+      ],
+      "checks": [
+        {
+          "kind": "has-call",
+          "name": "print"
+        },
+        {
+          "kind": "stdout",
+          "equals": "[1, 1, 3, 4, 5]"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    },
+    {
+      "id": "t5",
+      "type": "from-scratch",
+      "prompt": "Создайте пустой список inventory. Запросите 3 названия товаров через input(), добавьте через append. Выведите f-строкой: 'Товары: <inventory>'.",
+      "starter": "# Пустой список inventory\n# 3 раза input() + append\n# Вывод f-строкой\n",
+      "hints": [
+        "inventory = []\nfor i in range(3):\n    item = input(f\"Товар {i+1}: \")\n    inventory.append(item)",
+        "print(f\"Товары: {inventory}\")"
+      ],
+      "checks": [
+        {
+          "kind": "has-fstring"
+        },
+        {
+          "kind": "has-call",
+          "name": "append"
+        },
+        {
+          "kind": "has-call",
+          "name": "input"
+        },
+        {
+          "kind": "regex-stdout",
+          "pattern": "Товары: .+"
+        },
+        {
+          "kind": "no-error"
+        }
+      ]
+    }
+  ],
+  "recap": [
+    "Список — изменяемый, упорядоченный тип. Индекс с 0. Любые типы включая вложенные списки",
+    "Методы: append() добавляет в конец, pop() удаляет по индексу, remove() удаляет по значению",
+    "Срез [start:stop:step] безопасен — не выходит за границы, возвращает [] если пусто",
+    "Ссылка vs копия: b = a изменяет оригинал. Для копии: a.copy() или a[:]",
+    "sort() — in-place, возвращает None. sorted() — возвращает новый список"
+  ],
+  "quiz": [
+    {
+      "q": "Что выведет: [1, 2, 3][1:2]?",
+      "options": [
+        "[1]",
+        "[2]",
+        "[2, 3]",
+        "[1, 2]"
+      ],
+      "answer": 1,
+      "explain": "Срез [1:2] берёт элемент с индекса 1 (включительно) до 2 (не включительно). Только один элемент: [2]."
+    },
+    {
+      "q": "Что вернёт: [1, 2, 3].sort()?",
+      "options": [
+        "[1, 2, 3]",
+        "None",
+        "[3, 2, 1]",
+        "1"
+      ],
+      "answer": 1,
+      "explain": "sort() сортирует список in-place и возвращает None. Это НЕ создаёт новый список."
+    },
+    {
+      "q": "Что вернёт: 'Ghost' in ['V', 'Rex', 'Ghost']?",
+      "options": [
+        "True",
+        "False",
+        "1",
+        "Ошибка"
+      ],
+      "answer": 0,
+      "explain": "Оператор in проверяет принадлежность элемента списку. 'Ghost' есть в списке → True."
+    },
+    {
+      "q": "Что выведет: a=[1,2]; b=a; b.append(3); print(a)?",
+      "options": [
+        "[1, 2]",
+        "[1, 2, 3]",
+        "Ошибка",
+        "[3]"
+      ],
+      "answer": 1,
+      "explain": "b = a создаёт ссылку, а не копию. b.append(3) изменяет тот же список. a также показывает [1, 2, 3]."
+    }
+  ]
+}
