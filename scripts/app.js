@@ -23,6 +23,7 @@ export async function renderHeader(active) {
   if (!header) return;
 
   header.innerHTML = `
+    <button class="menu-toggle" id="menuToggle" aria-label="Меню" aria-expanded="false">☰</button>
     <a href="./index.html" class="logo" aria-label="Praxis Learn — главная">
       <span class="logo-text">PRAXIS LEARN</span>
     </a>
@@ -45,6 +46,13 @@ export async function renderHeader(active) {
     logoutBtn.addEventListener('click', async () => {
       await auth.logout();
       location.href = './index.html';
+    });
+  }
+
+  const menuToggle = header.querySelector('#menuToggle');
+  if (menuToggle) {
+    menuToggle.addEventListener('click', () => {
+      document.body.classList.toggle('menu-open');
     });
   }
 }

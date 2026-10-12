@@ -15,7 +15,7 @@
 
   --code-bg: #0d1117;
   --code-text: #d5e4ff;
-  --code-comment: #5a6478;
+    --code-comment: #7a8a9e;
 
   --font-sans: 'Rajdhani', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
@@ -29,6 +29,11 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
+
+.app-header, .app-header *, .card, .card *, .content, .content *,
+.sidebar, .sidebar *, .toc, .toc *, .aside-block, .predict-block {
+  overflow-wrap: anywhere;
+}
 
 html, body {
   margin: 0;
@@ -348,12 +353,17 @@ label {
 .predict-option.wrong   { border-color: var(--red);   background: rgba(255, 0, 60, 0.06);   color: var(--red); }
 
 .predict-block .predict-explain {
+  display: none;
   margin-top: 12px;
   padding: 12px 16px;
   background: rgba(0, 240, 255, 0.03);
   border-left: 3px solid var(--accent);
   font-size: 0.9rem;
   border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.predict-block .predict-explain.show {
+  display: block;
 }
 
 /* ===== Recap ===== */

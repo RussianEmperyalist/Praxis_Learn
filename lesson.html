@@ -14,11 +14,7 @@
   <header class="app-header"></header>
 
   <div class="layout lesson-layout">
-    <aside class="sidebar" id="sidebar">
-      <button class="menu-toggle" id="menuToggle" aria-label="Открыть меню" aria-expanded="false">
-        ☰
-      </button>
-    </aside>
+    <aside class="sidebar" id="sidebar"></aside>
     <main class="content" id="lessonContent">
       <div class="card"><span class="spinner"></span> Загрузка урока...</div>
     </main>
@@ -43,7 +39,7 @@
     menuToggle?.addEventListener('click', () => {
       const expanded = menuToggle.getAttribute('aria-expanded') === 'true';
       menuToggle.setAttribute('aria-expanded', !expanded);
-      sidebar.classList.toggle('open', !expanded);
+      document.body.classList.toggle('menu-open', !expanded);
     });
 
     (async () => {
@@ -180,7 +176,7 @@
 
       // Задачи
       const tasks = document.getElementById('tasks');
-      (lesson.tasks || []).forEach((task, i) => {
+      for (const [i, task] of (lesson.tasks || []).entries()) {
         const wrap = document.createElement('div');
         wrap.className = 'task-card';
         wrap.innerHTML = `
@@ -210,9 +206,9 @@
             completedTasks++;
             updateProgress();
             markLessonProgress();
-          }
-        });
-      });
+           }
+         });
+      }
 
       function renderHints(container, hints) {
         if (!hints.length) return;
@@ -223,7 +219,7 @@
             <button class="hint-toggle" aria-expanded="false" aria-controls="hint-${hi}">
               ${isSolution ? 'Показать решение' : 'Подсказка ' + (hi + 1)}
             </button>
-            <div class="hint-content" id="hint-${hi}" ${isSolution ? 'class="hint-content solution"' : ''}>
+            <div class="hint-content${isSolution ? ' solution' : ''}" id="hint-${hi}">
               ${escapeHtml(h)}
             </div>
           `;
@@ -350,7 +346,7 @@
                 </div>
               `).join('')}
             </div>
-            <div class="predict-explain" style="display:none;">
+            <div class="predict-explain">
               <strong>Объяснение:</strong> ${escapeHtml(b.explain)}
             </div>
           </div>
@@ -368,7 +364,7 @@
           opt.classList.add(isCorrect ? 'correct' : 'wrong');
           if (!isCorrect) all[correctIdx].classList.add('correct');
           const expl = container.nextElementSibling;
-          if (expl) expl.style.display = 'block';
+          if (expl) expl.classList.add('show');
         });
         container.querySelectorAll('.predict-option').forEach(opt => {
           opt.addEventListener('keydown', (e) => {
