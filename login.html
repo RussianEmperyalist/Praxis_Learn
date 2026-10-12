@@ -11,11 +11,11 @@
 <body>
   <div class="auth-page">
     <div class="auth-box">
-      <h2 class="glitch" data-text="ACCESS PORT">ACCESS PORT</h2>
+      <h2>ACCESS PORT</h2>
 
       <div class="auth-tabs">
-        <button data-tab="login" class="active">Вход</button>
-        <button data-tab="register">Регистрация</button>
+        <button data-tab="login" class="active" type="button">Вход</button>
+        <button data-tab="register" type="button">Регистрация</button>
       </div>
 
       <form id="authForm">
@@ -31,15 +31,13 @@
           <label for="password">Пароль</label>
           <input type="password" id="password" required minlength="8" autocomplete="current-password">
         </div>
-        <div class="error-msg" id="err"></div>
-        <button class="btn btn-primary" type="submit" id="submitBtn" style="width:100%; justify-content:center; margin-top:8px;">
+        <div class="error-msg" id="err" aria-live="polite"></div>
+        <button class="btn btn-primary" type="submit" id="submitBtn" style="width:100%;">
           Подключиться
         </button>
       </form>
 
-      <p style="text-align:center; margin-top:20px; color:var(--text-mute); font-size:.8rem; font-family:var(--font-mono);">
-        // Аккаунт и прогресс хранятся локально в вашем браузере. Данные не покидают устройство.
-      </p>
+      <p class="auth-hint">Аккаунт и прогресс хранятся локально в вашем браузере. Данные не покидают устройство.</p>
     </div>
   </div>
 
@@ -87,7 +85,6 @@
       }
     });
 
-    // Если уже залогинен — редирект
     auth.current().then(u => { if (u) location.href = './dashboard.html'; });
   </script>
 </body>

@@ -16,7 +16,7 @@
       <div id="courseHeader">
         <div class="card"><span class="spinner"></span> Загрузка...</div>
       </div>
-      <h2 style="margin-top:32px;">// Программа курса</h2>
+      <h2 class="section-title">// Программа курса</h2>
       <div id="lessonList"></div>
     </main>
   </div>
@@ -43,12 +43,15 @@
         const map = new Map(allProgress.map(p => [p.lessonId, p]));
 
         document.title = `${course.title} · Praxis Learn`;
+        const status = course.status || (map.size > 0 ? 'in-progress' : 'not-started');
+        const percent = status === 'completed' ? 100 : status === 'in-progress' ? 30 : 0;
+
         document.getElementById('courseHeader').innerHTML = `
-          <div class="card" style="padding:32px;">
-            <div style="font-size:2.4rem; margin-bottom:8px;">${course.icon}</div>
-            <h1 style="margin:0 0 8px;">${course.title}</h1>
-            <p style="color:var(--text-dim); margin:0 0 16px;">${course.description}</p>
-            <div style="display:flex; gap:12px; align-items:center;">
+          <div class="card course-header-inner">
+            <div class="course-icon">${course.icon}</div>
+            <h1 class="course-title">${course.title}</h1>
+            <p class="course-description">${course.description}</p>
+            <div class="course-meta">
               <span class="badge">${course.level}</span>
               <span class="badge">${idx.lessons.length} уроков</span>
             </div>
@@ -59,17 +62,17 @@
         list.innerHTML = idx.lessons.map((l, i) => {
           const p = map.get(l.id);
           const cls = p?.status === 'completed' ? 'done' : p?.status === 'in-progress' ? 'active' : '';
-          const badge = p?.status === 'completed' ? '<span class="badge done">✓ готово</span>'
-                      : p?.status === 'in-progress' ? '<span class="badge active">в процессе</span>'
-                      : '<span class="badge locked">не начат</span>';
+          const badge = p?.status === 'completed'
+            ? '<span class="badge done">✓ готово</span>'
+            : p?.status === 'in-progress'
+            ? '<span class="badge active">в процессе</span>'
+            : '<span class="badge locked">не начат</span>';
           return `
-            <a href="./lesson.html?course=${courseId}&lesson=${l.id}" class="card" style="display:flex; align-items:center; gap:16px; margin-bottom:10px; text-decoration:none; padding:16px 20px;">
-              <span class="mono" style="color:var(--text-mute); font-size:.9rem; min-width:32px;">${String(i+1).padStart(2,'0')}</span>
-              <div style="flex:1;">
-                <div style="font-family:var(--font-display); color:var(--text); font-size:1.05rem;">${l.title}</div>
-                <div style="font-family:var(--font-mono); font-size:.75rem; color:var(--text-mute); margin-top:2px;">
-                  ${l.summary || ''}
-                </div>
+            <a href="./lesson.html?course=${courseId}&lesson=${l.id}" class="card lesson-item">
+              <div class="lesson-item-num">${String(i + 1).padStart(2, '0')}</div>
+              <div class="lesson-item-content">
+                <div class="lesson-item-title">${l.title}</div>
+                <div class="lesson-item-summary">${l.summary || ''}</div>
               </div>
               ${badge}
             </a>

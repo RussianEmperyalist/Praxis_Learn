@@ -12,11 +12,9 @@ export function toast(message, type = 'info') {
   el.textContent = message;
   host.appendChild(el);
   setTimeout(() => {
-    el.style.transition = 'opacity .3s, transform .3s';
     el.style.opacity = '0';
-    el.style.transform = 'translateX(120%)';
     setTimeout(() => el.remove(), 320);
-  }, 3200);
+  }, 3000);
 }
 
 export async function renderHeader(active) {
@@ -25,8 +23,8 @@ export async function renderHeader(active) {
   if (!header) return;
 
   header.innerHTML = `
-    <a href="./index.html" class="logo">
-      <span class="glitch" data-text="PRAXIS LEARN">PRAXIS LEARN</span>
+    <a href="./index.html" class="logo" aria-label="Praxis Learn — главная">
+      <span class="logo-text">PRAXIS LEARN</span>
     </a>
     <nav>
       <a href="./index.html" class="${active === 'home' ? 'active' : ''}">Курсы</a>
@@ -35,9 +33,9 @@ export async function renderHeader(active) {
     <span class="spacer"></span>
     <div class="user-menu">
       ${user
-        ? `<span class="mono" style="color:var(--cyan); font-size:.85rem;">▸ ${user.username}</span>
-           <button class="btn btn-ghost" id="logoutBtn" style="padding:6px 14px; font-size:.75rem;">Выход</button>`
-        : `<a href="./login.html" class="btn btn-primary" style="padding:6px 16px; font-size:.78rem;">Вход</a>`
+        ? `<span class="user-name" aria-label="Пользователь">▸ ${user.username}</span>
+           <button class="btn btn-ghost btn-sm" id="logoutBtn" aria-label="Выйти">Выход</button>`
+        : `<a href="./login.html" class="btn btn-primary btn-sm">Вход</a>`
       }
     </div>
   `;

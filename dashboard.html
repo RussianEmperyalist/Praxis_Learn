@@ -15,7 +15,7 @@
     <main class="content wide">
       <h1 id="greeting">Загрузка...</h1>
       <div class="stats-grid" id="stats"></div>
-      <h2>// Прогресс по курсам</h2>
+      <h2 class="section-title">// Прогресс по курсам</h2>
       <div id="coursesProgress"></div>
     </main>
   </div>
@@ -34,8 +34,7 @@
       const user = await auth.current();
       if (!user) { location.href = './login.html'; return; }
 
-      document.getElementById('greeting').innerHTML =
-        `> Привет, <span style="color:var(--cyan)">${user.username}</span>`;
+      document.getElementById('greeting').innerHTML = `> Привет, <span class="user-name">${user.username}</span>`;
 
       const courses = await content.getCourses();
       const allProgress = await progress.getAll(user.id);
@@ -51,7 +50,7 @@
         <div class="stat"><div class="value">${totalCompleted}</div><div class="label">Уроков завершено</div></div>
         <div class="stat"><div class="value">${totalInProgress}</div><div class="label">В процессе</div></div>
         <div class="stat"><div class="value">${totalTasks}</div><div class="label">Задач решено</div></div>
-        <div class="stat"><div class="value">${totalQuiz}</div><div class="label">Квизов пройдено</div></div>
+        <div class="stat"><div class="value">${totalQuiz}</div><div class="label">Тестов пройдено</div></div>
       `;
 
       const wrap = document.getElementById('coursesProgress');
@@ -66,16 +65,13 @@
 
         const el = document.createElement('div');
         el.className = 'card';
-        el.style.marginBottom = '16px';
         el.innerHTML = `
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <div class="course-progress-header">
             <div>
-              <h3 style="margin:0;">${c.icon} ${c.title}</h3>
-              <div style="font-family:var(--font-mono); font-size:.8rem; color:var(--text-mute); margin-top:4px;">
-                ${stats.completed} / ${stats.total} уроков · ${stats.percent}%
-              </div>
+              <h3 class="course-progress-title">${c.icon} ${c.title}</h3>
+              <div class="course-progress-meta">${stats.completed} / ${stats.total} уроков · ${stats.percent}%</div>
             </div>
-            <a href="./course.html?id=${c.id}" class="btn btn-ghost" style="padding:8px 18px;">Открыть →</a>
+            <a href="./course.html?id=${c.id}" class="btn btn-ghost btn-sm">Открыть</a>
           </div>
           <div class="progress"><div style="width:${stats.percent}%"></div></div>
         `;

@@ -6,112 +6,172 @@ import { storage } from './storage.js';
  * @param {HTMLElement} mount
  * @param {object} opts { starter, userId, taskId, checks, onPass, currentLessonId }
  */
-export function createPlayground(mount, opts) {
+export async function createPlayground(mount, opts) {
   mount.innerHTML = `
     <div class="playground">
       <div class="playground-header">
-        <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot c"></span></div>
-        <span>PYTHON · SANDBOX</span>
+        <span>Песочница · Python</span>
       </div>
       <div class="playground-body">
-        <textarea spellcheck="false" autocapitalize="off"></textarea>
-        <div class="playground-output">// Вывод появится здесь</div>
+        <div id="editor-mount"></div>
+        <div class="playground-output placeholder">Вывод появится здесь</div>
       </div>
       <div class="playground-actions">
-        <button class="btn btn-primary" data-act="run">▶ Запустить</button>
-        <button class="btn btn-ghost" data-act="reset">↺ Сбросить</button>
-        <span class="status">Готов к запуску</span>
+        <button class="btn btn-primary btn-sm" data-act="check" aria-label="Проверить">✓ Проверить</button>
+        <button class="btn btn-ghost btn-sm" data-act="run" aria-label="Запустить">▶ Запустить</button>
+        <button class="btn btn-ghost btn-sm" data-act="reset" aria-label="Сбросить">↺ Сбросить</button>
+        <span class="status" id="status">Готов к запуску</span>
       </div>
     </div>
   `;
 
-  const ta = mount.querySelector('textarea');
+  const editorMount = mount.querySelector('#editor-mount');
   const out = mount.querySelector('.playground-output');
-  const status = mount.querySelector('.status');
+  const status = mount.querySelector('#status');
+  const checkBtn = mount.querySelector('[data-act="check"]');
   const runBtn = mount.querySelector('[data-act="run"]');
   const resetBtn = mount.querySelector('[data-act="reset"]');
 
-  let firstLine = opts.starter ?? '';
-  ta.value = firstLine;
+  const firstLine = opts.starter ?? '';
+  let codeGetValue = () => firstLine;
+  let editor = null;
+  let saveT = null;
 
-  // Подгружаем черновик
+  try {
+    const { EditorView, keymap, EditorView: EV } = await import('https://esm.sh/@codemirror/view@6');
+    const { EditorState } = await import('https://esm.sh/@codemirror/state@6');
+    const { python } = await import('https://esm.sh/@codemirror/lang-python@6');
+    const { indentWithTab } = await import('https://esm.sh/@codemirror/commands@6');
+
+    editor = new EditorView({
+      state: EditorState.create({
+        doc: firstLine || '# напишите ваш код здесь',
+        extensions: [
+          EditorState.tabIndent,
+          indentWithTab,
+          python(),
+          EditorView.lineWrapping,
+          keymap.of([
+            { key: 'Mod-Enter', run: () => { executeAndRun(); return true; } },
+          ]),
+          EditorView.updateListener.of((v) => {
+            if (v.docChanged && opts.userId && opts.taskId) {
+              clearTimeout(saveT);
+              saveT = setTimeout(() => {
+                storage.saveDraft(opts.userId, opts.taskId, v.state.doc.toString());
+              }, 400);
+            }
+          }),
+          EditorView.theme({
+            '&': {
+              backgroundColor: 'var(--code-bg)',
+              color: 'var(--code-text)',
+              fontSize: '0.92rem',
+              lineHeight: '1.55',
+            },
+            '&.cm-focused': { outline: 'none' },
+            '.cm-gutter': {
+              backgroundColor: 'var(--surface)',
+              color: 'var(--text-muted)',
+              fontFamily: 'var(--font-mono)',
+              fontSize: '0.85rem',
+              padding: '0 6px',
+            },
+            '.cm-activeLine': { backgroundColor: 'rgba(0, 240, 255, 0.04)' },
+            '.cm-activeLineGutter': { backgroundColor: 'var(--surface-2)' },
+            '.cm-cursor': { borderLeft: '2px solid var(--accent)' },
+            '.cm-scroller': { fontFamily: 'var(--font-mono)' },
+            '.cm-line': { lineHeight: '1.55' },
+            '&.cm-focused .cm-scroller': { outline: 'none' },
+          }, { dark: true }),
+        ],
+      }),
+      parent: editorMount,
+    });
+
+    codeGetValue = () => editor.state.doc.toString();
+  } catch (e) {
+    console.warn('CodeMirror 6 failed to load, falling back to textarea:', e);
+
+    editorMount.innerHTML = '<textarea spellcheck="false" autocapitalize="off"></textarea>';
+    const ta = editorMount.querySelector('textarea');
+    ta.value = firstLine || '# напишите ваш код здесь';
+    codeGetValue = () => ta.value;
+
+    ta.addEventListener('input', () => {
+      clearTimeout(saveT);
+      saveT = setTimeout(() => {
+        if (opts.userId && opts.taskId) {
+          storage.saveDraft(opts.userId, opts.taskId, ta.value);
+        }
+      }, 400);
+    });
+
+    ta.addEventListener('keydown', (e) => {
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const s = ta.selectionStart, end = ta.selectionEnd;
+        ta.value = ta.value.slice(0, s) + '    ' + ta.value.slice(end);
+        ta.selectionStart = ta.selectionEnd = s + 4;
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        executeAndRun();
+      }
+    });
+  }
+
+  // Load draft
   if (opts.userId && opts.taskId) {
     storage.getDraft(opts.userId, opts.taskId).then(code => {
-      if (code) ta.value = code;
+      if (!code || !editor) return;
+      editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: code } });
     }).catch(() => {});
   }
 
-  // Автосохранение
-  let saveT = null;
-  ta.addEventListener('input', () => {
-    clearTimeout(saveT);
-    saveT = setTimeout(() => {
-      if (opts.userId && opts.taskId) {
-        storage.saveDraft(opts.userId, opts.taskId, ta.value);
-      }
-    }, 400);
-  });
-
-  // Tab = 4 пробела
-  ta.addEventListener('keydown', (e) => {
-    if (e.key === 'Tab') {
-      e.preventDefault();
-      const s = ta.selectionStart, end = ta.selectionEnd;
-      ta.value = ta.value.slice(0, s) + '    ' + ta.value.slice(end);
-      ta.selectionStart = ta.selectionEnd = s + 4;
-    }
-  });
-
   function setStatus(text, cls = '') {
     status.textContent = text;
-    status.style.color = cls;
-  }
-
-  function print(text, cls = '') {
-    out.innerHTML = cls ? `<span class="${cls}">${escapeHtml(text)}</span>` : escapeHtml(text);
+    status.className = 'status';
+    if (cls) status.classList.add(cls);
   }
 
   function escapeHtml(s) {
-    return String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
   }
 
-  async function run() {
+  async function execute() {
+    const code = codeGetValue();
     runBtn.disabled = true;
-    setStatus('Исполняется...', 'var(--yellow)');
-    print('', '');
+    checkBtn.disabled = true;
+    setStatus('Исполняется...', 'warning');
+    out.classList.remove('placeholder');
+
     try {
-      const { stdout, stderr, var_info } = await runPython(ta.value);
+      const { stdout, stderr, var_info } = await runPython(code);
       let html = '';
       if (stdout) html += `<span class="ok">${escapeHtml(stdout)}</span>`;
       if (stderr) html += (html ? '\n' : '') + `<span class="err">${escapeHtml(stderr)}</span>`;
-      out.innerHTML = html || '<span style="color:var(--text-mute)">// пусто</span>';
-
-      const checks = normalizeChecks(opts);
-      const passed = evaluateChecks(checks, ta.value, stdout, stderr, var_info);
-
-      if (checks.length > 0) {
-        if (passed) {
-          setStatus('✓ Задача решена', 'var(--green)');
-          if (opts.userId && opts.taskId) {
-            storage.setProgress(opts.userId, opts.currentLessonId, {
-              tasks: { [opts.taskId]: { passed: true, at: Date.now() } }
-            }).then(() => opts.onPass?.());
-          }
-        } else {
-          setStatus('✗ Проверки не пройдены', 'var(--red)');
-        }
-      } else {
-        setStatus('Готово', 'var(--green)');
-      }
+      out.innerHTML = html || '';
+      return { stdout, stderr, var_info };
     } catch (err) {
-      setStatus('Ошибка', 'var(--red)');
-      print(err.message, 'err');
+      out.innerHTML = `<span class="err">${escapeHtml(err.message)}</span>`;
+      return null;
     } finally {
       runBtn.disabled = false;
+      checkBtn.disabled = false;
     }
   }
 
-  function normalizeChecks(opts) {
+  function executeAndRun() {
+    return execute().then(() => {
+      setStatus('Готово', '');
+    });
+  }
+
+  function normalizeChecks() {
     if (opts.checks && opts.checks.length) return opts.checks;
     if (opts.tests && opts.tests.length) {
       const converted = opts.tests.map(t => ({
@@ -130,52 +190,93 @@ export function createPlayground(mount, opts) {
     const normStdout = (stdout || '').replace(/\s+$/, '');
     const hasError = stderr && stderr.trim() !== '';
 
-    return checks.every(check => {
+    return checks.map(check => {
       switch (check.kind) {
         case 'no-error':
-          return !hasError;
+          return { pass: !hasError, expected: 'без ошибок', actual: hasError ? 'ошибка' : 'ок' };
         case 'stdout':
-          if (check.equals == null) return true;
-          return normStdout === String(check.equals).replace(/\s+$/, '');
+          if (check.equals == null) return { pass: true, expected: 'stdout', actual: 'ок' };
+          const pass = normStdout === String(check.equals).replace(/\s+$/, '');
+          return { pass, expected: '"' + check.equals + '"', actual: normStdout };
         case 'regex-stdout':
-          if (!check.pattern) return true;
-          return new RegExp(check.pattern, 'm').test(stdout || '');
+          if (!check.pattern) return { pass: true, expected: 'regex', actual: 'ок' };
+          const rpass = new RegExp(check.pattern, 'm').test(stdout || '');
+          return { pass: rpass, expected: 'паттерн ' + check.pattern, actual: normStdout };
         case 'var':
           const v = varInfo[check.name];
-          if (!v) return false;
-          if (check.type && v.type !== check.type) return false;
-          if (check.equals != null && v.repr !== String(check.equals)) return false;
-          return true;
+          if (!v) return { pass: false, expected: 'переменная ' + check.name, actual: 'не найдена' };
+          if (check.type && v.type !== check.type) return { pass: false, expected: 'тип ' + check.type, actual: v.type };
+          if (check.equals != null) {
+            const vpass = v.repr === String(check.equals);
+            return { pass: vpass, expected: '"' + check.equals + '"', actual: v.repr };
+          }
+          return { pass: true, expected: 'переменная ' + check.name, actual: 'ок' };
         case 'var-exists':
-          return !!varInfo[check.name];
+          return { pass: !!varInfo[check.name], expected: 'существует ' + check.name, actual: varInfo[check.name] ? 'да' : 'нет' };
         case 'has-call':
-          if (!check.name) return true;
-          return new RegExp('\\b' + check.name + '\\s*\\(').test(code);
+          if (!check.name) return { pass: true, expected: 'has-call', actual: 'ок' };
+          const cp = new RegExp('\\b' + check.name + '\\s*\\(').test(code);
+          return { pass: cp, expected: 'вызов ' + check.name + '()', actual: cp ? 'да' : 'нет' };
         case 'has-fstring':
-          return /f["']/.test(code);
+          const fp = /f["']/.test(code);
+          return { pass: fp, expected: 'f-строка', actual: fp ? 'да' : 'нет' };
         case 'has-keyword':
-          if (!check.keyword) return true;
-          return new RegExp('\\b' + check.keyword + '\\b').test(code);
+          if (!check.keyword) return { pass: true, expected: 'has-keyword', actual: 'ок' };
+          const kp = new RegExp('\\b' + check.keyword + '\\b').test(code);
+          return { pass: kp, expected: 'ключевое слово ' + check.keyword, actual: kp ? 'да' : 'нет' };
         default:
-          return true;
+          return { pass: true, expected: 'неизвестно', actual: 'ок' };
       }
     });
   }
 
-  runBtn.addEventListener('click', run);
-  resetBtn.addEventListener('click', () => {
-    ta.value = firstLine;
-    out.textContent = '// Вывод появится здесь';
-    setStatus('Готов к запуску');
-  });
+  checkBtn.addEventListener('click', async () => {
+    const result = await execute();
+    if (!result) {
+      setStatus('✗ Ошибка выполнения', 'err');
+      return;
+    }
 
-  // Ctrl+Enter — запуск
-  ta.addEventListener('keydown', (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-      e.preventDefault();
-      run();
+    const { stdout, stderr, var_info } = result;
+    const checks = normalizeChecks();
+
+    if (checks.length === 0) {
+      setStatus('Готово', '');
+      return;
+    }
+
+    const results = evaluateChecks(checks, codeGetValue(), stdout, stderr, var_info);
+    const allPass = results.every(r => r.pass);
+
+    if (allPass) {
+      setStatus('✓ Верно', 'ok');
+      if (opts.userId && opts.taskId) {
+        storage.setProgress(opts.userId, opts.currentLessonId, {
+          tasks: { [opts.taskId]: { passed: true, at: Date.now() } }
+        }).then(() => opts.onPass?.());
+      }
+    } else {
+      const failed = results.filter(r => !r.pass);
+      const first = failed[0];
+      const detail = 'Ожидалось: ' + first.expected + ', получено: ' + (first.actual || '—');
+      setStatus('✗ ' + detail, 'err');
     }
   });
 
-  return { run };
+  runBtn.addEventListener('click', async () => {
+    const result = await execute();
+    if (result) setStatus('Готово', '');
+  });
+
+  resetBtn.addEventListener('click', () => {
+    if (editor) {
+      editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: firstLine || '# напишите ваш код здесь' } });
+    }
+    out.innerHTML = '';
+    out.classList.add('placeholder');
+    out.textContent = 'Вывод появится здесь';
+    setStatus('Готов к запуску');
+  });
+
+  return { run: execute };
 }

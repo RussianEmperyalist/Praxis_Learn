@@ -4,35 +4,34 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Praxis Learn — Изучай код как нетраннер</title>
-  <meta name="theme-color" content="#05070a">
+  <meta name="theme-color" content="#0a0e14">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./styles/cyberpunk.css">
   <link rel="stylesheet" href="./styles/layout.css">
-  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <script src="./js/highlighter.js" defer></script>
 </head>
 <body>
   <header class="app-header"></header>
 
   <section class="hero">
-    <h1 class="glitch" data-text="> SYSTEM ONLINE">> SYSTEM ONLINE</h1>
-    <p class="subtitle">// платформа для изучения Python · Git · DevOps до уровня Junior+</p>
+    <h1 class="hero-title">> SYSTEM ONLINE</h1>
+    <p class="subtitle">Платформа для изучения Python, Git и DevOps до уровня Junior+</p>
     <div class="cta">
-      <a href="#courses" class="btn btn-primary">Начать обучение →</a>
-      <a href="./login.html" class="btn btn-ghost">Войти в систему</a>
+      <a href="#courses" class="btn btn-primary">Начать обучение</a>
+      <a href="./login.html" class="btn btn-ghost">Войти</a>
     </div>
   </section>
 
-  <h2 style="text-align:center; padding-top:20px;">// Доступные модули</h2>
+  <h2 class="section-title">// Доступные модули</h2>
   <div class="cards-grid" id="coursesGrid">
-    <div class="card course-card"><span class="spinner"></span> Загрузка...</div>
+    <div class="card"><span class="spinner"></span> Загрузка...</div>
   </div>
 
-  <footer style="text-align:center; padding:60px 24px 40px; color:var(--text-mute); font-family:var(--font-mono); font-size:.78rem;">
-    PRAXIS LEARN v0.1 · данные хранятся локально в <code>data/db.json</code><br>
+  <footer class="footer">
+    <p>PRAXIS LEARN v0.1 · данные хранятся локально в <code>data/db.json</code></p>
   </footer>
 
   <div id="toasts"></div>
