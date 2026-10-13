@@ -1,0 +1,260 @@
+{
+  "id": "git-03-commit",
+  "title": "Коммиты и сообщения",
+  "goal": "Освоить создание коммитов, понять что попадает в commit, использовать --amend",
+  "prereq": ["git-02-status-add"],
+  "duration": 14,
+  "theory": [
+    {
+      "type": "hook",
+      "content": "Коммит — это снимок вашего проекта в определённый момент времени. Как фото, только вместо людей — файлы. Каждый коммит имеет уникальный хеш, автора и сообщение."
+    },
+    {
+      "type": "heading",
+      "content": "Что на самом деле хранит коммит"
+    },
+    {
+      "type": "text",
+      "content": "Коммит содержит:"
+    },
+    {
+      "type": "code",
+      "content": "- Хеш (7-символьный идентификатор, напр. a1b2c3d)\n- Сообщение (commit message)\n- Автор и email\n- Снимок файлов (file tree) — НЕ изменения, а полный снимок\n- Хеш родительского коммита (parent)"
+    },
+    {
+      "type": "text",
+      "content": "Важно: Git хранит не <b>разницу</b> между версиями, а <b>полный снимок</b> при каждом коммите. Это эффективнее, чем кажется — Git использует ссылки и сжатие."
+    },
+    {
+      "type": "predict",
+      "code": "$ git commit -m \"add login\"",
+      "question": "Если вы ничего не добавили через git add, что случится?",
+      "options": [
+        "Коммит создастся с пустыми файлами",
+        "Git создаст коммит и выведет предупреждение",
+        "Ошибка: nothing to commit",
+        "Git откроет редактор для ввода сообщения"
+      ],
+      "answer": 2,
+      "explain": "Без git add индекс (staged) пуст. Git не может создать коммит и выдаёт: 'nothing to commit, working tree clean'."
+    },
+    {
+      "type": "heading",
+      "content": "Создание коммита: пошаговый процесс"
+    },
+    {
+      "type": "code",
+      "content": "$ git add login.py\n$ git status\nOn branch main\nChanges to be committed:\n  new file:   login.py\n$ git commit -m \"add login form\""
+    },
+    {
+      "type": "tip",
+      "content": "Всегда смотрите git status перед коммитом. Это помогает убедиться, что вы коммитите именно то, что задумали."
+    },
+    {
+      "type": "warning",
+      "content": "• <b>Коммит без -m</b>: <code>git commit</code> без <code>-m</code> откроет ваш редактор. Если редактор не настроен — ошибка.<br>• <b>Пустой коммит</b>: если staged пуст, коммит не создаётся. Используйте <code>--allow-empty</code> только если действительно нужно."
+    },
+    {
+      "type": "heading",
+      "content": "Хорошие и плохие сообщения коммитов"
+    },
+    {
+      "type": "text",
+      "content": "Сообщение коммита должно отвечать на вопрос: «Что и зачем изменено?» Плохо:"
+    },
+    {
+      "type": "code",
+      "content": "# ПЛОХО:\ngit commit -m \"fix\"\ngit commit -m \"update\"\ngit commit -m \"done\"\n\n# ХОРОШО:\ngit commit -m \"fix: handle null in user lookup\"\ngit commit -m \"add login form\"\ngit commit -m \"refactor: extract validation to separate module\""
+    },
+    {
+      "type": "note",
+      "content": "Соглашение Conventional Commits: тип действия + краткое описание. Типы: <code>feat:</code>, <code>fix:</code>, <code>refactor:</code>, <code>docs:</code>, <code>style:</code>, <code>test:</code>."
+    },
+    {
+      "type": "predict",
+      "code": "$ git log --oneline",
+      "question": "После трёх коммитов с сообщениями 'init', 'add auth', 'fix typo' — что покажет git log --oneline?",
+      "options": [
+        "Одну строку с последним коммитом",
+        "Три строки с хешами и сообщениями в обратном порядке",
+        "Ошибку, т.к. --oneline не поддерживается",
+        "Пустой вывод"
+      ],
+      "answer": 1,
+      "explain": "git log перечисляет все коммиты в обратном хронологическом порядке (новые сверху). --oneline показывает короткий формат: хеш и первое слово сообщения."
+    },
+    {
+      "type": "heading",
+      "content": "git commit --amend: исправить последний коммит"
+    },
+    {
+      "type": "text",
+      "content": "Сделали коммит, забыли добавить файл? Используйте <code>--amend</code> — команда заменяет последний коммит новым."
+    },
+    {
+      "type": "code",
+      "content": "$ git add forgotten.txt\n$ git commit --amend -m \"init + forgotten.txt\"\n[main abcd123] init + forgotten.txt\n 2 files changed, 3 insertions(+)"
+    },
+    {
+      "type": "tip",
+      "content": "Никогда не используйте --amend для уже запушенных коммитов! Это нарушит историю для остальных участников."
+    },
+    {
+      "type": "warning",
+      "content": "• <b>amend без staged</b>: если вы не добавили новые файлы, --amend изменит только сообщение.<br>• <b>amend в shared ветке</b>: если коммит уже отправлен в remote, --amend создаст конфликт для коллег."
+    },
+    {
+      "type": "heading",
+      "content": "git log: полезные флаги"
+    },
+    {
+      "type": "code",
+      "content": "$ git log --oneline       # короткий формат\n$ git log -3              # последние 3 коммита\n$ git log --author \"alice\"  # по автору\n$ git log --since=2024-01  # с определённой даты"
+    },
+    {
+      "type": "predict",
+      "code": "$ git log --oneline -1",
+      "question": "Что покажет команда git log --oneline -1 после трёх коммитов?",
+      "options": [
+        "Ошибку: слишком мало коммитов",
+        "Только последний (самый новый) коммит",
+        "Все три коммита в коротком формате",
+        "Пустой вывод"
+      ],
+      "answer": 1,
+      "explain": "Флаг -1 ограничивает вывод одним коммитом — самым последним (HEAD). Это удобно, чтобы быстро посмотреть, что закоммичено."
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t1",
+      "type": "git",
+      "prompt": "Инициализируй репозиторий, добавь файл README.md в индекс и закоммить с сообщением \"initial project\".",
+      "starter": "",
+      "hints": [
+        "git init → git add README.md → git commit -m \"initial project\"",
+        "Сообщение коммита должно содержать 'initial project'"
+      ],
+      "checks": [
+        { "kind": "git-command-used", "command": "git add" },
+        { "kind": "git-command-used", "command": "git commit" },
+        { "kind": "git-commit-message", "contains": "initial project" }
+      ]
+    },
+    {
+      "id": "t2",
+      "type": "git",
+      "prompt": "Сделай коммит с понятным сообщением, содержащим слово \"docs\".",
+      "starter": "",
+      "hints": [
+        "Используйте git add для файла, затем git commit -m \"docs: ...\"",
+        "Сообщение должно содержать слово 'docs'"
+      ],
+      "checks": [
+        { "kind": "git-commits-count", "equals": 1 },
+        { "kind": "git-commit-message", "contains": "docs" },
+        { "kind": "git-command-used", "command": "git commit" }
+      ]
+    },
+    {
+      "id": "t3",
+      "type": "git",
+      "prompt": "Закоммить с сообщением \"add feature\" и сразу проверь лог через git log --oneline.",
+      "starter": "",
+      "hints": [
+        "git add file → git commit -m \"add feature\" → git log --oneline",
+        "git log покажет ваш коммит"
+      ],
+      "checks": [
+        { "kind": "git-commits-count", "equals": 1 },
+        { "kind": "git-commit-message", "contains": "add feature" },
+        { "kind": "git-command-used", "command": "git log" }
+      ]
+    },
+    {
+      "id": "t4",
+      "type": "git",
+      "prompt": "Ты сделал коммит с сообщением \"wip\", но забыл добавить important.py. Исправь последний коммит — добавь файл и поправь сообщение на \"wip + important\".",
+      "starter": "",
+      "hints": [
+        "Сначала: git add important.py",
+        "Затем: git commit --amend -m \"wip + important\"",
+        "Проверь: в коммите должен быть important.py"
+      ],
+      "checks": [
+        { "kind": "git-command-used", "command": "git commit" },
+        { "kind": "git-commit-message", "contains": "important" },
+        { "kind": "git-file-in-commit", "file": "important.py" }
+      ]
+    },
+    {
+      "id": "t5",
+      "type": "git",
+      "prompt": "init → добавь config.py в индекс → закоммить как \"add config\" → добавь utils.py → исправь коммит через --amend, сообщение \"add config and utils\".",
+      "starter": "",
+      "hints": [
+        "git init → git add config.py → git commit -m \"add config\"",
+        "git add utils.py → git commit --amend -m \"add config and utils\""
+      ],
+      "checks": [
+        { "kind": "git-command-used", "command": "git commit" },
+        { "kind": "git-commits-count", "equals": 1 },
+        { "kind": "git-commit-message", "contains": "config and utils" },
+        { "kind": "git-file-in-commit", "file": "utils.py" }
+      ]
+    }
+  ],
+  "recap": [
+    "Коммит создаётся из staged-файлов: сначала git add, потом git commit -m \"сообщение\"",
+    "Сообщение коммита должно быть осмысленным: 'fix:', 'add:', 'docs:'",
+    "git log показывает историю коммитов; --oneline для краткого формата",
+    "git commit --amend заменяет последний коммит — используйте чтобы добавить забытое или поправить сообщение",
+    "Никогда не --amend на уже запушенный коммит"
+  ],
+  "quiz": [
+    {
+      "q": "Что произойдёт при git commit без git add?",
+      "options": [
+        "Создаст пустой коммит",
+        "Добавит все файлы автоматически",
+        "Ошибка 'nothing to commit'",
+        "Откроет редактор для выбора файлов"
+      ],
+      "answer": 2,
+      "explain": "Без git add индекс пуст, Git не знает что коммитить. Ошибка: 'nothing to commit, working tree clean'."
+    },
+    {
+      "q": "Для чего нужен --amend?",
+      "options": [
+        "Добавить все файлы в индекс",
+        "Заменить последний коммит новым содержимым",
+        "Удалить последний коммит",
+        "Переключиться на другую ветку"
+      ],
+      "answer": 1,
+      "explain": "--amend создаёт новый коммит, заменяющий последний. Удобно для исправления сообщения или добавления забытых файлов."
+    },
+    {
+      "q": "Что хранит каждый коммит в Git?",
+      "options": [
+        "Только изменения (diff) от предыдущего коммита",
+        "Полный снимок всех файлов проекта",
+        "Список удалённых файлов",
+        "Только сообщение и хеш"
+      ],
+      "answer": 1,
+      "explain": "Git хранит полные снимки файлов при каждом коммите, а не diff. Это делает ветки и checkout быстрыми."
+    },
+    {
+      "q": "Можно ли использовать --amend на уже опубликованный коммит?",
+      "options": [
+        "Да, это безопасно",
+        "Только если никто не работает с веткой",
+        "Нет, это нарушит историю для коллег",
+        "Только в тестовых ветках"
+      ],
+      "answer": 2,
+      "explain": "Если коммит уже отправлен в remote и другие коллеги его получили, --amend создаст конфликт истории. Используйте обычный коммит вместо --amend для опубликованных коммитов."
+    }
+  ]
+}

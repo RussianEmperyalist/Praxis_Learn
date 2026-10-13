@@ -1,5 +1,19 @@
 {
   "lessons": [
-    { "id": "01-intro", "title": "Что такое Git", "summary": "История, зачем нужен, установка, первая настройка" }
+    { "id": "01-intro", "title": "Что такое Git", "summary": "История, зачем нужен, установка, первая настройка" },
+    { "id": "02-status-add", "title": "Статус и добавление файлов", "summary": "Три состояния файлов, git status, git add, .gitignore" },
+    { "id": "03-commit", "title": "Коммиты и сообщения", "summary": "Создание коммитов, хорошие сообщения, git commit --amend" },
+    { "id": "04-diff", "title": "Просмотр изменений", "summary": "git diff, git diff --staged, git show, git log -p" },
+    { "id": "05-branches", "title": "Ветвление и переключение", "summary": "Создание, удаление и переключение веток, detached HEAD" },
+    { "id": "06-merge", "title": "Слияние веток", "summary": "Fast-forward, 3-way merge, разрешение конфликтов" },
+    { "id": "07-remote", "title": "Работа с удалёнными репозиториями", "summary": "remote, push, tracking, fetch" },
+    { "id": "08-fetch-pull", "title": "Fetch и pull", "summary": "git fetch, git pull, pull --rebase" },
+    { "id": "09-pr", "title": "Pull Request workflow", "summary": "Feature branch, PR, merge strategies, branch protection" },
+    { "id": "10-rebase", "title": "Rebase: линейная история", "summary": "git rebase, интерактивный rebase, конфликты" },
+    { "id": "11-cherry-tag", "title": "Cherry-pick, tag, revert", "summary": "Перенос коммитов, метки версий, откат изменений" },
+    { "id": "12-stash", "title": "Stash: временное сохранение", "summary": "git stash, pop, apply, drop, list" },
+    { "id": "13-history", "title": "Изменение истории", "summary": "git reset (soft/mixed/hard), reflog, revert" },
+    { "id": "14-workflow", "title": "Git workflow", "summary": "Git Flow vs Trunk-based development" },
+    { "id": "15-gitignore", "title": ".gitignore: управление исключениями", "summary": "Паттерны, global ignore, git check-ignore" }
   ]
 }

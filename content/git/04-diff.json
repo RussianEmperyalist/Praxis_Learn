@@ -1,0 +1,298 @@
+{
+  "id": "git-04-diff",
+  "title": "Просмотр изменений",
+  "goal": "Освоить git diff, git diff --staged, git show для анализа изменений",
+  "prereq": ["git-03-commit"],
+  "duration": 11,
+  "theory": [
+    {
+      "type": "hook",
+      "content": "Вы сделали 5 изменений в коде. Где именно? Что добавлено, а что удалено? Git не просто хранит снимки — он тоже умеет показывать, что изменилось между версиями."
+    },
+    {
+      "type": "heading",
+      "content": "git diff: что изменилось в working"
+    },
+    {
+      "type": "text",
+      "content": "Команда git diff показывает изменения в рабочей директории по сравнению с индексом. То есть — что вы поменяли, но ещё не добавили в staged."
+    },
+    {
+      "type": "code",
+      "content": "$ git diff\nindex 3d3e3cb..e4a9f3c 100644\n--- a/app.py\n+++ b/app.py\n@@ -1,5 +1,6 @@\n def greet(name):\n-    print(f'Hello, {name}')\n+    print(f'Hello, {name}!')\n+    return True\n\ndef main():\n    greet('World')"
+    },
+    {
+      "type": "predict",
+      "code": "$ git add app.py && git diff",
+      "question": "После git add app.py — что покажет git diff?",
+      "options": [
+        "Покажет изменения в app.py",
+        "Ничего не покажет — изменения уже в индексе",
+        "Ошибку staged file conflict",
+        "Покажет diff между индексом и HEAD"
+      ],
+      "answer": 1,
+      "explain": "git diff без аргументов показывает diff между working и индексом. После git add изменения попали в индекс, working больше не отличается. diff становится пустым."
+    },
+    {
+      "type": "heading",
+      "content": "git diff --staged: что попадёт в коммит"
+    },
+    {
+      "type": "text",
+      "content": "Команда git diff --staged (или --cached) показывает изменения между индексом и последним коммитом (HEAD). То есть — что выбирается для следующего коммита."
+    },
+    {
+      "type": "code",
+      "content": "$ git diff --staged\ncommit a1b2c3d4e5f6...\nAuthor: Dev <dev@example.com>\nDate:   Mon Oct 12\n\n    add login form\n\ndiff --git a/login.py b/login.py\nnew file mode 100644\nindex 0000001..e69de29\n--- /dev/null\n+++ b/login.py\n@@ -0,0 +1 @@\n+def login(): pass"
+    },
+    {
+      "type": "tip",
+      "content": "git show HEAD покажет diff и метаданные последнего коммита. git show HEAD~1 — предпоследнего."
+    },
+    {
+      "type": "heading",
+      "content": "Как читать diff: символы +, -, @@"
+    },
+    {
+      "type": "text",
+      "content": "В выводе diff есть три ключевых символа:"
+    },
+    {
+      "type": "code",
+      "content": "+ (плюс) — строка добавлена\n- (минус) — строка удалена\n@@ -1,5 +1,6 @@ — хедер hunk:\n  -1,5 = 5 строк, начиная с 1 в старом файле\n  +1,6 = 6 строк, начиная с 1 в новом файле"
+    },
+    {
+      "type": "warning",
+      "content": "• git diff без аргументов показывает только unstaged изменения.\n• Без --staged вы не увидите, что уже добавлено в индекс."
+    },
+    {
+      "type": "note",
+      "content": "Всегда проверяйте git diff --staged перед коммитом. Это помогает не закоммитить лишнее."
+    },
+    {
+      "type": "predict",
+      "code": "$ git diff HEAD~1 HEAD",
+      "question": "Что покажет git diff HEAD~1 HEAD?",
+      "options": [
+        "Разницу между рабочей директорией и последним коммитом",
+        "Разницу между двумя последними коммитами",
+        "Ошибку: неверный синтаксис",
+        "Только удалённые строки"
+      ],
+      "answer": 1,
+      "explain": "git diff HEAD~1 HEAD показывает разницу между предпоследним и последним коммитом — что изменилось в рамках конкретного коммита."
+    },
+    {
+      "type": "heading",
+      "content": "git log -p: полная история изменений"
+    },
+    {
+      "type": "text",
+      "content": "Комбинация git log -p покажет каждый коммит и diff для него. Удобно для просмотра истории проекта."
+    },
+    {
+      "type": "code",
+      "content": "$ git log --oneline --graph\n* a1b2c3d (HEAD -> main) fix: handle null\n* e4a9f3c add login form\n* 3d3e3cb initial commit"
+    },
+    {
+      "type": "tip",
+      "content": "--graph рисует визуальное дерево веток. Используйте с --oneline для компактного и понятного лога."
+    },
+    {
+      "type": "heading",
+      "content": "git show: детали конкретного коммита"
+    },
+    {
+      "type": "text",
+      "content": "Команда git show <hash> выводит diff и метаданные конкретного коммита. Без аргумента показывает HEAD."
+    },
+    {
+      "type": "code",
+      "content": "$ git show HEAD\ncommit a1b2c3d4e5f6...\nAuthor: Dev <dev@example.com>\nDate:   Mon Oct 12\n\n    add login form\n\ndiff --git a/login.py b/login.py\nnew file mode 100644\nindex 0000001..e69de29"
+    },
+    {
+      "type": "predict",
+      "code": "$ git show HEAD~2",
+      "question": "Что покажет git show HEAD~2?",
+      "options": [
+        "Ошибку: неизвестный синтаксис",
+        "Детали коммита через два шага назад от HEAD",
+        "Список всех коммитов",
+        "Разницу между working и HEAD"
+      ],
+      "answer": 1,
+      "explain": "~2 означает «два назад». HEAD~2 — это коммит, который предшествует HEAD двумя шагами. git show покажет его diff и метаданные."
+    },
+    {
+      "type": "heading",
+      "content": "Сводка команд просмотра изменений"
+    },
+    {
+      "type": "code",
+      "content": "git diff            — unstaged изменения (working ↔ staged)\ngit diff --staged   — staged изменения (staged ↔ HEAD)\ngit diff HEAD~1 HEAD — между двумя коммитами\ngit show HEAD          — детали последнего коммита\ngit log -p             — история с diffs\n\ngit diff <file>          — только для конкретного файла"
+    },
+    {
+      "type": "tip",
+      "content": "Запомните простое правило: git diff показывает НЕ закоммиченные изменения, git show и git log -p — уже закоммиченные."
+    },
+    {
+      "type": "predict",
+      "code": "$ git diff --staged -- file.txt",
+      "question": "Что покажет команда git diff --staged -- file.txt?",
+      "options": [
+        "Все staged изменения во всех файлах",
+        "Только staged изменения в file.txt",
+        "Ошибку: неверный синтаксис",
+        "Unstaged изменения в file.txt"
+      ],
+      "answer": 1,
+      "explain": "Флаг --file.txt ограничивает diff только этим файлом. Комбинируйте с --staged чтобы увидеть только его staged изменения."
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t1",
+      "type": "git",
+      "prompt": "Инициализируй репозиторий, добавь файл app.py в индекс и закоммить как init. Затем изменения в app.py и проверь через git diff.",
+      "starter": "",
+      "hints": [
+        "git init → git add app.py → git commit -m \"init\"",
+        "Чтобы увидеть diff в симуляторе — отредактируйте файл и вызовите git diff"
+      ],
+      "checks": [
+        { "kind": "git-command-used", "command": "git diff" },
+        { "kind": "git-command-used", "command": "git status" },
+        { "kind": "git-commits-count", "equals": 1 }
+      ]
+    },
+    {
+      "id": "t2",
+      "type": "git",
+      "prompt": "Создай коммит, затем добавь новые изменения в индекс и проверь, что попало в коммит через git diff --staged.",
+      "starter": "",
+      "hints": [
+        "git add file → git commit -m \"msg\" → git add file (again with changes) → git diff --staged",
+        "git diff --staged покажет изменения в индексе"
+      ],
+       "checks": [
+        { "kind": "git-command-used", "command": "git diff --staged" },
+        { "kind": "git-command-used", "command": "git commit" },
+        { "kind": "git-commits-count", "equals": 1 }
+      ]
+    },
+    {
+      "id": "t3",
+      "type": "git",
+      "prompt": "Инициализируй репо, сделай коммит 'init', измени файл config.py, потом посмотри что изменилось относительно последнего коммита через git diff.",
+      "starter": "",
+      "hints": [
+        "git init → git add config.py → git commit -m \"init\"",
+        "Чтобы изменить файл — введите 'git edit config.py' с новым содержимым",
+        "git diff покажет разницу между working и HEAD"
+      ],
+      "checks": [
+        { "kind": "git-command-used", "command": "git diff" },
+        { "kind": "git-commits-count", "equals": 1 }
+      ]
+    },
+    {
+      "id": "t4",
+      "type": "git",
+      "prompt": "Студент ввёл 'git add app.py', потом 'git diff' — но diff пустой, хотя файл изменён. Что студент забыл? Исправь: покажи изменения через правильную команду.",
+      "starter": "",
+      "initialState": {
+        "initialized": true,
+        "commits": [
+          { "hash": "abc1234", "message": "init", "files": { "app.py": "print('hello')" }, "parent": null, "parent2": null }
+        ],
+        "branches": { "main": "abc1234" },
+        "head": { "type": "branch", "name": "main" },
+        "staged": { "app.py": "print('hello world')" },
+        "working": { "app.py": "print('hello world')" },
+        "remote": { "origin": { "url": null, "branches": {} } },
+        "stash": [],
+        "config": {},
+        "output": [],
+        "commandHistory": []
+      },
+      "hints": [
+        "git diff без флагов показывает только unstaged изменения",
+        "если файл уже в staging, используйте git diff --staged"
+      ],
+      "checks": [
+        { "kind": "git-command-used", "command": "git diff --staged" },
+        { "kind": "git-commits-count", "equals": 1 }
+      ]
+    },
+    {
+      "id": "t5",
+      "type": "git",
+      "prompt": "Полный цикл анализа: init, закоммить config.yml, добавить изменения, закоммить как \"update config\", затем показать полную историю с diff через git log -p.",
+      "starter": "",
+      "hints": [
+        "git init → git add config.yml → git commit -m \"init\"",
+        "Измените config.yml → git add config.yml → git commit -m \"update config\"",
+        "git log -p покажет оба коммита с diff"
+      ],
+      "checks": [
+        { "kind": "git-command-used", "command": "git log" },
+        { "kind": "git-commits-count", "equals": 2 },
+        { "kind": "git-commit-message", "contains": "update config" }
+      ]
+    }
+  ],
+  "recap": [
+    "git diff показывает изменения в working по сравнению с индексом",
+    "git diff --staged показывает, что попадёт в коммит (индекс vs HEAD)",
+    "git show показывает детали конкретного коммита",
+    "git log -p добавляет diff к каждому коммиту в истории",
+    "Символы + (добавлено), - (удалено), @@ (хедер hunk)"
+  ],
+  "quiz": [
+    {
+      "q": "Что показывает git diff без аргументов?",
+      "options": [
+        "Разницу между индексом и HEAD",
+        "Разницу между working и индексом",
+        "Разницу между двумя последними коммитами",
+        "Только staged изменения"
+      ],
+      "answer": 1,
+      "explain": "git diff без аргументов показывает diff между рабочей директорией и индексом — то есть unstaged изменения."
+    },
+    {
+      "q": "Как увидеть что уже добавлено в индекс?",
+      "options": [
+        "git diff",
+        "git diff --staged",
+        "git diff HEAD",
+        "git show"
+      ],
+      "answer": 2,
+      "explain": "git diff --staged (alias: --cached) показывает разницу между индексом и HEAD — то есть staged изменения, которые попадут в следующий коммит."
+    },
+    {
+      "q": "Что означает символ + в diff?",
+      "options": [
+        "Строка удалена",
+        "Строка добавлена",
+        "Строка изменена",
+        "Строка закоммичена"
+      ],
+      "answer": 1,
+      "explain": "В diff: + означает добавленную строку, - означает удалённую строку."
+    },
+    {
+      "q": "Для чего нужен git log --graph?",
+      "options": [
+        "Показать diff каждого коммита",
+        "Нарисовать визуальное дерево веток",
+        "Показать только сообщения коммитов",
+        "Отфильтровать коммиты по автору"
+      ],
+      "answer": 1,
+      "explain": "--graph рисует визуальное дерево коммитов и веток, что особенно полезно при работе с несколькими ветками."
+    }
+  ]
+}

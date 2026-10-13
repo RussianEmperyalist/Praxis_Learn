@@ -1,0 +1,271 @@
+{
+  "id": "git-15-gitignore",
+  "title": ".gitignore: управление исключениями",
+  "goal": "Освоить паттерны .gitignore, global ignore, отладка через git check-ignore",
+  "prereq": [
+    "git-14-workflow"
+  ],
+  "duration": 11,
+  "theory": [
+    {
+      "type": "hook",
+      "content": "Кроме кода в репозитории могут оказаться node_modules (100МБ), .env с паролями, логи, кэш. gitignore — ваша защита."
+    },
+    {
+      "type": "heading",
+      "content": "Основные паттерны .gitignore"
+    },
+    {
+      "type": "text",
+      "content": "В .gitignore используются glob-паттерны:"
+    },
+    {
+      "type": "code",
+      "content": "*.log          # все .log файлы\nnode_modules/     # директория\n.env              # конкретный файл\n*.pyc             # по расширению\n/build/           # только в корне\n**/*.tmp          # во всех папках"
+    },
+    {
+      "type": "predict",
+      "code": "/config.env",
+      "question": "Что игнорирует этот паттерн?",
+      "options": [
+        "Все config.env",
+        "Только config.env в корне",
+        "Все .env файлы",
+        "Никогда"
+      ],
+      "answer": 1,
+      "explain": "Когда паттерн начинается с /, он привязан к корню. /config.env игнорирует только config.env в корне."
+    },
+    {
+      "type": "heading",
+      "content": "Отрицание: игнорировать всё, кроме..."
+    },
+    {
+      "type": "text",
+      "content": "Иногда нужно игнорировать всё, кроме определённого:"
+    },
+    {
+      "type": "code",
+      "content": "assets/*\n!assets/.gitkeep\n!assets/*.png"
+    },
+    {
+      "type": "tip",
+      "content": "Отрицание работает только для untracked файлов. Если файл уже закоммичен, git его не перестанет отслеживать."
+    },
+    {
+      "type": "warning",
+      "content": "Исключение ! не работает для файлов уже в индексе. Слеш в конце означает директорию."
+    },
+    {
+      "type": "predict",
+      "code": "git check-ignore -v secrets.env",
+      "question": "Зачем нужен git check-ignore?",
+      "options": [
+        "Удалить файл",
+        "Проверить почему файл игнорируется",
+        "Создать файл",
+        "Закоммитить файл"
+      ],
+      "answer": 1,
+      "explain": "git check-ignore показывает какой именно паттерн в .gitignore привёл к игнорированию файла, включая имя файла и номер строки."
+    },
+    {
+      "type": "heading",
+      "content": "Global .gitignore: игнорировать везде"
+    },
+    {
+      "type": "text",
+      "content": "Вы можете настроить глобальный .gitignore, который применяется ко всем репозиториям:"
+    },
+    {
+      "type": "code",
+      "content": "git config --global core.excludesfile ~/.gitignore_global\n# Теперь всё, что вы добавите туда, будет игнорироваться во всех репозиториях"
+    },
+    {
+      "type": "tip",
+      "content": "Глобальный gitignore полезен для: .DS_Store, Thumbs.db, *.swp, .env.local — файлы, которые вы точно никогда не коммитите."
+    },
+    {
+      "type": "note",
+      "content": "Команды для проверки: git status покажет игнорированные файлы серым. git check-ignore -v <file> объяснит почему."
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t1",
+      "type": "git",
+      "prompt": "Создай .gitignore с паттернами *.log и node_modules/.",
+      "starter": "",
+      "hints": [
+        "Создайте файл .gitignore с нужными шаблонами",
+        "git add .gitignore",
+        "git status покажет что файлы игнорируются"
+      ],
+      "checks": [
+        {
+          "kind": "git-command-used",
+          "command": "git add .gitignore"
+        },
+        {
+          "kind": "git-no-error"
+        },
+        {
+          "kind": "git-command-used",
+          "command": "git status"
+        }
+      ]
+    },
+    {
+      "id": "t2",
+      "type": "git",
+      "prompt": "Добавь паттерн для игнорирования всех .pyc файлов и директории __pycache__/.",
+      "starter": "",
+      "hints": [
+        "Шаблон *.pyc игнорирует файлы по расширению",
+        "__pycache__/ игнорирует директорию"
+      ],
+      "checks": [
+        {
+          "kind": "git-command-used",
+          "command": "git add .gitignore"
+        },
+        {
+          "kind": "git-no-error"
+        },
+        {
+          "kind": "git-command-used",
+          "command": "git status"
+        }
+      ]
+    },
+    {
+      "id": "t3",
+      "type": "git",
+      "prompt": "Настрой глобальный .gitignore через git config для игнорирования .DS_Store во всех репозиториях.",
+      "starter": "",
+      "hints": [
+        "git config --global core.excludesfile ~/.gitignore_global",
+        "Создайте ~/.gitignore_global с .DS_Store и другими файлами"
+      ],
+      "checks": [
+        {
+          "kind": "git-command-used",
+          "command": "git config"
+        },
+        {
+          "kind": "git-config-value",
+          "key": "core.excludesfile",
+          "value": "~/.gitignore_global"
+        },
+        {
+          "kind": "git-no-error"
+        }
+      ]
+    },
+    {
+      "id": "t4",
+      "type": "git",
+      "prompt": "Проверь почему файл config.env игнорируется через git check-ignore.",
+      "starter": "",
+      "hints": [
+        "git check-ignore -v config.env покажет правило из .gitignore",
+        "Если файл не игнорируется — создайте .gitignore с нужным шаблоном"
+      ],
+      "checks": [
+        {
+          "kind": "git-command-used",
+          "command": "git check-ignore"
+        },
+        {
+          "kind": "git-no-error"
+        },
+        {
+          "kind": "git-command-used",
+          "command": "git status"
+        }
+      ]
+    },
+    {
+      "id": "t5",
+      "type": "git",
+      "prompt": "Полный цикл: создай .gitignore с *.log, .env, __pycache__/, добавь в индекс, закоммить, затем используй check-ignore для проверки.",
+      "starter": "",
+      "hints": [
+        "Создайте .gitignore с шаблонами",
+        "git add .gitignore → git commit -m ignore",
+        "git check-ignore -v test.log"
+      ],
+      "checks": [
+        {
+          "kind": "git-command-used",
+          "command": "git add .gitignore"
+        },
+        {
+          "kind": "git-command-used",
+          "command": "git commit"
+        },
+        {
+          "kind": "git-command-used",
+          "command": "git check-ignore"
+        },
+        {
+          "kind": "git-commits-count",
+          "equals": 1
+        }
+      ]
+    }
+  ],
+  "recap": [
+    "*.log игнорирует все файлы с расширением .log",
+    "/config.env с слешом игнорирует только в корне",
+    "!assets/*.png отменяет игнорирование для конкретных файлов",
+    "git check-ignore -v объясняет почему файл игнорируется",
+    "git config --global core.excludesfile задаёт глобальный gitignore"
+  ],
+  "quiz": [
+    {
+      "q": "Что означает паттерн dir/ в .gitignore?",
+      "options": [
+        "Игнорировать файл с именем dir",
+        "Игнорировать директорию dir",
+        "Игнорировать только в корне",
+        "Ничего не значит"
+      ],
+      "answer": 1,
+      "explain": "Слеш в конце означает директорию. git будет игнорировать папку dir и всё содержимое."
+    },
+    {
+      "q": "Можно ли «разигнорировать» файл, который уже закоммичен?",
+      "options": [
+        "Да через !",
+        "Нет, нужно удалить из индекса через git rm --cached",
+        "git reset --hard",
+        "Да через .gitignore"
+      ],
+      "answer": 1,
+      "explain": "Файлы уже в индексе не могут быть разигнорированы через !. Сначала удалите из индекса: git rm --cached file, затем добавьте в .gitignore."
+    },
+    {
+      "q": "Для чего нужен git check-ignore?",
+      "options": [
+        "Проверить почему файл игнорируется",
+        "Удалить файл",
+        "Создать .gitignore",
+        "Закоммитить файл"
+      ],
+      "answer": 0,
+      "explain": "git check-ignore -v <file> показывает какой именно паттерн и номер строки в .gitignore привели к игнорированию."
+    },
+    {
+      "q": "Где хранится глобальный .gitignore?",
+      "options": [
+        "В ~/.gitignore",
+        "В настройках core.excludesfile",
+        "В .git/config",
+        "В /etc/gitignore"
+      ],
+      "answer": 1,
+      "explain": "Глобальный gitignore настраивается через git config --global core.excludesfile <path>. Этот файл применяется ко всем репозиториям пользователя."
+    }
+  ]
+}

@@ -1,0 +1,318 @@
+{
+  "id": "devops-02-docker-run",
+  "title": "Запуск и управление контейнерами",
+  "goal": "Освоить docker run с опциями -d, --name, -p, -e, --rm; управлять жизненным циклом контейнеров",
+  "prereq": ["devops-01-docker-intro"],
+  "duration": 15,
+  "theory": [
+    {
+      "type": "hook",
+      "content": "Образ скачан — теперь что? docker run скачивает образ, если его нет локально, создаёт контейнер и запускает его. Одна команда — весь цикл. Но как управлять контейнером после запуска? Ответ в флагах."
+    },
+    {
+      "type": "heading",
+      "content": "docker run: полная команда"
+    },
+    {
+      "type": "text",
+      "content": "docker run — это три команды в одной: <b>pull</b> (если образ не локален) + <b>create</b> + <b>start</b>. Каждый раз, когда вы запускаете контейнер, создаётся новый экземпляр с уникальным ID."
+    },
+    {
+      "type": "code",
+      "content": "$ docker run nginx                 # foreground, без имени\n$ docker run -d nginx            # detached (в фоне)\n$ docker run --rm nginx          # удалить после остановки\n$ docker run --name web nginx   # именованный контейнер\n$ docker run -d -p 8080:80 nginx # фон + проброс порта"
+    },
+    {
+      "type": "warning",
+      "content": "Без -d контейнер берёт терминал в форус: вы не можете ввести новые команды, пока он работает. Остановить — Ctrl+C, но контейнер останется в статусе exited, а не удалится."
+    },
+    {
+      "type": "heading",
+      "content": "Detached (-d) vs foreground"
+    },
+    {
+      "type": "text",
+      "content": "Foreground = процесс привязан к вашей сессии. Отключить можно только Ctrl+C или docker stop. Detached = процесс работает в фоне, терминал свободен."
+    },
+    {
+      "type": "code",
+      "content": "# Foreground (блокирует терминал):\ndocker run nginx\n# Никаких команд, пока не остановите контейнер\n\n# Detached (не блокирует):\ndocker run -d --name web nginx\n# Терминал свободен — вводите новые команды"
+    },
+    {
+      "type": "predict",
+      "code": "$ docker run -d --name web nginx && docker ps",
+      "question": "Что покажет docker ps после запуска nginx в фоне с именем web?",
+      "options": [
+        "Ошибка: nginx уже запущен",
+        "web в статусе running с проблемой порта",
+        "web в статусе running, без портов",
+        "Пустой вывод"
+      ],
+      "answer": 2,
+      "explain": "docker run -d запускает контейнер в фоне. docker ps показывает только работающие контейнеры. Без -p порты не проброшены — контейнер работает, но недоступен извне. Имя web отображается в колонке NAMES."
+    },
+    {
+      "type": "heading",
+      "content": "Имена контейнеров: --name"
+    },
+    {
+      "type": "text",
+      "content": "Без --name Docker генерирует случайное имя (nervous_brown, keen_curie). С --name вы задаёте своё: удобно для docker stop, docker logs, docker rm."
+    },
+    {
+      "type": "code",
+      "content": "$ docker run -d --name api nginx\n$ docker stop api      # остановить по имени\n$ docker rm api         # удалить по имени\n$ docker logs api       # логи по имени"
+    },
+    {
+      "type": "warning",
+      "content": "Имя контейнера должно быть уникально. Запустить второй контейнер с именем api даст ошибку: 'container name already in use'. Чтобы перезапустить — сначала rm, потом run."
+    },
+    {
+      "type": "tip",
+      "content": "Для временных контейнеров используйте --rm. После остановки (docker stop) контейнер автоматически удаляется. Идеально для one-shot задач: docker run --rm -it python:3.12 python --version"
+    },
+    {
+      "type": "heading",
+      "content": "Проброс портов: -p host:container"
+    },
+    {
+      "type": "text",
+      "content": "Контейнер изолирован: его порт 80 недоступен из хоста. Чтобы достучаться — используйте -p. Формат: <b>host:container</b>. Хост-порт пробрасывается на порт контейнера."
+    },
+    {
+      "type": "code",
+      "content": "$ docker run -d -p 8080:80 nginx    # host:8080 → container:80\n$ docker run -d -p 3000:3000 api    # host:3000 → container:3000\n\n# Проверить проброс:\ndocker ps\n# PORTS будет: 0.0.0.0:8080->80/tcp"
+    },
+    {
+      "type": "predict",
+      "code": "$ docker run -d -p 8080:80 --name web1 nginx\n$ docker run -d -p 8080:80 --name web2 nginx",
+      "question": "Что произойдёт при запуске второго контейнера с тем же хост-портом 8080?",
+      "options": [
+        "Второй контейнер запустится, порт станет общим",
+        "Ошибка: port already in use",
+        "Первый контейнер остановится автоматически",
+        "Docker пробросит 8080 на 2 контейнера"
+      ],
+      "answer": 1,
+      "explain": "Хост-порт 8080 уже занят контейнером web1. Docker не позволяет двум контейнерам слушать один и тот же хост-порт. Ошибка: 'port already in use'. Нужен другой хост-порт: -p 8081:80."
+    },
+    {
+      "type": "heading",
+      "content": "Переменные окружения: -e"
+    },
+    {
+      "type": "text",
+      "content": "Приложения читают конфигурацию из переменных окружения. Docker передаёт их через -e KEY=value или --env-file .env."
+    },
+    {
+      "type": "code",
+      "content": "$ docker run -d --name db \\\n  -e POSTGRES_PASSWORD=secret \\\n  -e POSTGRES_DB=myapp \\\n  -p 5432:5432 \\\n  postgres:16\n\n# В контейнере:\n$ docker exec db env\nPOSTGRES_PASSWORD=secret\nPOSTGRES_DB=myapp"
+    },
+    {
+      "type": "warning",
+      "content": "Без POSTGRES_PASSWORD postgres:16 не запустится. Без -p вы не сможете подключиться к БД из хоста. Эти ошибки не видны в логах контейнера — проверяйте через docker logs db."
+    },
+    {
+      "type": "tip",
+      "content": "Для production используйте --env-file .env вместо множества -e. Файл .env не попадает в образ, а подставляется на этапе запуска."
+    },
+    {
+      "type": "heading",
+      "content": "Управление жизненным циклом"
+    },
+    {
+      "type": "text",
+      "content": "Контейнеры имеют статусы: <b>created → running → exited → removed</b>. Каждая команда управляет переходом между ними."
+    },
+    {
+      "type": "code",
+      "content": "$ docker ps                 # только running\n$ docker ps -a              # все (включая exited)\n$ docker stop web           # running → exited\n$ docker start web          # exited → running\n$ docker restart web        # restart (stop + start)\n$ docker rm web             # удалить exited\n$ docker rm -f web          # удалить даже если running (stop+rm)"
+    },
+    {
+      "type": "note",
+      "content": "docker rm работает ТОЛЬКО с остановленными контейнерами. Чтобы удалить running контейнер — сначала stop, потом rm, либо используйте -f (--force)."
+    },
+    {
+      "type": "warning",
+      "content": "docker stop отправляет SIGTERM, затем через 10 секунд SIGKILL. Если приложение не успевает завершиться — используйте docker stop -t 30 web для увеличения таймаута."
+    },
+    {
+      "type": "heading",
+      "content": "docker exec: команда в запущенном контейнере"
+    },
+    {
+      "type": "text",
+      "content": "docker run создаёт новый контейнер. docker exec — запускает команду В УЖЕ РАБОТАЮЩЕМ контейнере. Это как SSH, но без SSH."
+    },
+    {
+      "type": "code",
+      "content": "$ docker exec -it web bash        # зайти в контейнер как sh\n$ docker exec web ls /app          # выполнить команду\n$ docker exec web cat app.py      # посмотреть файл"
+    },
+    {
+      "type": "tip",
+      "content": "Флаг -it объединяет интерактивный режим (-i) и TTY (-t). Без них вы не увидите приглашение bash и не сможете вводить команды интерактивно."
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t1",
+      "type": "docker",
+      "prompt": "Скачай образ nginx и запусти контейнер в фоне (detached) под именем web, пробросив порт 8080 на 80.",
+      "starter": "",
+      "initialState": null,
+      "hints": [
+        "docker pull nginx → docker run -d -p 8080:80 --name web nginx",
+        "Проверь: docker ps должен показать web в статусе running"
+      ],
+      "checks": [
+        { "kind": "docker-image-exists", "name": "nginx" },
+        { "kind": "docker-container-running", "name": "web" },
+        { "kind": "docker-port-mapped", "container": "web", "host": "8080", "target": "80" }
+      ]
+    },
+    {
+      "id": "t2",
+      "type": "docker",
+      "prompt": "Скачай образ redis и запусти контейнер в фоне под именем cache, пробросив порт 6379 на 6379, с переменной окружения REDIS_PASSWORD=secretpass.",
+      "starter": "",
+      "hints": [
+        "docker pull redis → docker run -d -p 6379:6379 --name cache -e REDIS_PASSWORD=secretpass redis",
+        "redis всегда слушает 6379"
+      ],
+      "checks": [
+        { "kind": "docker-image-exists", "name": "redis" },
+        { "kind": "docker-container-running", "name": "cache" },
+        { "kind": "docker-port-mapped", "container": "cache", "host": "6379", "target": "6379" }
+      ]
+    },
+    {
+      "id": "t3",
+      "type": "docker",
+      "prompt": "Останови контейнер web, затем запусти его снова в фоне под именем web2 с пробросом порта 9090 на 80.",
+      "starter": "",
+      "hints": [
+        "docker stop web → docker rm web → docker run -d -p 9090:80 --name web2 nginx",
+        "Имя должно быть web2, а не web — оно уже использовано"
+      ],
+      "checks": [
+        { "kind": "docker-command-used", "contains": "docker stop" },
+        { "kind": "docker-command-used", "contains": "docker rm" },
+        { "kind": "docker-container-running", "name": "web2" },
+        { "kind": "docker-port-mapped", "container": "web2", "host": "9090", "target": "80" }
+      ]
+    },
+    {
+      "id": "t4",
+      "type": "docker",
+      "prompt": "Студент запустил контейнер web1 на порту 8080. Теперь нужно запустить второй nginx на порту 8081, но студент пытается снова использовать 8080. Исправь ошибку: останови web1, запусти web2 с портом 8081:80 --name web2.",
+      "starter": "",
+      "initialState": {
+        "images": [
+          { "name": "nginx", "tag": "latest", "size": "187MB", "layers": ["base", "main"], "createdAt": 1700000000000 }
+        ],
+        "containers": [
+          {
+            "id": "a1b2c3d4e5f6",
+            "image": "nginx:latest",
+            "name": "web1",
+            "status": "running",
+            "ports": { "8080": "80" },
+            "volumes": [],
+            "env": {},
+            "logs": ["nginx started"],
+            "exitCode": null,
+            "createdAt": 1700000000000,
+            "rm": false
+          }
+        ],
+        "volumes": [],
+        "networks": [
+          { "name": "bridge", "driver": "bridge", "ipam": { "config": [{ "subnet": "172.17.0.0/16" }] }, "containers": [] }
+        ],
+        "history": [],
+        "output": [],
+        "commandHistory": [],
+        "lastError": null
+      },
+      "hints": [
+        "Сначала: docker stop web1 → docker rm web1",
+        "Затем: docker run -d -p 8081:80 --name web2 nginx",
+        "Проверь: docker ps покажет web2 на порту 8081"
+      ],
+      "checks": [
+        { "kind": "docker-command-used", "contains": "docker ps" },
+        { "kind": "docker-command-used", "contains": "8081:80" }
+      ]
+    },
+    {
+      "id": "t5",
+      "type": "docker",
+      "prompt": "Сценарий: скачай postgres:16, запусти контейнер под именем db на порту 5432:5432, с переменными POSTGRES_PASSWORD=secret и POSTGRES_DB=appdb. Проверь статус через docker ps, затем останови и удаляй контейнер.",
+      "starter": "",
+      "hints": [
+        "docker pull postgres:16 → docker run -d --name db -p 5432:5432 -e POSTGRES_PASSWORD=secret -e POSTGRES_DB=appdb postgres:16",
+        "docker ps → docker stop db → docker rm db"
+      ],
+      "checks": [
+        { "kind": "docker-image-exists", "name": "postgres" },
+        { "kind": "docker-container-running", "name": "db" },
+        { "kind": "docker-port-mapped", "container": "db", "host": "5432", "target": "5432" },
+        { "kind": "docker-command-used", "contains": "docker stop" },
+        { "kind": "docker-container-status", "name": "db", "status": "exited" }
+      ]
+    }
+  ],
+  "recap": [
+    "docker run = pull + create + start. Флаг -d отправляет в фон",
+    "--name задаёт уникальное имя контейнера. Имя не повторимо",
+    "-p host:container пробрасывает порт. Один хост-порт = один контейнер",
+    "-e KEY=value передаёт переменную окружения в контейнер",
+    "docker ps = running. docker ps -a = все. rm только на exited (или -f)",
+    "docker exec -it <name> — запустить команду в работающем контейнере"
+  ],
+  "quiz": [
+    {
+      "q": "Чем отличается docker run от docker start?",
+      "options": [
+        "run быстрее, start медленнее",
+        "run создаёт новый контейнер, start возобнавляет существующий",
+        "run удаляет контейнер после остановки",
+        "run и start — одно и то же"
+      ],
+      "answer": 1,
+      "explain": "docker run всегда создаёт новый контейнер и запускает его. docker start возобнавляет уже существующий (ранее созданный или остановленный) контейнер. Поэтому run можно вызывать дважды, а start — только на остановленном контейнере."
+    },
+    {
+      "q": "Что делает флаг -d в docker run?",
+      "options": [
+        "Удаляет контейнер после остановки",
+        "Запускает контейнер в фоне (detached)",
+        "Отключает сеть контейнера",
+        "Делает образ read-only"
+      ],
+      "answer": 1,
+      "explain": "-d (detached) отправляет контейнер в фон. Терминал освобождается — вы можете вводить новые команды. Без -d контейнер работает в foreground и берёт ваш терминал."
+    },
+    {
+      "q": "Какой порт нужно пробросить, чтобы достучаться к nginx на порту 80?",
+      "options": [
+        "80:80",
+        "8080:8080",
+        "8080:80",
+        "80:8080"
+      ],
+      "answer": 2,
+      "explain": "В nginx контейнер слушает порт 80. Чтобы достучаться на порт 8080 хоста, используйте -p 8080:80. Формат: host:container. Порт 80:8080 означал бы обратное — host 80, container 8080."
+    },
+    {
+      "q": "Можно ли запустить два контейнера с одинаковым именем web?",
+      "options": [
+        "Да, Docker переименует второй автоматически",
+        "Да, оба будут работать параллельно",
+        "Нет — имя должно быть уникальным",
+        "Нет, но можно через --force"
+      ],
+      "answer": 2,
+      "explain": "Имена контейнеров уникальны в пределах хоста. Попытка запустить второй контейнер с существующим именем даст ошибку: 'container name already in use'. Сначала удалите старый: docker rm web → затем запускайте новый."
+    }
+  ]
+}

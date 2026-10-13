@@ -1,14 +1,8 @@
-const CACHE_VERSION = 25;
+const CACHE_VERSION = 43;
 const CACHE_NAME = 'praxis-learn-v' + CACHE_VERSION;
 
 const PRECACHE_URLS = [
   './',
-  './index.html',
-  './lesson.html',
-  './course.html',
-  './dashboard.html',
-  './login.html',
-  './manifest.webmanifest',
   './styles/cyberpunk.css',
   './styles/layout.css',
   './js/highlighter.js',
@@ -19,6 +13,14 @@ const PRECACHE_URLS = [
   './scripts/storage.js',
   './scripts/auth.js',
   './scripts/progress.js',
+  './scripts/git-simulator.js',
+  './scripts/git-render.js',
+  './scripts/git-terminal.js',
+  './scripts/git-simulator.test.html',
+  './scripts/docker-simulator.js',
+  './scripts/docker-terminal.js',
+  './scripts/dockerfile-parser.js',
+  './scripts/docker-simulator.test.html',
   './content/courses.json',
   './content/python/index.json',
   './content/python/01-intro.json',
@@ -51,10 +53,31 @@ const PRECACHE_URLS = [
   './content/python/28-sqlite.json',
   './content/python/29-threading.json',
   './content/python/30-project.json',
-  './content/git/index.json',
-  './content/git/01-intro.json',
+    './content/git/index.json',
+    './content/git/01-intro.json',
+    './content/git/02-status-add.json',
+    './content/git/03-commit.json',
+    './content/git/04-diff.json',
+    './content/git/05-branches.json',
+    './content/git/06-merge.json',
+    './content/git/07-remote.json',
+    './content/git/08-fetch-pull.json',
+    './content/git/09-pr.json',
+    './content/git/10-rebase.json',
+    './content/git/11-cherry-tag.json',
+    './content/git/12-stash.json',
+    './content/git/13-history.json',
+    './content/git/14-workflow.json',
+    './content/git/15-gitignore.json',
+    './scripts/git-simulator.js',
+    './scripts/git-render.js',
+    './scripts/git-terminal.js',
+    './scripts/git-simulator.test.html',
   './content/devops/index.json',
-  './content/devops/01-docker-intro.json'
+    './content/devops/01-docker-intro.json',
+    './content/devops/02-docker-run.json',
+    './content/devops/03-dockerfile.json',
+    './manifest.webmanifest'
 ];
 
 self.addEventListener('install', function (event) {
@@ -83,16 +106,48 @@ self.addEventListener('activate', function (event) {
 });
 
 self.addEventListener('fetch', function (event) {
-  var url = event.request.url;
-  var isStatic = PRECACHE_URLS.some(function (p) {
-    return url.endsWith(p.replace(/^\.\//, ''));
-  });
+  var url = new URL(event.request.url);
+  var path = url.pathname;
 
-  if (isStatic || url.includes('cdn.jsdelivr.net')) {
+  if (url.includes('cdn.jsdelivr.net')) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  if (path.endsWith('.html') || path === '/' ||
+      path.endsWith('/')) {
+    event.respondWith(
+      fetch(event.request).then(function (res) {
+        if (res.ok) {
+          var clone = res.clone();
+          caches.open(CACHE_NAME).then(function (c) { c.put(event.request, clone); });
+        }
+        return res;
+      }).catch(function () {
+        return caches.match(event.request);
+      })
+    );
+    return;
+  }
+
+  if (path.endsWith('.json')) {
     event.respondWith(
       caches.match(event.request).then(function (response) {
         return response || fetch(event.request);
       })
     );
+    return;
   }
+
+  event.respondWith(
+    fetch(event.request).then(function (res) {
+      if (res.ok) {
+        var clone = res.clone();
+        caches.open(CACHE_NAME).then(function (c) { c.put(event.request, clone); });
+      }
+      return res;
+    }).catch(function () {
+      return caches.match(event.request);
+    })
+  );
 });

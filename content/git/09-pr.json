@@ -1,0 +1,229 @@
+{
+  "id": "git-09-pr",
+  "title": "Pull Request workflow",
+  "goal": "Освоить workflow фича-ветки → PR → merge + protect main",
+  "prereq": ["git-08-fetch-pull"],
+  "duration": 15,
+  "theory": [
+    {
+      "type": "hook",
+      "content": "Вы не работаете в одиночку. Pull Request (или Merge Request) — это ваш способ сказать команде: «Я закончил эту фичу, проверьте перед слиянием»."
+    },
+    {
+      "type": "heading",
+      "content": "Что такое Pull Request"
+    },
+    {
+      "type": "text",
+      "content": "Pull Request (PR) — это запрос на слияние вашей ветки в другую (обычно main). Он не выполняет merge автоматически — сначала нужен review."
+    },
+    {
+      "type": "code",
+      "content": "1. Создаёте feature-ветку от main\n2. Делаете коммиты\n3. Пушите ветку в origin\n4. Открываете PR через GitHub/GitLab\n5. Коллеги review → approve\n6. Сливаете PR (merge commit или squash или rebase)"
+    },
+    {
+      "type": "predict",
+      "code": "$ git push origin feature/login",
+      "question": "После этого вы можете сделать что?",
+      "options": [
+        "Открыть Pull Request на GitHub/GitLab",
+        "Сразу слить ветку",
+        "Удалить ветку",
+        "Сделать merge commit"
+      ],
+      "answer": 0,
+      "explain": "После push ветки в origin вы можете открыть Pull Request через веб-интерфейс GitHub/GitLab. Это запрос на слияние, требующий review."
+    },
+    {
+      "type": "heading",
+      "content": "Типы слияния в PR"
+    },
+    {
+      "type": "text",
+      "content": "GitHub/GitLab предлагают три способа слияния Pull Request:"
+    },
+    {
+      "type": "code",
+      "content": "# Merge commit — сохраняет ветвистую историю\n*   Merge pull request #12\n|\\  Merge: a1b2c3d e4a9f3c\n| * Add login form\n| * Fix typo\n* | Update README\n* | Refactor auth\n* C Initial commit\n\n# Squash — один коммит из всех\n* Add login form and fix typo  (squashed)\n* Update README\n* Refactor auth\n* C Initial commit\n\n# Rebase — линейная история, без merge commit\n* Add login form\n* Fix typo\n* Update README\n* Refactor auth\n* C Initial commit"
+    },
+    {
+      "type": "tip",
+      "content": "Squash удобен для небольших фич. Rebase — для чистой линейной истории. Merge commit — когда важна точная история ветвления."
+    },
+    {
+      "type": "heading",
+      "content": "Защита веток (branch protection)"
+    },
+    {
+      "type": "text",
+      "content": "Вы можете настроить защиту ветки main на GitHub/GitLab:"
+    },
+    {
+      "type": "code",
+      "content": "- Require pull request reviews before merging\n- Require status checks to pass\n- Require linear history (disallow merge commits)\n- Require signed commits\n- Include administrators"
+    },
+    {
+      "type": "warning",
+      "content": "• Никогда не пушьте напрямую в protected main — всегда используйте PR.\n• Статус-чеки (CI) должны проходить перед merge."
+    },
+    {
+      "type": "predict",
+      "code": "$ git checkout -b fix-typo && git commit -m \"fix: typo\" && git push origin fix-typo",
+      "question": "Почему вы создали отдельную ветку для исправления опечатки?",
+      "options": [
+        "Опечатки не нуждаются в ветках",
+        "Небольшие изменения можно коммитить прямо в main",
+        "Для защиты main и простоты отката",
+        "Чтобы увеличить скорость CI"
+      ],
+      "answer": 2,
+      "explain": "Даже маленькое исправление должно идти через отдельную ветку и PR. Это сохраняет защиту main, позволяет review и легко откатить изменение."
+    },
+    {
+      "type": "heading",
+      "content": "Рабочий процесс feature branch"
+    },
+    {
+      "type": "code",
+      "content": "$ git checkout -b feature/user-profile      # создаём ветку\n$ git add profile.py                          # работаем\n$ git commit -m \"feat: add user profile page\"   # коммитим\n$ git push -u origin feature/user-profile        # пушим в origin\n# → открываем PR на GitHub"
+    },
+    {
+      "type": "note",
+      "content": "Перед тем как открывать PR, убедитесь что feature-ветка закоммичена и запушена в origin."
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t1",
+      "type": "git",
+      "prompt": "Создай feature-ветку для новой фичи и закоммить изменение в ней.",
+      "starter": "",
+      "hints": [
+        "git checkout -b feature/new-feature",
+        "git add file → git commit -m \"feat: new feature\"",
+        "git branch покажет ветку feature/new-feature с меткой *"
+      ],
+      "checks": [
+        { "kind": "git-command-used", "command": "git checkout" },
+        { "kind": "git-branch-exists", "branch": "feature/new-feature" },
+        { "kind": "git-commits-count", "equals": 1 }
+      ]
+    },
+    {
+      "id": "t2",
+      "type": "git",
+      "prompt": "Закончи работу над фичей: закоммить, запушить ветку в origin с tracking, проверить статус.",
+      "starter": "",
+      "hints": [
+        "git push -u origin feature/new-feature установит tracking",
+        "git status покажет синхронизированную ветку"
+      ],
+      "checks": [
+        { "kind": "git-command-used", "command": "git push" },
+        { "kind": "git-commits-count", "min": 1 },
+        { "kind": "git-no-error" }
+      ]
+    },
+    {
+      "id": "t3",
+      "type": "git",
+      "prompt": "Ты хочешь слить feature-ветку в main через PR. Сначала переключись на main, выполните слияние, затем удали ветку feature.",
+      "starter": "",
+      "hints": [
+        "git checkout main → git merge feature/new-feature",
+        "git branch -d feature/new-feature удалит ветку после merge"
+      ],
+      "checks": [
+        { "kind": "git-command-used", "command": "git merge" },
+        { "kind": "git-command-used", "command": "git branch" },
+        { "kind": "git-head-branch", "branch": "main" }
+      ]
+    },
+    {
+      "id": "t4",
+      "type": "git",
+      "prompt": "CI-чеки провалились на твоей ветке. Как исправить и повторно запушить?",
+      "starter": "",
+      "hints": [
+        "Измени файл → git add → git commit --amend (или squash в rebase)",
+        "git push --force-with-lease отправит исправления"
+      ],
+      "checks": [
+        { "kind": "git-command-used", "command": "git push" },
+        { "kind": "git-command-used", "command": "git commit" },
+        { "kind": "git-no-error" }
+      ]
+    },
+    {
+      "id": "t5",
+      "type": "git",
+      "prompt": "Эмуляция full PR cycle: создай feature-ветку, закоммить, push, переключись на main, выполни merge, удали ветку, проверь историю через git log --oneline --graph.",
+      "starter": "",
+      "hints": [
+        "git checkout -b feature/task → git add file → git commit -m \"feat: implement task\"",
+        "git push -u origin feature/task",
+        "git checkout main → git merge feature/task → git branch -d feature/task",
+        "git log --oneline --graph"
+      ],
+      "checks": [
+        { "kind": "git-command-used", "command": "git push" },
+        { "kind": "git-command-used", "command": "git merge" },
+        { "kind": "git-command-used", "command": "git branch" },
+        { "kind": "git-commits-count", "min": 2 }
+      ]
+    }
+  ],
+  "recap": [
+    "Pull Request — это запрос на слияние, проходящий review и CI",
+    "Создавайте feature-ветку для каждой задачи: git checkout -b feature/name",
+    "Push ветки с tracking: git push -u origin feature/name",
+    "Три типа merge: merge commit (ветвисто), squash (один коммит), rebase (линейно)",
+    "Branch protection защищает main от прямых пушей и сбоев CI"
+  ],
+  "quiz": [
+    {
+      "q": "Почему нельзя коммитить прямо в main?",
+      "options": [
+        "Это медленно",
+        "CI не пропустит изменения",
+        "Можно случайно сломать production и невозможно отменить",
+        "Git не позволяет коммитить в main"
+      ],
+      "answer": 2,
+      "explain": "Коммиты прямо в main обходят review и CI. Если изменение сломает сборку — отменить сложно. Feature-ветки + PR обеспечивают безопасный workflow."
+    },
+    {
+      "q": "В чём разница между squash и rebase merge?",
+      "options": [
+        "Squash создаёт merge commit, rebase — нет",
+        "Squash объединяет все коммиты в один, rebase переносит их линейно",
+        "Разницы нет",
+        "Rebase удаляет ветвь"
+      ],
+      "answer": 1,
+      "explain": "Squash: все коммиты feature-ветки объединяются в один коммит перед merge. Rebase: коммиты переносятся поверх main, сохраняя линейную историю без merge commit."
+    },
+    {
+      "q": "Что делает git push --force-with-lease?",
+      "options": [
+        "Удаляет ветку удалённо",
+        "Перезаписывает историю с проверкой, что никто не добавил коммиты",
+        "Принудительно пушит без проверки",
+        "Создаёт backup перед пушем"
+      ],
+      "answer": 1,
+      "explain": "--force-with-lease безопаснее обычного --force: он проверяет, что удалённая ветка не изменилась с момента вашего последнего fetch. Если кто-то уже запушил — пуш отклоняется."
+    },
+    {
+      "q": "Для чего нужен branch protection?",
+      "options": [
+        "Автоматически удалять старые ветки",
+        "Предотвращать прямые пуши и требовать review/CI",
+        "Ускорять CI-проверки",
+        "Блокировать clone"
+      ],
+      "answer": 2,
+      "explain": "Branch protection настраивается на уровне GitHub/GitLab и требует PR с review и проходящими CI-чеками перед merge. Это предотвращает случайные или некачественные изменения в main."
+    }
+  ]
+}

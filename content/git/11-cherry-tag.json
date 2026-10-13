@@ -1,0 +1,245 @@
+{
+  "id": "git-11-cherry-tag",
+  "title": "Cherry-pick, tag, revert",
+  "goal": "Освоить cherry-pick для переноса коммитов, tag для версий, revert для отката",
+  "prereq": ["git-10-rebase"],
+  "duration": 13,
+  "theory": [
+    {
+      "type": "hook",
+      "content": "Вы случайно закоммистили в ветку develop, а нужно было в release. Или нужно перенести исправление бага в старую версию. Git даёт точные инструменты: cherry-pick для переноса, tag для версий, revert для безопасного отката."
+    },
+    {
+      "type": "heading",
+      "content": "git cherry-pick: перенести конкретный коммит"
+    },
+    {
+      "type": "text",
+      "content": "Cherry-pick позволяет применить один конкретный коммит из другой ветки к вашей."
+    },
+    {
+      "type": "code",
+      "content": "# Перенести коммит a1b2c3d из ветки hotfix в main\n$ git checkout main\n$ git cherry-pick a1b2c3d\n[main abc1234] Fix security issue"
+    },
+    {
+      "type": "predict",
+      "code": "$ git cherry-pick a1b2c3d e4a9f3c",
+      "question": "Что сделает эта команда?",
+      "options": [
+        "Перенесёт два коммита на текущую ветку",
+        "Создаст ветку с двумя коммитами",
+        "Выдаст ошибку: только один хеш",
+        "Удалит два коммита"
+      ],
+      "answer": 0,
+      "explain": "git cherry-pick a1b2c3d e4a9f3c перенесёт оба коммита на текущую ветку в порядке их следования."
+    },
+    {
+      "type": "heading",
+      "content": "Tag: метки версий"
+    },
+    {
+      "type": "text",
+      "content": "Тег (tag) — это метка на конкретном коммите, обычно для версии: v1.0.0, v2.1.3."
+    },
+    {
+      "type": "code",
+      "content": "# Annotated tag (с описанием и подписью)\n$ git tag -a v1.0.0 -m \"Release version 1.0.0\"\n\n# Lightweight tag (без метаданных)\n$ git tag v1.0.0\n\n# Просмотр тегов\n$ git tag -l \"v*\""
+    },
+    {
+      "type": "tip",
+      "content": "Annotated tags хранят имя автора, email, дату и сообщение. Используйте их для релизов. Lightweight — для локального быстрого доступа."
+    },
+    {
+      "type": "warning",
+      "content": "• Теги не пушатся автоматически — используйте git push origin <tag> или git push --tags.\n• Не меняйте теги после публикации — это нарушит целостность для коллег."
+    },
+    {
+      "type": "predict",
+      "code": "$ git show v1.0.0",
+      "question": "Что покажет эта команда?",
+      "options": [
+        "Только хеш коммита",
+        "Информацию о теге, коммите и diff",
+        "Список всех тегов",
+        "Ошибка"
+      ],
+      "answer": 1,
+      "explain": "git show v1.0.0 покажет метаданные тега (если annotated), информацию о коммите и diff относительно родителя."
+    },
+    {
+      "type": "heading",
+      "content": "git revert: безопасный откат"
+    },
+    {
+      "type": "text",
+      "content": "Revert создаёт НОВЫЙ коммит, который отменяет изменения указанного коммита. Это безопаснее, чем reset — история не переписывается."
+    },
+    {
+      "type": "code",
+      "content": "# Отменить коммит a1b2c3d\n$ git revert a1b2c3d\n[main def4567] Revert \"fix bug\"\n 1 file changed, 1 deletion(-)\n# Если нужно отменить несколько коммитов:\n$ git revert a1b2c3d^..e4a9f3c  # диапазон"
+    },
+    {
+      "type": "note",
+      "content": "Revert безопасен для опубликованных коммитов. Reset переписывает историю — опасен после push."
+    },
+    {
+      "type": "predict",
+      "code": "git revert a1b2c3d",
+      "question": "Чем git revert отличается от git reset?",
+      "options": [
+        "Revert создаёт коммит-отмену, reset переписывает историю",
+        "Разницы нет — оба удаляют коммиты",
+        "Revert быстрее, reset медленнее",
+        "Revert работает только с тегами"
+      ],
+      "answer": 0,
+      "explain": "git revert создаёт новый коммит, отменяющий изменения. История сохраняется и это безопасно для опубликованных коммитов. git reset удаляет коммиты из истории — опасно после push."
+    },
+    {
+      "type": "heading",
+      "content": "SemVer: версии и теги"
+    },
+    {
+      "type": "text",
+      "content": "SemVer: MAJOR.MINOR.PATCH\n- MAJOR: несовместимые изменения\n- MINOR: новый функционал, backward compatible\n- PATCH: исправления багов"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t1",
+      "type": "git",
+      "prompt": "Создай тег v1.0.0 на текущем коммите и проверь через git tag -l.",
+      "starter": "",
+      "hints": [
+        "git commit -m \"release\" сначала",
+        "git tag -a v1.0.0 -m \"version 1.0.0\"",
+        "git tag -l покажет тег"
+      ],
+      "checks": [
+        { "kind": "git-command-used", "command": "git tag" },
+        { "kind": "git-commits-count", "equals": 1 },
+        { "kind": "git-no-error" }
+      ]
+    },
+    {
+      "id": "t2",
+      "type": "git",
+      "prompt": "Перенеси коммит из ветки hotfix в main с помощью git cherry-pick.",
+      "starter": "",
+      "hints": [
+        "git checkout -b hotfix → git add file → git commit -m \"fix\"",
+        "git checkout main → git cherry-pick <hash>"
+      ],
+      "checks": [
+        { "kind": "git-command-used", "command": "git cherry-pick" },
+        { "kind": "git-commits-count", "min": 2 },
+        { "kind": "git-no-error" }
+      ]
+    },
+    {
+      "id": "t3",
+      "type": "git",
+      "prompt": "Отметь текущий коммит тегом v2.0.0, создай ещё один коммит и пометь v2.1.0. Покажи все теги.",
+      "starter": "",
+      "hints": [
+        "git tag -a v2.0.0 -m \"major\"",
+        "git add file → git commit -m \"minor update\"",
+        "git tag -a v2.1.0 -m \"minor\"",
+        "git tag -l \"v*\" покажет теги"
+      ],
+      "checks": [
+        { "kind": "git-command-used", "command": "git tag" },
+        { "kind": "git-commits-count", "equals": 2 },
+        { "kind": "git-no-error" }
+      ]
+    },
+    {
+      "id": "t4",
+      "type": "git",
+      "prompt": "Ты закоммитил баг (сообщение \"fix bug\"). Отмени коммит через git revert — не удаляя историю.",
+      "starter": "",
+      "hints": [
+        "git revert HEAD создаст коммит-отмену",
+        "git log покажет 2 коммита: исправление и отмена"
+      ],
+      "checks": [
+        { "kind": "git-command-used", "command": "git revert" },
+        { "kind": "git-commits-count", "equals": 2 },
+        { "kind": "git-no-error" }
+      ]
+    },
+    {
+      "id": "t5",
+      "type": "git",
+      "prompt": "Полный цикл: создай репо с 3 коммитами, пометь v1.0.0 на втором, перенеси третий коммит в новую ветку через cherry-pick, затем отмени изменения через revert в main.",
+      "starter": "",
+      "hints": [
+        "git init → git add → git commit -m \"first\" → git tag -a v1.0.0 -m \"first release\"",
+        "git add → git commit -m \"second\" → git add → git commit -m \"third\"",
+        "git checkout -b hotfix → git cherry-pick <hash_третьего>",
+        "git checkout main → git revert <hash_первого>"
+      ],
+      "checks": [
+        { "kind": "git-command-used", "command": "git tag" },
+        { "kind": "git-command-used", "command": "git cherry-pick" },
+        { "kind": "git-command-used", "command": "git revert" },
+        { "kind": "git-commits-count", "min": 3 }
+      ]
+    }
+  ],
+  "recap": [
+    "cherry-pick переносит один коммит из ветки в другую — полезно для hotfix",
+    "Tag (v1.0.0) метит версией важные коммиты; annotated tag хранит метаданные",
+    "git tag -l \"v*\" показывает только теги по шаблону",
+    "git revert создаёт новый коммит-отмену — безопасен для опубликованных изменений",
+    "git reset переписывает историю — только для локальных незапушенных коммитов",
+    "Теги не пушатся автоматически — используйте git push --tags"
+  ],
+  "quiz": [
+    {
+      "q": "Для чего используется git cherry-pick?",
+      "options": [
+        "Удалить коммит из истории",
+        "Перенести один коммит из ветки в другую",
+        "Создать новый тег",
+        "Отменить все изменения"
+      ],
+      "answer": 1,
+      "explain": "Cherry-pick применяет один конкретный коммит (определяемый хешем) к текущей ветке. Удобно для переноса исправлений багов или отдельных фич."
+    },
+    {
+      "q": "Разница между annotated и lightweight tag?",
+      "options": [
+        "Annotated хранит метаданные, lightweight — нет",
+        "Разницы нет",
+        "Annotated быстрее создать",
+        "Lightweight поддерживается только в старых версиях Git"
+      ],
+      "answer": 0,
+      "explain": "Annotated tag (-a) хранит имя автора, email, дату и сообщение. Lightweight tag — просто указатель на коммит без метаданных."
+    },
+    {
+      "q": "В чём разница между revert и reset?",
+      "options": [
+        "Revert создаёт коммит-отмену, reset переписывает историю",
+        "Разницы нет — оба удаляют коммиты",
+        "Revert быстрее, reset медленнее",
+        "Revert работает только с тегами"
+      ],
+      "answer": 0,
+      "explain": "git revert создаёт новый коммит, отменяющий изменения. История сохраняется и это безопасно для опубликованных коммитов. git reset удаляет коммиты из истории — опасно после push."
+    },
+    {
+      "q": "Как отправить все теги в origin?",
+      "options": [
+        "git push origin --tags",
+        "git push origin tag",
+        "git push --all",
+        "Теги отправляются автоматически"
+      ],
+      "answer": 0,
+      "explain": "Теги не отправляются автоматически. Используйте git push origin --tags для отправки всех тегов или git push origin <tag> для конкретного."
+    }
+  ]
+}

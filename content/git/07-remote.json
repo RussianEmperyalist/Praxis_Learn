@@ -1,0 +1,231 @@
+{
+  "id": "git-07-remote",
+  "title": "Работа с удалёнными репозиториями",
+  "goal": "Освоить remote add, push, tracking; понять origin и upstream",
+  "prereq": ["git-06-merge"],
+  "duration": 14,
+  "theory": [
+    {
+      "type": "hook",
+      "content": "Ваш локальный Git — это не всё. Основное хранилище кода живёт на GitHub, GitLab или Bitbucket. remote — это мост между вашим локальным репозиторием и удалённым."
+    },
+    {
+      "type": "heading",
+      "content": "Что такое remote и origin"
+    },
+    {
+      "type": "text",
+      "content": "Remote — это ссылка на внешний репозиторий. По умолчанию Git называет главный remote origin."
+    },
+    {
+      "type": "code",
+      "content": "$ git remote -v\ngit@github.com:username/project.git (fetch)\ngit@github.com:username/project.git (push)"
+    },
+    {
+      "type": "predict",
+      "code": "$ git remote add upstream git@github.com:org/project.git",
+      "question": "Что делает эта команда?",
+      "options": [
+        "Удаляет удалённый репозиторий origin",
+        "Добавляет новый remote под именем upstream",
+        "Переключение на ветку upstream",
+        "Синхронизирует с удалённым"
+      ],
+      "answer": 1,
+      "explain": "git remote add upstream добавляет новую ссылку на удалённый репозиторий с именем 'upstream'. Это позволяет иметь два удалённых: origin (ваш форк) и upstream (оригинальный проект)."
+    },
+    {
+      "type": "heading",
+      "content": "git push: отправка изменений"
+    },
+    {
+      "type": "text",
+      "content": "git push отправляет ваши коммиты в удалённую ветку. По умолчанию — в текущую ветку на origin."
+    },
+    {
+      "type": "code",
+      "content": "$ git push origin main\nTo github.com:username/project.git\n   a1b2c3d..e4a9f3c  main -> main"
+    },
+    {
+      "type": "tip",
+      "content": "Первый push ветки: git push -u origin feature установит tracking link. Далее достаточно git push."
+    },
+    {
+      "type": "warning",
+      "content": "• PUSH НЕЛЬЗЯ отменять на shared ветках — это сломает историю для коллег (force push).\n• git push origin --delete удаляет удалённую ветку — убедитесь что это merge."
+    },
+    {
+      "type": "heading",
+      "content": "Tracking branches: следим за удалённой"
+    },
+    {
+      "type": "text",
+      "content": "git fetch origin скачивает изменения, но НЕ сливает их. Используйте git pull для слияния."
+    },
+    {
+      "type": "code",
+      "content": "$ git push origin main"
+    },
+    {
+      "type": "predict",
+      "code": "$ git push -u origin feature",
+      "question": "Что сделает эта команда?",
+      "options": [
+        "Добавит tracking к ветке feature на origin",
+        "Удалит tracking ссылку",
+        "Ошибка: ветка не найдена",
+        "Настроит синхронизацию с upstream"
+      ],
+      "answer": 0,
+      "explain": "git push -u origin feature создаёт tracking связь между локальной веткой feature и удалённой origin/feature. Теперь git push и git pull будут работать без аргументов для этой ветки."
+    },
+    {
+      "type": "heading",
+      "content": "git fetch: безопасное обновление"
+    },
+    {
+      "type": "text",
+      "content": "git fetch origin скачивает изменения, но НЕ сливает их."
+    },
+    {
+      "type": "code",
+      "content": "$ git fetch origin\nremote: Counting objects: 5, done.\nremote: Compressing objects: 100% (3/3), done.\nUnpacking objects: 100% (5/5), done.\nFrom github.com:username/project\n   a1b2c3d..e4a9f3c  main       -> origin/main"
+    },
+    {
+      "type": "note",
+      "content": "git fetch скачивает изменения, но НЕ сливает их. Это безопасно — вы можете посмотреть diff, а потом решить, когда сливать."
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t1",
+      "type": "git",
+      "prompt": "Свяжи репозиторий с удалённым origin. Добавь remote и проверь через git remote -v.",
+      "starter": "",
+      "hints": [
+        "git remote add origin <url>",
+        "git remote -v покажет настроенный remote"
+      ],
+      "checks": [
+        { "kind": "git-command-used", "command": "git remote" },
+        { "kind": "git-no-error" },
+        { "kind": "git-command-used", "command": "git remote -v" }
+      ]
+    },
+    {
+      "id": "t2",
+      "type": "git",
+      "prompt": "Отправь свою ветку feature в origin с установкой tracking (git push -u origin feature). Затем сделай ещё один коммит и push без аргументов.",
+      "starter": "",
+      "hints": [
+        "git push -u origin feature установит tracking",
+        "После этого просто git push отправит новые коммиты"
+      ],
+      "checks": [
+        { "kind": "git-command-used", "command": "git push" },
+        { "kind": "git-commits-count", "min": 2 },
+        { "kind": "git-no-error" }
+      ]
+    },
+    {
+      "id": "t3",
+      "type": "git",
+      "prompt": "Получи изменения из удалённого, не сливая их. Используй git fetch, затем проверь статус.",
+      "starter": "",
+      "hints": [
+        "git fetch origin скачивает изменения",
+        "git status покажет, что есть незабранные изменения в origin/main"
+      ],
+      "checks": [
+        { "kind": "git-command-used", "command": "git fetch" },
+        { "kind": "git-command-used", "command": "git status" },
+        { "kind": "git-no-error" }
+      ]
+    },
+    {
+      "id": "t4",
+      "type": "git",
+      "prompt": "Ты случайно выполнил git push --force на ветку, которую уже запушили коллеги. Как вернуть состояние?",
+      "starter": "",
+      "hints": [
+        "git fetch origin",
+        "git reset --hard origin/main вернёт последнюю версию с удалённого"
+      ],
+      "checks": [
+        { "kind": "git-command-used", "command": "git fetch" },
+        { "kind": "git-no-error" },
+        { "kind": "git-command-used", "command": "git reset" }
+      ]
+    },
+    {
+      "id": "t5",
+      "type": "git",
+      "prompt": "Полный цикл remote workflow: init, создай коммит, настрой remote origin, push с tracking, сделай ещё коммит, push без аргументов. Проверь через git log --oneline.",
+      "starter": "",
+      "hints": [
+        "git init → git add file → git commit -m \"first\"",
+        "git remote add origin <url>",
+        "git push -u origin main",
+        "git add file2 → git commit -m \"second\" → git push"
+      ],
+      "checks": [
+        { "kind": "git-command-used", "command": "git push" },
+        { "kind": "git-commits-count", "min": 2 },
+        { "kind": "git-command-used", "command": "git log" }
+      ]
+    }
+  ],
+  "recap": [
+    "git remote add назначает удалённый репозиторий локальному (origin — стандартное имя)",
+    "git push origin ветка отправляет коммиты; -u устанавливает tracking для будущих push/pull",
+    "git fetch скачивает изменения без слияния — безопасно для просмотра",
+    "Tracking branches (origin/main) синхронизируются через push и pull автоматически",
+    "Никогда не делайте git push --force на ветки с чужими коммитами"
+  ],
+  "quiz": [
+    {
+      "q": "В чём разница между git push и git fetch?",
+      "options": [
+        "push скачивает, fetch загружает",
+        "push загружает ваши коммиты, fetch скачивает чужие без слияния",
+        "Разницы нет",
+        "fetch требует аутентификации, push нет"
+      ],
+      "answer": 1,
+      "explain": "git push отправляет ваши коммиты в удалённый репозиторий. git fetch скачивает изменения с удалённого, но не объединяет их — это безопасная операция."
+    },
+    {
+      "q": "Для чего нужен git push -u?",
+      "options": [
+        "Удалить удалённую ветку",
+        "Установить tracking связь с удалённой веткой",
+        "Принудительно отправить изменения",
+        "Проверить статус удалённого"
+      ],
+      "answer": 1,
+      "explain": "git push -u origin <branch> создаёт tracking связь между локальной веткой и удалённой. После этого git push и git pull можно вызывать без аргументов для этой ветки."
+    },
+    {
+      "q": "Можно ли безопасно использовать git push --force?",
+      "options": [
+        "Да, всегда безопасно",
+        "Только для личных веток и feature branches",
+        "Только если вы единственный разработчик",
+        "Никогда, это всегда опасно"
+      ],
+      "answer": 1,
+      "explain": "git push --force можно использовать для личных веток и feature branches, где вы — единственный разработчик. Для общих веток (main, shared feature) --force разрушит историю для коллег."
+    },
+    {
+      "q": "Что означает tracking branch?",
+      "options": [
+        "Автоматическая проверка обновлений каждые 5 минут",
+        "Локальная ветка с привязкой к удалённой для push/pull без аргументов",
+        "Удалённая ветка, которая не синхронизируется",
+        "Устаревший термин в новых версиях Git"
+      ],
+      "answer": 1,
+      "explain": "Tracking branch — это локальная ветка, которая знает, с какой удалённой веткой синхронизироваться. Git push и git pull используют эту связь, чтобы работать без аргументов."
+    }
+  ]
+}

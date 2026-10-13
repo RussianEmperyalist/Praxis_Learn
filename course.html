@@ -4,6 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Курс · Praxis Learn</title>
+  <style>
+    html { visibility: hidden; }
+    html.ready { visibility: visible; }
+  </style>
+  <script>
+    window.addEventListener('load', function() {
+      document.documentElement.classList.add('ready');
+    });
+  </script>
   <link rel="stylesheet" href="./styles/cyberpunk.css">
   <link rel="stylesheet" href="./styles/layout.css">
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
@@ -82,6 +91,21 @@
         toast('Ошибка загрузки курса: ' + e.message, 'error');
       }
     })();
+  </script>
+
+  <script>
+    if ('serviceWorker' in navigator &&
+        location.hostname !== 'localhost' &&
+        location.hostname !== '127.0.0.1') {
+      navigator.serviceWorker.register('./service-worker.js');
+    } else if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(rs => {
+        rs.forEach(r => r.unregister());
+      });
+      if (window.caches) {
+        caches.keys().then(ks => ks.forEach(k => caches.delete(k)));
+      }
+    }
   </script>
 </body>
 </html>

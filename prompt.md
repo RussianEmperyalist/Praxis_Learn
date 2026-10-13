@@ -432,7 +432,52 @@ QUIZ — массив 3–5 вопросов. Формат:
    - quiz: 3–5 вопросов с explain?
    - все примеры конкретные (не foo/bar)?
 4. Если что-то не укладывается — сокращай теорию, но не задачи 
-   и не проверки.
+       и не проверки.
+
+============================================================
+ЧАСТЬ 12. KOURС DOCKER — СИМУЛЯТОР И ПРОВЕРКИ
+============================================================
+
+Docker-симулятор — аналог git-симулятора. Состоит из трёх файлов:
+
+- scripts/docker-simulator.js — класс DockerSim (логика)
+  Поддерживает: pull, images, rmi, build, run, ps, stop, start,
+  restart, rm, logs, exec, inspect, prune, --version, help
+
+- scripts/docker-terminal.js — UI-терминал (как git-terminal.js)
+  Чеки для Docker-задач (kind):
+  - docker-image-exists: { name: "nginx" }
+  - docker-image-count: { equals: N }
+  - docker-container-running: { image: "nginx" } | { name: "web" }
+  - docker-container-count: { equals: N }
+  - docker-container-status: { name: "web", status: "exited" }
+  - docker-port-mapped: { container: "web", host: "8080", target: "80" }
+  - docker-command-used: { contains: "docker run" }
+  - dockerfile-valid: { true }
+  - dockerfile-has-instruction: { instruction: "COPY" }
+  - dockerfile-no-warnings: { true }
+
+- scripts/dockerfile-parser.js — parseDockerfile(text) →
+  { instructions, errors, warnings, layers, baseImage }
+
+Поддерживаемые Dockerfile-инструкции:
+  FROM, RUN, COPY, ADD, WORKDIR, ENV, EXPOSE,
+  CMD, ENTRYPOINT, USER, ARG, LABEL, VOLUME, HEALTHCHECK
+
+Валидации:
+  - FROM обязательна первой (иначе error)
+  - Несколько CMD → error
+  - ADD вместо COPY для локальных файлов → warning
+  - RUN apt-get без --no-install-recomments → warning
+  - Работа от root без USER → warning
+
+В lesson.html:
+  - type: "docker" — терминал Docker
+  - type: "dockerfile" — split-view: textarea слева, терминал справа
+  - type: "yaml" — textarea для YAML (compose/k8s/actions)
+
+Каждый контейнер хранит: id (12 hex), image, name, status,
+ports {host:target}, volumes, env, logs, exitCode, createdAt.
 
 ============================================================
 КОНЕЦ МАСТЕР-ПРОМПТА

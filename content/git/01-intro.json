@@ -1,28 +1,266 @@
 {
   "id": "git-01-intro",
   "title": "Что такое Git",
+  "goal": "Понять назначение Git, выполнить инициализацию репозитория и первый коммит",
+  "prereq": [],
+  "duration": 15,
   "theory": [
-    { "type": "text", "content": "Git — распределённая система контроля версий, созданная Линусом Торвальдсом в 2005 году для разработки ядра Linux." },
-    { "type": "heading", "content": "Зачем нужен Git" },
-    { "type": "text", "content": "Git позволяет: отслеживать изменения файлов, возвращаться к любой версии проекта, работать параллельно в ветках, сливать изменения и разрешать конфликты." },
-    { "type": "heading", "content": "Первая настройка" },
-    { "type": "code", "content": "git config --global user.name \"V\"\ngit config --global user.email \"v@nightcity.dev\"" },
-    { "type": "heading", "content": "Инициализация репозитория" },
-    { "type": "code", "content": "mkdir myproject && cd myproject\ngit init" },
-    { "type": "note", "content": "После <code>git init</code> в папке появится скрытая директория <code>.git</code> — это и есть локальный репозиторий." },
-    { "type": "tip", "content": "Проверить состояние репозитория можно командой <code>git status</code>." }
-  ],
-  "tasks": [],
-  "quiz": [
     {
-      "q": "Какая команда инициализирует новый Git-репозиторий?",
-      "options": ["git start", "git init", "git new", "git create"],
-      "answer": 1
+      "type": "hook",
+      "content": "В 2005 году Линус Торвальдс создал Git за два недели, потому что нуждался в быстрой системе контроля версий для ядра Linux. Сегодня Git — стандарт де-факто для разработчиков по всему миру."
     },
     {
-      "q": "Кто создал Git?",
-      "options": ["Гвидо ван Россум", "Линус Торвальдс", "Джон Кармак", "Брендан Айк"],
-      "answer": 1
+      "type": "heading",
+      "content": "Зачем нужен Git"
+    },
+    {
+      "type": "text",
+      "content": "Git решает три главные задачи разработчика: <b>отслеживание изменений</b> — кто и что изменил; <b>откат</b> — вернуться к любой версии; <b>параллельная работа</b> — коллеги не мешают друг другу."
+    },
+    {
+      "type": "heading",
+      "content": "Три уровня хранения"
+    },
+    {
+      "type": "text",
+      "content": "Git работает с тремя уровнями:"
+    },
+    {
+      "type": "code",
+      "content": "1. Рабочая директория (working)  — ваши файлы прямо сейчас\n2. Индекс (staged)              — то, что попадёт в коммит\n3. Репозиторий (committed)      — снимок, сохранённый в истории\n\ngit add     →  working → staged\n                     staged → committed\n                     committed → HEAD (голова ветки)"
+    },
+    {
+      "type": "heading",
+      "content": "Установка"
+    },
+    {
+      "type": "text",
+      "content": "В Ubuntu/Debian: <code>sudo apt install git</code>. В macOS через Homebrew: <code>brew install git</code>. В Windows — скачайте с <code>git-scm.com</code>. Проверить версию: <code>git --version</code>."
+    },
+    {
+      "type": "note",
+      "content": "В этом курсе вы работаете с <b>виртуальным Git</b> — симулятором прямо в браузере. Все команды работают так же, как в настоящем Git, но результат виден в окне рядом."
+    },
+    {
+      "type": "heading",
+      "content": "Первая настройка: кто вы?"
+    },
+    {
+      "type": "text",
+      "content": "Git нужно знать, кто создаёт коммиты. Это задаётся один раз через <code>git config</code>."
+    },
+    {
+      "type": "code",
+      "content": "git config --global user.name \"Ваше имя\"\ngit config --global user.email \"you@example.com\""
+    },
+    {
+      "type": "tip",
+      "content": "Флаг <code>--global</code> пишет настройку в файл <code>~/.gitconfig</code> и применяет её ко всем репозиториям. Без него — только в текущем."
+    },
+    {
+      "type": "heading",
+      "content": "Инициализация репозитория"
+    },
+    {
+      "type": "text",
+      "content": "Первая команда в любом проекте — <code>git init</code>. Она создаёт скрытую папку <code>.git</code>, в которой Git хранит всю историю."
+    },
+    {
+      "type": "code",
+      "content": "$ mkdir myproject && cd myproject\n$ git init\nInitialized empty Git repository in /myproject/.git/"
+    },
+    {
+      "type": "heading",
+      "content": "Состояние репозитория"
+    },
+    {
+      "type": "text",
+      "content": "Команда <code>git status</code> показывает, есть ли незакоммиченные изменения и какие файлы в индексе."
+    },
+    {
+      "type": "predict",
+      "code": "$ git status",
+      "question": "Что покажет git status после чистого git init, если вы ещё ничего не добавили?",
+      "options": [
+        "Ошибка: репозиторий не найден",
+        "Untracked files и список файлов",
+        "Рабочее дерево чистое",
+        "Никаких файлов для коммита, но статус без ошибок"
+      ],
+      "answer": 3,
+      "explain": "После git init репозиторий существует, но в нём нет коммитов и нет файлов в индексе. Git сообщает, что нечего коммитить, но не ошибается."
+    },
+    {
+      "type": "heading",
+      "content": "Добавление файлов и первый коммит"
+    },
+    {
+      "type": "code",
+      "content": "$ git add README.md      # добавить конкретный файл\n$ git add .              # добавить всё в текущей папке\n$ git commit -m \"initial commit\"  # закоммитить"
+    },
+    {
+      "type": "warning",
+      "content": "• <b>commit без add</b>: если вы ничего не добавили в индекс, <code>git commit -m \"...\"</code> выдаст ошибку «nothing to commit».<br>• <b>Пустой коммит</b>: если staged пуст и нет <code>--allow-empty</code>, коммит не создастся.<br>• <b>Потерянный -m</b>: <code>git commit</code> без <code>-m</code> откроет редактор для ввода сообщения."
+    },
+    {
+      "type": "tip",
+      "content": "Всегда пишите осмысленное сообщение коммита. Плохо: «fix», «update», «done». Хорошо: «add login form», «fix: handle null in user lookup»."
+    },
+    {
+      "type": "heading",
+      "content": "Добавление файлов в индекс"
+    },
+    {
+      "type": "text",
+      "content": "Команда <code>git add</code> копирует файл из рабочей директории в индекс (staged). В этом симуляторе файл можно добавить прямо через <code>git add filename</code> — отдельное создание файла не требуется."
+    },
+    {
+      "type": "predict",
+      "code": "$ git log --oneline",
+      "question": "Если вы только что сделали один коммит с сообщением \"initial\", что покажет git log --oneline?",
+      "options": [
+        "Ошибка: нет коммитов",
+        "Хеш и сообщение коммита",
+        "Пустой вывод",
+        "Список всех файлов в репозитории"
+      ],
+      "answer": 1,
+      "explain": "git log --oneline показывает короткий журнал: 7-символьный хеш и сообщение каждого коммита. После одного коммита вы увидите одну строку."
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t1",
+      "type": "git",
+      "prompt": "Инициализируй репозиторий Git для нового проекта.",
+      "starter": "",
+      "hints": [
+        "Команда для создания репозитория: git init",
+        "После init появится ветка main"
+      ],
+      "checks": [
+        { "kind": "git-command-used", "command": "git init" },
+        { "kind": "git-head-branch", "name": "main" },
+        { "kind": "git-command-used", "command": "git status" }
+      ]
+    },
+    {
+      "id": "t2",
+      "type": "git",
+      "prompt": "Настрой своё имя пользователя в Git на «developer».",
+      "starter": "",
+      "hints": [
+        "Команда: git config user.name \"developer\"",
+        "Имя сохраняется в config"
+      ],
+      "checks": [
+        { "kind": "git-command-used", "command": "git config" },
+        { "kind": "git-config-value", "key": "user.name", "equals": "developer" }
+      ]
+    },
+    {
+      "id": "t3",
+      "type": "git",
+      "prompt": "Создай файл README.md с содержимым \"# My Project\", добавь его в индекс и закоммить с сообщением \"initial\".",
+      "starter": "",
+      "hints": [
+        "В симуляторе файл можно добавить командой: git add README.md (создание файла отдельно не нужно)",
+        "Потом: git commit -m \"initial\""
+      ],
+      "checks": [
+        { "kind": "git-command-used", "command": "git add" },
+        { "kind": "git-command-used", "command": "git commit" },
+        { "kind": "git-commits-count", "equals": 1 },
+        { "kind": "git-file-in-commit", "file": "README.md" }
+      ]
+    },
+    {
+      "id": "t4",
+      "type": "git",
+      "prompt": "Сначала попробуй сделать git commit -m \"broken\" без git add. Увидишь, что коммит не создан (нет staged файлов). Исправь: добавь README.md в staging и только потом делай коммит с сообщением \"fixed\".",
+      "starter": "",
+      "hints": [
+        "Сначала выполните: git commit -m \"broken\" — это приведёт к ошибке «nothing to commit»",
+        "Потом: git add README.md",
+        "Наконец: git commit -m \"fixed\""
+      ],
+      "checks": [
+        { "kind": "git-command-used", "command": "git add" },
+        { "kind": "git-command-used", "command": "git commit" },
+        { "kind": "git-commits-count", "equals": 1 }
+      ]
+    },
+    {
+      "id": "t5",
+      "type": "git",
+      "prompt": "Полный цикл: инициализируй репозиторий, настрой имя «alice», добавь файл app.py в индекс и закоммить с сообщением \"add app\". Затем проверь лог коммитов.",
+      "starter": "",
+      "hints": [
+        "git init создаёт репозиторий",
+        "git config user.name \"alice\" задаёт имя",
+        "git add app.py добавляет файл",
+        "git commit -m \"add app\" создаёт коммит с нужным сообщением"
+      ],
+      "checks": [
+        { "kind": "git-command-used", "command": "git init" },
+        { "kind": "git-command-used", "command": "git commit" },
+        { "kind": "git-commits-count", "equals": 1 },
+        { "kind": "git-commit-message", "contains": "add app" }
+      ]
+    }
+  ],
+  "recap": [
+    "Git init создаёт репозиторий и автоматически создаёт ветку main",
+    "git config один раз задаёт ваше имя и email для коммитов",
+    "git add добавляет файлы в индекс — без него commit не сработает",
+    "git commit -m \"сообщение\" создаёт снимок проекта в истории",
+    "git log показывает историю коммитов, --oneline для краткого вида",
+    "git status отслеживает состояние working, staged и committed"
+  ],
+  "quiz": [
+    {
+      "q": "Что создаёт git init?",
+      "options": [
+        "Файл .gitconfig",
+        "Папку .git с внутренними структурами Git",
+        "Первый коммит",
+        "Файл .gitignore"
+      ],
+      "answer": 1,
+      "explain": "git init создаёт скрытую директорию .git, в которой хранится вся внутренняя структура Git: объекты, рефы, индекс."
+    },
+    {
+      "q": "Кто такой создатель Git?",
+      "options": [
+        "Джэймс Гослинг",
+        "Линус Торвальдс",
+        "Марк Бёртнис",
+        "Ричард Столлман"
+      ],
+      "answer": 1,
+      "explain": "Линус Торвальдс создал Git в 2005 году для разработки ядра Linux. Его философией было: быстро, просто, распределённо."
+    },
+    {
+      "q": "Что делает git add перед git commit?",
+      "options": [
+        "Открывает редактор для сообщения",
+        "Добавляет изменения в индекс (staging area)",
+        "Удаляет файлы из репозитория",
+        "Синхронизирует с удалённым репозиторием"
+      ],
+      "answer": 1,
+      "explain": "git add переносит изменения из рабочей директории в индекс (staged). Только staged-файлы попадают в следующий коммит."
+    },
+    {
+      "q": "Какой флаг нужен для коммита с сообщением?",
+      "options": [
+        "-a / --all",
+        "-m / --message",
+        "-a / --amend",
+        "-d / --delete"
+      ],
+      "answer": 1,
+      "explain": "-m (--message) позволяет передать сообщение коммита прямо в командной строке. Без него Git откроет ваш редактор для ввода."
     }
   ]
 }

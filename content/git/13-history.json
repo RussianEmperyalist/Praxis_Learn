@@ -1,0 +1,220 @@
+{
+  "id": "git-13-history",
+  "title": "Изменение истории",
+  "goal": "Освоить reset (soft/mixed/hard), reflog, понять опасность переписывания истории",
+  "prereq": ["git-12-stash"],
+  "duration": 14,
+  "theory": [
+    {
+      "type": "hook",
+      "content": "Вы закоммитили с ошибкой и уже запушили. Или нужно удалить секретный ключ, который случайно попал в историю. Git даёт мощные, но опасные инструменты для изменения истории. Используйте их бережно."
+    },
+    {
+      "type": "heading",
+      "content": "git reset: три режима"
+    },
+    {
+      "type": "text",
+      "content": "git reset возвращает ветку на указанный коммит. Три режима управляют тем, что происходит с вашими изменениями:"
+    },
+    {
+      "type": "code",
+      "content": "# soft: движем HEAD, оставляем staged и working\n$ git reset --soft HEAD~1\n\n# mixed (по умолчанию): движем HEAD, unstage\n$ git reset --mixed HEAD~1\n\n# hard: движем HEAD, удаляем staged и working\n$ git reset --hard HEAD~1"
+    },
+    {
+      "type": "predict",
+      "code": "$ git reset --soft HEAD~1",
+      "question": "После этой команды что сохранится?",
+      "options": [
+        "Ничего не сохранится",
+        "Изменения останутся в staged и working",
+        "Изменения только в working, как unstaged",
+        "Коммит удалён безвозвратно"
+      ],
+      "answer": 1,
+      "explain": "git reset --soft движет HEAD, но оставляет изменения в индексе (staged) и в working directory. Вы можете сразу закоммитить их заново."
+    },
+    {
+      "type": "heading",
+      "content": "Когда использовать каждый режим"
+    },
+    {
+      "type": "text",
+      "content": "Сравните режимы reset по триаде: HEAD, индекс (staging), working directory:"
+    },
+    {
+      "type": "code",
+      "content": "# reset --soft HEAD~1\nHEAD:    C → B (коммит удалён)\nIndex:   всё тот же staged\nWorking: всё тот же unstaged\n\n# reset --mixed HEAD~1 (default)\nHEAD:    C → B\nIndex:   очищается (unstage)\nWorking: сохраняется\n\n# reset --hard HEAD~1\nHEAD:    C → B\nIndex:   очищается\nWorking: ОЧИЩАЕТСЯ (все изменения потеряны!)"
+    },
+    {
+      "type": "warning",
+      "content": "• --hard НЕОБРАТИМО уничтожает изменения в working directory!\n• Никогда не reset --hard на запушенных коммитах — сломаете историю для коллег.\n• Для публичных коммитов используйте git revert."
+    },
+    {
+      "type": "note",
+      "content": "Если вы потеряли коммит, reflog может его восстановить. git reflog показывает историю движения HEAD."
+    },
+    {
+      "type": "predict",
+      "code": "git checkout deadbeef",
+      "question": "Вы случайно выполнили git reset --hard HEAD~10. Как восстановить работу?",
+      "options": [
+        "git reflog",
+        "git reset --hard HEAD@{1}",
+        "Оба варианта помогут найти потерянный коммит",
+        "Ничего не восстановить"
+      ],
+      "answer": 2,
+      "explain": "git reflog покажет историю движения HEAD, включая удалённые коммиты. Вы можете найти нужный коммит по его хешу и выполнить git reset --hard <hash> для восстановления."
+    },
+    {
+      "type": "heading",
+      "content": "git reflog: история движения HEAD"
+    },
+    {
+      "type": "text",
+      "content": "Reflog записывает все изменения указателя HEAD — коммиты, reset, checkout, merge. Это ваш личный undo history."
+    },
+    {
+      "type": "code",
+      "content": "$ git reflog\na1b2c3d HEAD@{0}: reset: moving to HEAD~1\nf5e6d7c HEAD@{1}: commit: fix bug\ne4a9f3c HEAD@{2}: commit: add feature\n3d3e3cb HEAD@{3}: commit (initial): init"
+    },
+    {
+      "type": "tip",
+      "content": "Reflog работает только локально. Он не передаётся в remote. Используйте его как личный undo для восстановления потерянных коммитов."
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t1",
+      "type": "git",
+      "prompt": "Создай 2 коммита, затем отмени один через git reset --soft. Затем создай новый коммит с другим сообщением — изменения должны сохраниться.",
+      "starter": "",
+      "hints": [
+        "git add file → git commit -m \"first\" → git add file2 → git commit -m \"second\"",
+        "git reset --soft HEAD~1 вернёт на один коммит назад, сохранив изменения как staged",
+        "git commit -m \"fixed\" создаст новый коммит с теми же изменениями"
+      ],
+      "checks": [
+        { "kind": "git-command-used", "command": "git reset" },
+        { "kind": "git-commits-count", "equals": 2 },
+        { "kind": "git-no-error" }
+      ]
+    },
+    {
+      "id": "t2",
+      "type": "git",
+      "prompt": "Создай коммит, используй git reset --mixed HEAD~1 для unstage, затем проверь статус — изменения должны быть в working, а не в индексе.",
+      "starter": "",
+      "hints": [
+        "git reset --mixed HEAD~1 (или просто git reset HEAD~1)",
+        "git status покажет изменения как 'Changes not staged'"
+      ],
+      "checks": [
+        { "kind": "git-command-used", "command": "git reset" },
+        { "kind": "git-command-used", "command": "git status" },
+        { "kind": "git-no-error" }
+      ]
+    },
+    {
+      "id": "t3",
+      "type": "git",
+      "prompt": "Проверь reflog после нескольких коммитов и reset. Убедись, что он показывает историю.",
+      "starter": "",
+      "hints": [
+        "git commit → git reset HEAD~1 → git reflog",
+        "git reflog покажет все операции с HEAD"
+      ],
+      "checks": [
+        { "kind": "git-command-used", "command": "git reset" },
+        { "kind": "git-command-used", "command": "git reflog" },
+        { "kind": "git-no-error" }
+      ]
+    },
+    {
+      "id": "t4",
+      "type": "git",
+      "prompt": "Ты случайно выполнил git reset --hard HEAD~5 и потерял работу. Восстанови состояние через reflog.",
+      "starter": "",
+      "hints": [
+        "git reflog покажет предыдущее состояние HEAD@{1}",
+        "git reset --hard HEAD@{1} восстановит потерянные изменения"
+      ],
+      "checks": [
+        { "kind": "git-command-used", "command": "git reflog" },
+        { "kind": "git-command-used", "command": "git reset" },
+        { "kind": "git-no-error" }
+      ]
+    },
+    {
+      "id": "t5",
+      "type": "git",
+      "prompt": "Полный цикл: создай 3 коммита, выполни git reset --soft HEAD~1, создай новый коммит с сообщением \"corrected\", проверь reflog и лог.",
+      "starter": "",
+      "hints": [
+        "git add file → git commit -m \"first\" → git add → git commit -m \"second\" → git add → git commit -m \"third\"",
+        "git reset --soft HEAD~1",
+        "git commit -m \"corrected\"",
+        "git reflog → git log --oneline"
+      ],
+      "checks": [
+        { "kind": "git-command-used", "command": "git reset" },
+        { "kind": "git-command-used", "command": "git commit" },
+        { "kind": "git-commits-count", "equals": 3 }
+      ]
+    }
+  ],
+  "recap": [
+    "git reset --soft: двигает HEAD, сохраняет staged и working",
+    "git reset --mixed (default): unstage, сохраняет working",
+    "git reset --hard: НЕОБРАТИМО уничтожает все изменения — используйте с осторожностью!",
+    "git reflog показывает историю движения HEAD — личный undo",
+    "Для публичных коммитов используйте git revert, а не reset"
+  ],
+  "quiz": [
+    {
+      "q": "Чем опасен git reset --hard?",
+      "options": [
+        "Можно потерять коммиты безвозвратно",
+        "Создаёт merge commit",
+        "Медленно работает",
+        "Требует root-доступа"
+      ],
+      "answer": 0,
+      "explain": "git reset --hard уничтожает все изменения в индексе и working directory. Если вы потеряете хеш нужного коммита, reflog может помочь восстановить работу, но это не всегда гарантировано."
+    },
+    {
+      "q": "В чём разница между --soft и --mixed в reset?",
+      "options": [
+        "soft сохраняет staged, mixed unstage",
+        "Разницы нет",
+        "soft удаляет изменения, mixed сохраняет",
+        "soft быстрее"
+      ],
+      "answer": 0,
+      "explain": "git reset --soft сохраняет изменения в индексе (staged). git reset --mixed (по умолчанию) переводит изменения из staged в working, делая их unstaged."
+    },
+    {
+      "q": "Для чего нужен git reflog?",
+      "options": [
+        "Посмотреть историю коммитов",
+        "Увидеть историю движения HEAD и восстановить потерянные коммиты",
+        "Удалить ветки",
+        "Создать backup"
+      ],
+      "answer": 1,
+      "explain": "git reflog показывает историю всех изменений указателя HEAD в локальном репозитории. Это позволяет найти и восстановить потерянные коммиты после reset --hard или rebase."
+    },
+    {
+      "q": "Когда использовать git revert вместо git reset?",
+      "options": [
+        "Только для локальных незапушенных коммитов",
+        "Для публичных коммитов, уже отправленных в remote",
+        "Никогда",
+        "Только для больших коммитов"
+      ],
+      "answer": 1,
+      "explain": "git revert создаёт новый коммит-отмену, не переписывая историю. Это безопасно для опубликованных коммитов, где git reset мог бы сломать историю для коллег."
+    }
+  ]
+}

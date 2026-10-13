@@ -4,11 +4,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Урок · Praxis Learn</title>
+  <style>
+    html { visibility: hidden; }
+    html.ready { visibility: visible; }
+  </style>
+  <script>
+    window.addEventListener('load', function() {
+      document.documentElement.classList.add('ready');
+    });
+  </script>
   <link rel="stylesheet" href="./styles/cyberpunk.css">
   <link rel="stylesheet" href="./styles/layout.css">
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-  <script src="./js/highlighter.js" defer></script>
-  <script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+     <script src="./js/highlighter.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
 </head>
 <body>
   <header class="app-header"></header>
@@ -30,7 +39,9 @@
     import { content } from './scripts/content.js';
     import { auth } from './scripts/auth.js';
     import { progress } from './scripts/progress.js';
-    import { createPlayground } from './scripts/editor.js';
+     import { createPlayground } from './scripts/editor.js';
+     import { createGitTerminal } from './scripts/git-terminal.js';
+     import { createDockerTerminal } from './scripts/docker-terminal.js';
 
     renderHeader('home');
 
@@ -148,6 +159,7 @@
           progressEl.style.width = pct + '%';
           progressEl.setAttribute('aria-valuenow', pct);
         }
+        updateCompleteBtn();
       }
 
       // IntersectionObserver для подсветки активного пункта TOC
@@ -194,20 +206,109 @@
         const hintsContainer = wrap.querySelector('.hints-container');
         renderHints(hintsContainer, task.hints || []);
 
-        await createPlayground(mount, {
-          starter: task.starter || '',
-          checks: task.checks || [],
-          tests: task.tests || [],
-          userId: user?.id,
-          taskId: task.id,
-          currentLessonId: lesson.id,
-          onPass: () => {
-            toast('Задача решена ✓', 'success');
-            completedTasks++;
-            updateProgress();
-            markLessonProgress();
-           }
-         });
+        if (task.type === 'git') {
+          await createGitPlayground(mount, {
+            checks: task.checks || [],
+            initialState: task.initialState || null,
+            userId: user?.id,
+            taskId: task.id,
+            currentLessonId: lesson.id,
+            onPass: () => {
+              toast('Задача решена ✓', 'success');
+              completedTasks++;
+              updateProgress();
+              markLessonProgress();
+            },
+          });
+        } else if (task.type === 'docker') {
+          await createDockerPlayground(mount, {
+            checks: task.checks || [],
+            initialState: task.initialState || null,
+            userId: user?.id,
+            taskId: task.id,
+            currentLessonId: lesson.id,
+            onPass: () => {
+              toast('Задача решена ✓', 'success');
+              completedTasks++;
+              updateProgress();
+              markLessonProgress();
+            },
+          });
+        } else if (task.type === 'dockerfile') {
+          await createDockerfilePlayground(mount, task, {
+            userId: user?.id,
+            taskId: task.id,
+            currentLessonId: lesson.id,
+            onPass: () => {
+              toast('Задача решена ✓', 'success');
+              completedTasks++;
+              updateProgress();
+              markLessonProgress();
+            },
+          });
+        } else {
+          await createPlayground(mount, {
+            starter: task.starter || '',
+            checks: task.checks || [],
+            tests: task.tests || [],
+            userId: user?.id,
+            taskId: task.id,
+            currentLessonId: lesson.id,
+            onPass: () => {
+              toast('Задача решена ✓', 'success');
+              completedTasks++;
+              updateProgress();
+              markLessonProgress();
+            },
+          });
+        }
+      }
+
+      async function createGitPlayground(mountEl, opts) {
+        const terminal = createGitTerminal(mountEl, opts.initialState);
+        mountEl.classList.add('git-task-playground');
+        terminal.setOpts({ ...opts, onGitPass: opts.onPass });
+      }
+
+      async function createDockerPlayground(mountEl, opts) {
+        const terminal = createDockerTerminal(mountEl, opts.initialState);
+        mountEl.classList.add('docker-task-playground');
+        terminal.setOpts({ ...opts, onDockerPass: opts.onPass });
+      }
+
+      async function createDockerfilePlayground(mountEl, task, opts) {
+        mountEl.classList.add('dockerfile-task-playground');
+        mountEl.innerHTML = `
+          <div class="dockerfile-split">
+            <div class="dockerfile-editor">
+              <label>Dockerfile</label>
+              <textarea id="dockerfile-${task.id}" class="dockerfile-input" placeholder="Напишите Dockerfile здесь...">${task.starter || ''}</textarea>
+            </div>
+            <div class="dockerfile-terminal" id="dockerfile-term-${task.id}"></div>
+          </div>
+        `;
+        const ta = mountEl.querySelector('.dockerfile-input');
+        const termMount = mountEl.querySelector('#dockerfile-term-' + task.id);
+        const terminal = createDockerTerminal(termMount, opts.initialState);
+        terminal.setOpts({
+          ...opts,
+          onDockerPass: opts.onPass,
+          parseDockerfile: async (text) => {
+            const { parseDockerfile } = await import('./scripts/dockerfile-parser.js');
+            return parseDockerfile(text);
+          },
+        });
+        const checkBtn = termMount.querySelector('#dockerCheckBtn');
+        const originalClick = checkBtn.onclick;
+        if (checkBtn && ta) {
+          checkBtn.onclick = async () => {
+            const dockerfileText = ta.value;
+            const { parseDockerfile } = await import('./scripts/dockerfile-parser.js');
+            const result = parseDockerfile(dockerfileText);
+            terminal.getSim()._dockerfileResult = result;
+            if (originalClick) originalClick();
+          };
+        }
       }
 
       function renderHints(container, hints) {
@@ -244,7 +345,7 @@
           const block = document.createElement('div');
           block.className = 'card';
           block.innerHTML = `
-            <div class="quiz-question">${qi + 1}. ${escapeHtml(q.q)}</div>
+            <div class="quiz-question">${qi + 1}. ${q.q}</div>
             <div class="quiz-options"></div>
           `;
           const opts = block.querySelector('.quiz-options');
@@ -265,7 +366,7 @@
               if (q.explain) {
                 const expl = document.createElement('div');
                 expl.className = 'quiz-explanation';
-                expl.innerHTML = `<strong>Объяснение:</strong> ${escapeHtml(q.explain)}`;
+                 expl.innerHTML = `<strong>Объяснение:</strong> ${q.explain}`;
                 block.appendChild(expl);
               }
               if (correct) completedQuiz++;
@@ -296,6 +397,10 @@
 
       // Отметка о прохождении
       const completeBtn = document.getElementById('completeBtn');
+      function updateCompleteBtn() {
+        const allDone = completedTasks === totalTasks && completedQuiz === totalQuiz;
+        completeBtn.disabled = !allDone;
+      }
       if (user) {
         const p = map.get(lesson.id);
         if (p?.status === 'completed') completeBtn.textContent = '✓ Пройдено';
@@ -303,11 +408,13 @@
           await progress.completeLesson(user.id, lesson.id);
           toast('Урок отмечен как пройденный', 'success');
           completeBtn.textContent = '✓ Пройдено';
+          completeBtn.disabled = true;
         };
       } else {
         completeBtn.onclick = () => location.href = './login.html';
         completeBtn.textContent = 'Войдите, чтобы сохранять прогресс';
       }
+      updateCompleteBtn();
 
       if (user) markLessonProgress();
 
@@ -316,16 +423,16 @@
       }
 
       function renderTheoryBlock(b) {
-        if (b.type === 'hook') return `<div class="aside-block"><strong>◆</strong> ${escapeHtml(b.content)}</div>`;
+        if (b.type === 'hook') return `<div class="aside-block"><strong>◆</strong> ${b.content}</div>`;
         if (b.type === 'text') return `<p>${b.content}</p>`;
         if (b.type === 'html') return b.content;
         if (b.type === 'code') {
           const lang = b.lang || 'python';
           return `<pre class="language-${lang}"><code class="language-${lang}">${escapeHtml(b.content)}</code></pre>`;
         }
-        if (b.type === 'note') return `<div class="aside-block"><strong>Примечание</strong> ${escapeHtml(b.content)}</div>`;
-        if (b.type === 'warning') return `<div class="aside-block warning"><strong>Внимание</strong> ${escapeHtml(b.content)}</div>`;
-        if (b.type === 'tip') return `<div class="aside-block tip"><strong>Подсказка</strong> ${escapeHtml(b.content)}</div>`;
+        if (b.type === 'note') return `<div class="aside-block"><strong>Примечание</strong> ${b.content}</div>`;
+        if (b.type === 'warning') return `<div class="aside-block warning"><strong>Внимание</strong> ${b.content}</div>`;
+        if (b.type === 'tip') return `<div class="aside-block tip"><strong>Подсказка</strong> ${b.content}</div>`;
         if (b.type === 'heading') {
           const slug = b.content.toLowerCase().replace(/[^а-яёa-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
           return `<h2 id="${slug}">${b.content}</h2>`;
@@ -338,16 +445,16 @@
         return `
           <div class="predict-block">
             <pre class="language-python"><code class="language-python">${escapeHtml(b.code)}</code></pre>
-            <div class="predict-question">${escapeHtml(b.question)}</div>
+            <div class="predict-question">${b.question}</div>
             <div class="predict-options" data-answer="${b.answer}" role="group">
               ${b.options.map((opt, oi) => `
                 <div class="predict-option" data-idx="${oi}" role="button" tabindex="0">
-                  ${String.fromCharCode(65 + oi)}. ${escapeHtml(opt)}
+                  ${String.fromCharCode(65 + oi)}. ${opt}
                 </div>
               `).join('')}
             </div>
             <div class="predict-explain">
-              <strong>Объяснение:</strong> ${escapeHtml(b.explain)}
+              <strong>Объяснение:</strong> ${b.explain}
             </div>
           </div>
         `;
@@ -384,8 +491,17 @@
   </script>
 
   <script>
-    if ('serviceWorker' in navigator) {
+    if ('serviceWorker' in navigator &&
+        location.hostname !== 'localhost' &&
+        location.hostname !== '127.0.0.1') {
       navigator.serviceWorker.register('./service-worker.js');
+    } else if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(rs => {
+        rs.forEach(r => r.unregister());
+      });
+      if (window.caches) {
+        caches.keys().then(ks => ks.forEach(k => caches.delete(k)));
+      }
     }
   </script>
 </body>

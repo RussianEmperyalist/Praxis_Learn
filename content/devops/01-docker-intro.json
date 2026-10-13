@@ -1,27 +1,309 @@
 {
-  "id": "devops-01-docker",
-  "title": "Docker: базовые концепции",
+  "id": "devops-01-docker-intro",
+  "title": "Docker: контейнеры вместо ВМ",
+  "goal": "Понять концепцию контейнеров, разницу с виртуальными машинами и выполнить первые команды Docker",
+  "prereq": [],
+  "duration": 15,
   "theory": [
-    { "type": "text", "content": "Docker — платформа для запуска приложений в изолированных контейнерах. Контейнер содержит код и все зависимости, что гарантирует одинаковое поведение на любой машине." },
-    { "type": "heading", "content": "Образ vs Контейнер" },
-    { "type": "text", "content": "<b>Образ (image)</b> — неизменяемый шаблон: файловая система + метаданные.<br><b>Контейнер</b> — запущенный экземпляр образа. Один образ → много контейнеров." },
-    { "type": "code", "content": "docker pull python:3.12-slim\ndocker run -it --rm python:3.12-slim python --version\ndocker ps\ndocker images" },
-    { "type": "heading", "content": "Dockerfile" },
-    { "type": "code", "content": "FROM python:3.12-slim\nWORKDIR /app\nCOPY requirements.txt .\nRUN pip install --no-cache-dir -r requirements.txt\nCOPY . .\nCMD [\"python\", \"app.py\"]" },
-    { "type": "note", "content": "Сборка образа: <code>docker build -t myapp .</code><br>Запуск: <code>docker run myapp</code>" },
-    { "type": "warning", "content": "Не храните секреты (пароли, токены) в Dockerfile. Используйте <code>--env-file</code> или Docker secrets." }
-  ],
-  "tasks": [],
-  "quiz": [
     {
-      "q": "Что такое образ Docker?",
-      "options": ["Запущенный процесс", "Неизменяемый шаблон ФС и метаданных", "Docker-файл", "Виртуальная машина"],
-      "answer": 1
+      "type": "hook",
+      "content": "Приложение работает на твоей машине, но падает у коллеги. «У меня всё работает!» — классика. Как сделать так, чтобы работало везде одинаково?"
     },
     {
-      "q": "Какая команда собирает образ из Dockerfile?",
-      "options": ["docker run", "docker build", "docker make", "docker compile"],
-      "answer": 1
+      "type": "heading",
+      "content": "Зачем Docker: проблема окружения"
+    },
+    {
+      "type": "text",
+      "content": "Python 3.10 на твоей машине, Python 3.12 на сервере. В одних системах есть libpq, в других — нет. «Работает у меня» ≠ «работает везде»."
+    },
+    {
+      "type": "text",
+      "content": "Docker решает это: он упаковывает приложение <b>вместе со всеми зависимостями</b> в контейнер. Один и тот же образ работает на Ubuntu, macOS и Windows без изменений."
+    },
+    {
+      "type": "code",
+      "content": "# Без Docker:\npython app.py\n# ModuleNotFoundError: No module named 'flask'\n# — потому что flask не установлен в этом окружении\n\n# С Docker:\ndocker run -p 5000:5000 myapp\n# Работает везде, где есть Docker"
+    },
+    {
+      "type": "warning",
+      "content": "• <b>Python 3.10 vs 3.12</b>: код с f-строками и match-case работает на 3.10+, но падает на 3.9.<br>• <b>Системные библиотеки</b>: psycopg2 требует libpq-dev — его нет на всех машинах.<br>• <b>Node 16 vs 18</b>: некоторые пакеты ломаются на разных версиях."
+    },
+    {
+      "type": "heading",
+      "content": "Что такое контейнер"
+    },
+    {
+      "type": "text",
+      "content": "Контейнер — это <b>изолированный процесс</b> с собственной файловой системой, сетью и окружением. Он запускается на ядре хост-системы, не требуя отдельной ОС."
+    },
+    {
+      "type": "text",
+      "content": "Контейнер ≠ виртуальная машина. ВМ содержит целую операционную систему и запускается через гипервизор. Контейнер — просто процесс с изоляцией."
+    },
+    {
+      "type": "code",
+      "lang": "text",
+      "content": "┌─────────────────────────────┐    ┌─────────────────────┐\n│       Виртуальная Машина      │    │      Контейнер       │\n│                               │    │                     │\n│  ┌─────────────────────────┐  │    │  ┌─────────────────┐  │\n│  │  Гостевая ОС (Ubuntu)   │  │    │  │  Приложение     │  │\n│  │                         │  │    │  │  + зависимости  │  │\n│  │  ┌───────────────────┐ │  │    │  └─────────────────┘  │\n│  │  │    Приложение     │ │  │    │             ↑             │\n│  │  └───────────────────┘ │  │    │      Ядро хоста       │\n│  └─────────────────────────┘  │    └─────────────────────┘\n│  ┌─────────────────────────┐  │     ↑        ↑\n│  │  Гипервизор             │  │  Быстрее, меньше памяти\n│  └─────────────────────────┘  │\n└─────────────────────────────┘\n\nРазмер: ВМ = 2–8 ГБ | Контейнер = 50–500 МБ\nВремя старта: ВМ = 30–120 сек | Контейнер = 1–3 сек"
+    },
+    {
+      "type": "predict",
+      "code": "$ docker run hello-world",
+      "question": "Что произойдёт после docker run hello-world?",
+      "options": [
+        "Ошибка: образ не найден",
+        "Загрузит образ, запустит контейнер, выведет приветствие и остановится",
+        "Запустит nginx на порте 80",
+        "Создаст файл hello-world.txt"
+      ],
+      "answer": 1,
+      "explain": "docker run hello-world автоматически выполнит docker pull, если образ локально отсутствует. Затем запустит контейнер, который выведет приветствие и завершится, потому что CMD в образе hello-world просто печатает текст."
+    },
+    {
+      "type": "heading",
+      "content": "Образ vs контейнер"
+    },
+    {
+      "type": "text",
+      "content": "Это две разные вещи. Путайте — и CI сломается."
+    },
+    {
+      "type": "code",
+      "content": "Образ (image)        — неизменяимый шаблон (как класс в ООП)\nКонтейнер (container)  — запущенный экземпляр образа (как объект)\n\nОдин образ  →  бесконечное количество контейнеров\nnginx:latest  →  web1, web2, web3 (все на разных портах)"
+    },
+    {
+      "type": "note",
+      "content": "Образ состоит из слоёв (layers). Каждый слой — read-only. Контейнер добавляет свой верхний слой для записи. Это почему образы можно кэшировать и переиспользовать."
+    },
+    {
+      "type": "tip",
+      "content": "Запомните аналогию: образ = бутылка с водой (шаблон), контейнер = открытая бутылка (можно пить, а потом выбросить). Одну бутылку можно открыть много раз."
+    },
+    {
+      "type": "warning",
+      "content": "• <b>docker run ≠ docker start</b>: run создаёт новый контейнер, start — возобнавливает остановленный.<br>• <b>Путают image и container</b>: docker rmi удаляет образ, docker rm — контейнер.<br>• <b>docker exec ≠ docker run</b>: exec запускает команду в уже работающем контейнере."
+    },
+    {
+      "type": "heading",
+      "content": "Первые команды: pull, run, ps, images"
+    },
+    {
+      "type": "text",
+      "content": "Эти четыре команды покрывают 80% типичного использования Docker."
+    },
+    {
+      "type": "code",
+      "content": "$ docker pull nginx            # загрузить образ из реестра\n$ docker images               # список локальных образов\n$ docker run nginx            # запустить контейнер (foreground)\n$ docker run -d -p 8080:80 nginx  # запустить в фоне, проброс порта\n$ docker ps                    # работающие контейнеры\n$ docker ps -a                 # все контейнеры (включая остановленные)"
+    },
+    {
+      "type": "predict",
+      "code": "$ docker run -d --name web1 nginx\n$ docker run -d --name web2 nginx",
+      "question": "Сколько контейнеров можно запустить из одного образа nginx?",
+      "options": [
+        "Только один — второй даст ошибку",
+        "Два — каждый контейнер независим",
+        "Ошибку port conflict (порт 80 занят)",
+        "Ноль — нужен -p для каждого"
+      ],
+      "answer": 1,
+      "explain": "Образ nginx можно использовать для создания неограниченного количества контейнеров. Каждый имеет свой ID, свою файловую систему и свои порты. Ошибка port conflict случится только если вы пробросите одинаковый host-порт (-p 80:80 для обоих)."
+    },
+    {
+      "type": "heading",
+      "content": "Установка Docker"
+    },
+    {
+      "type": "text",
+      "content": "Docker Desktop (Windows/macOS) — включает Docker Engine и GUI. Linux: <code>apt install docker.io</code>. В этом курсе вы работаете с виртуальным Docker — симулятором в браузере."
+    },
+    {
+      "type": "tip",
+      "content": "<code>docker info</code> покажет версию, количество образов, контейнеров и активную сеть. Хорошая команда для диагностики."
+    },
+    {
+      "type": "note",
+      "content": "В симуляторе образы <code>hello-world</code>, <code>nginx</code>, <code>redis</code>, <code>postgres</code> и <code>python</code> доступны командой <code>docker pull</code>. Поддерживаются: run, ps, stop, start, rm, logs, exec, inspect, build, pull, images, rmi, prune."
+    },
+    {
+      "type": "heading",
+      "content": "Как остановить и удалить контейнер"
+    },
+    {
+      "type": "text",
+      "content": "Контейнер в фоне работает, пока вы не остановите его. Цикл жизни: <b>created → running → exited → removed</b>."
+    },
+    {
+      "type": "code",
+      "content": "$ docker ps                        # увидеть running контейнеры\n$ docker stop web                  # остановить по имени\n$ docker rm web                    # удалить остановленный\n$ docker rm -f web                 # удалить принудительно (даже если running)\n$ docker start web                 # возобновить остановленный"
+    },
+    {
+      "type": "warning",
+      "content": "• <b>docker rm на running контейнере</b> выдаст ошибку. Сначала stop, потом rm.<br>• <b>docker stop без -d</b>: контейнер блокирует терминал до остановки. Используйте -d для фоновых контейнеров.<br>• <b>docker rmi на образ с контейнерами</b>: ошибка «image is being used». Удалите контейнеры первыми."
+    },
+    {
+      "type": "tip",
+      "content": "Флаг <code>--rm</code> автоматически удаляет контейнер после остановки. Удобно для one-shot задач: <code>docker run --rm myimage</code>."
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t1",
+      "type": "docker",
+      "prompt": "Проверь версию Docker и скачай образ hello-world.",
+      "starter": "",
+      "hints": [
+        "Команда: docker --version",
+        "Скачать образ: docker pull hello-world"
+      ],
+      "checks": [
+        { "kind": "docker-command-used", "contains": "docker --version" },
+        { "kind": "docker-image-exists", "name": "hello-world" }
+      ]
+    },
+    {
+      "id": "t2",
+      "type": "docker",
+      "prompt": "Запусти контейнер из образа hello-world с флагом --rm, чтобы он сам удалился после остановки.",
+      "starter": "",
+      "hints": [
+        "Синтаксис: docker run --rm hello-world",
+        "hello-world сразу завершается — контейнер исчезнет"
+      ],
+      "checks": [
+        { "kind": "docker-command-used", "contains": "docker run" },
+        { "kind": "docker-command-used", "contains": "--rm" }
+      ]
+    },
+    {
+      "id": "t3",
+      "type": "docker",
+      "prompt": "Скачай образ nginx и запусти его в фоне (detached) под именем web, пробросив порт 8080 на 80.",
+      "starter": "",
+      "hints": [
+        "docker pull nginx → docker run -d -p 8080:80 --name web nginx",
+        "Проверь через docker ps"
+      ],
+      "checks": [
+        { "kind": "docker-image-exists", "name": "nginx" },
+        { "kind": "docker-container-running", "name": "web" },
+        { "kind": "docker-port-mapped", "container": "web", "host": "8080", "target": "80" }
+      ]
+    },
+    {
+      "id": "t4",
+      "type": "docker",
+      "prompt": "Студент ввёл 'docker run nginx' без -d, и терминал завис — контейнер работает в foreground. Останови его: сначала посмотри запущенные контейнеры через docker ps, останови по ID, затем перезапусти nginx в фоне (-d) и снова проверь список.",
+      "starter": "",
+      "initialState": {
+        "images": [
+          { "name": "nginx", "tag": "latest", "size": "187MB", "layers": ["base", "main"], "createdAt": 1700000000000, "id": "sha256:abc123" }
+        ],
+        "containers": [
+          {
+            "id": "a1b2c3d4e5f6",
+            "image": "nginx:latest",
+            "name": "nginx",
+            "status": "running",
+            "ports": {},
+            "volumes": [],
+            "env": {},
+            "logs": ["/docker-entrypoint.sh: ready"],
+            "exitCode": null,
+            "createdAt": 1700000000000,
+            "rm": false
+          }
+        ],
+        "volumes": [],
+        "networks": [
+          { "name": "bridge", "driver": "bridge", "ipam": { "config": [{ "subnet": "172.17.0.0/16" }] }, "containers": [] }
+        ],
+        "history": [],
+        "output": [],
+        "commandHistory": [],
+        "lastError": null
+      },
+      "hints": [
+        "docker ps покажет запущенный контейнер по ID a1b2c3d4e5f6",
+        "docker stop a1b2c3d4e5f6 — остановит контейнер",
+        "docker rm a1b2c3d4e5f6 — удалит его",
+        "docker run -d --name web -p 8080:80 nginx — запустит в фоне"
+      ],
+      "checks": [
+        { "kind": "docker-command-used", "contains": "docker ps" },
+        { "kind": "docker-command-used", "contains": "docker run -d" }
+      ]
+    },
+    {
+      "id": "t5",
+      "type": "docker",
+      "prompt": "Сценарий: скачай postgres, запусти под именем db с пробросом порта 5432:5432 и переменной POSTGRES_PASSWORD=secret. Проверь статус контейнера и список образов.",
+      "starter": "",
+      "hints": [
+        "docker pull postgres",
+        "docker run -d --name db -p 5432:5432 -e POSTGRES_PASSWORD=secret postgres",
+        "docker ps → статус running",
+        "docker images → увидеть postgres"
+      ],
+      "checks": [
+        { "kind": "docker-image-exists", "name": "postgres" },
+        { "kind": "docker-container-running", "name": "db" },
+        { "kind": "docker-port-mapped", "container": "db", "host": "5432", "target": "5432" },
+        { "kind": "docker-command-used", "contains": "docker images" }
+      ]
+    }
+  ],
+  "recap": [
+    "Контейнер — изолированный процесс. Он НЕ содержит ОС, а использует ядро хоста",
+    "Образ — неизменяемый шаблон. Контейнер — запущенный экземпляр образа",
+    "docker run = pull (если нужно) + create + start. -d = detached (в фоне)",
+    "docker ps = только running. docker ps -a = все контейнеры",
+    "docker stop → docker rm → docker rmi: остановить, удалить контейнер, удалить образ",
+    "Порты: -p host:container. Один хост-порт — только один контейнер"
+  ],
+  "quiz": [
+    {
+      "q": "Чем контейнер отличается от виртуальной машины?",
+      "options": [
+        "Контейнер тяжелее и медленнее запускается",
+        "Контейнер включает гостевую ОС и гипервизор",
+        "Контейнер использует ядро хоста, не содержит ОС",
+        "Виртуальная машина быстрее"
+      ],
+      "answer": 2,
+      "explain": "Виртуальная машина содержит полную ОС и запускается через гипервизор. Контейнер — это просто изолированный процесс, который использует ядро хост-системы. Поэтому контейнеры в 10–100 раз легче и быстрее стартуют."
+    },
+    {
+      "q": "Что делает docker run -d --name web -p 8080:80 nginx?",
+      "options": [
+        "Скачивает nginx и удаляет его после остановки",
+        "Запускает контейнер nginx в фоне с пробросом порта 8080→80",
+        "Останавливает контейнер web",
+        "Создаёт образ nginx из Dockerfile"
+      ],
+      "answer": 1,
+      "explain": "docker run создаёт и запускает контейнер. Флаг -d (detached) отправляет процесс в фон. --name web задаёт имя. -p 8080:80 пробрасывает host-порт 8080 на container-порт 80. nginx — образ."
+    },
+    {
+      "q": "Образ (image) vs контейнер (container) — чем отличаются?",
+      "options": [
+        "Разницы нет, это синонимы",
+        "Образ — класс, контейнер — объект. Образ шаблон, контейнер — запущенный экземпляр",
+        "Контейнер — файл, образ — запущенный процесс",
+        "Образ удаляется командой docker rm, контейнер — docker rmi"
+      ],
+      "answer": 1,
+      "explain": "Образ — это неизменяемый шаблон (как класс в ООП). Контейнер — это запущенный экземпляр образа (как объект). Один образ можно использовать для создания множества контейнеров."
+    },
+    {
+      "q": "Что покажет docker ps -a?",
+      "options": [
+        "Только работающие контейнеры",
+        "Все контейнеры, включая остановленные",
+        "Только остановленные контейнеры",
+        "Список образов"
+      ],
+      "answer": 1,
+      "explain": "docker ps показывает только работающие контейнеры. Флаг -a (all) добавляет остановленные. Это ключевое различие: без -a вы не увидите контейнер после остановки."
     }
   ]
 }

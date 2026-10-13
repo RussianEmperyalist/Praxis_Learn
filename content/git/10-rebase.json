@@ -1,0 +1,236 @@
+{
+  "id": "git-10-rebase",
+  "title": "Rebase: линейная история",
+  "goal": "Освоить git rebase, понять разницу с merge, уметь исправлять конфликты",
+  "prereq": ["git-09-pr"],
+  "duration": 16,
+  "theory": [
+    {
+      "type": "hook",
+      "content": "Вы сделали 10 коммитов в feature-ветке. История main тоже продвинулась. Как совместить? Merge создаст merge commit, rebase — перенесёт ваши коммиты поверх main. Чисто, линейно, красиво."
+    },
+    {
+      "type": "heading",
+      "content": "Что делает rebase"
+    },
+    {
+      "type": "text",
+      "content": "Rebase временно отсоединяет ваши коммиты, переносит основу ветки на конец target, затем применяет ваши коммиты по порядку. Результат — линейная история."
+    },
+    {
+      "type": "code",
+      "content": "# До rebase:\nmain:    A---B---C (HEAD)\n          \\\nfeature:          D---E---F (HEAD)\n\n# После git rebase main:\nmain:    A---B---C (HEAD)\n                    \\\nfeature:                    D'---E'---F' (HEAD)\n\n# Теперь можно fast-forward merge обратно в main"
+    },
+    {
+      "type": "predict",
+      "code": "$ git checkout feature && git rebase main && git checkout main && git merge feature",
+      "question": "Какой тип merge получится после rebase?",
+      "options": [
+        "3-way merge с merge commit",
+        "Fast-forward — main просто переместится на feature",
+        "Конфликт",
+        "Ошибка rebase"
+      ],
+      "answer": 1,
+      "explain": "После rebase feature указывает на конец main. Когда вы switch на main и merge feature, Git может выполнить fast-forward — просто переместить main на feature без создания merge commit."
+    },
+    {
+      "type": "heading",
+      "content": "git rebase: типичный сценарий"
+    },
+    {
+      "type": "text",
+      "content": "Типичный rebase- workflow для feature-ветки:"
+    },
+    {
+      "type": "code",
+      "content": "$ git checkout feature\n$ git rebase main\nFirst, rewinding head your branch... Applying: feat: add login → OK\nApplying: fix: validate input → OK\n$ git checkout main\n$ git merge feature  # fast-forward!\n$ git branch -d feature"
+    },
+    {
+      "type": "tip",
+      "content": "Rebase даёт чистую линейную историю. Используйте его, когда хотите избежать merge commit-ов в основной ветке."
+    },
+    {
+      "type": "heading",
+      "content": "Интерактивный rebase: меняем историю"
+    },
+    {
+      "type": "text",
+      "content": "git rebase -i (interactive) позволяет переставлять, удалять, склеиввать и редактировать коммиты."
+    },
+    {
+      "type": "code",
+      "content": "$ git rebase -i HEAD~3\n# Откроется редактор:\n# pick a1b2c3d first commit\n# pick e4a9f3c second commit\n# pick 5d6e7f8 third commit\n\n# Можно изменить:\n# reword — изменить сообщение\n# squash — слить с предыдущим\n# edit — отредактировать содержимое\n# drop — удалить коммит\n# reorder — перетащить строку выше/ниже"
+    },
+    {
+      "type": "warning",
+      "content": "• rebase переписывает историю — хеши коммитов меняются!\n• Никогда не rebase опубликованных (уже в origin) коммитов — это сломает историю для коллег.\n• Если rebase конфликтует — исправьте и git rebase --continue"
+    },
+    {
+      "type": "predict",
+      "code": "git rebase main",
+      "question": "Во время rebase возник конфликт в файле app.py. Что делать?",
+      "options": [
+        "git merge --abort",
+        "Исправить файл, git add app.py, git rebase --continue",
+        "git reset --hard",
+        "Пропустить конфликт через Ctrl+C"
+      ],
+      "answer": 1,
+      "explain": "При конфликте rebase останавливается. Исправьте файл (удалите маркеры), git add <file>, затем git rebase --continue, чтобы продолжить применение оставшихся коммитов."
+    },
+    {
+      "type": "heading",
+      "content": "Rebase vs Merge: когда что использовать"
+    },
+    {
+      "type": "text",
+      "content": "Выбор между rebase и merge зависит от команды:"
+    },
+    {
+      "type": "code",
+      "content": "# Merge: сохраняет историю ветвления, понятна происхождение\n#   + Удобно для отслеживания истории фич\n#   - Ветвистая история, много merge commits\n\n# Rebase: линейная история, чистый лог\n#   + Легко читать git log и git bisect\n#   - Потеря информации о ветвлении"
+    },
+    {
+      "type": "tip",
+      "content": "Многие команды используют rebase для feature-веток перед PR (чтобы очистить историю), а для слияния в main используют merge commit или squash."
+    },
+    {
+      "type": "note",
+      "content": "GitHub поддерживает \"rebase and merge\" и \"squash and merge\" как альтернативу merge commit в настройках ветки."
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t1",
+      "type": "git",
+      "prompt": "Создай ветку feature от main, сделай коммит, затем выполните rebase на main.",
+      "starter": "",
+      "hints": [
+        "git checkout main → git checkout -b feature",
+        "git add file → git commit -m \"feat\"",
+        "git rebase main перенесёт коммиты на конец main"
+      ],
+      "checks": [
+        { "kind": "git-command-used", "command": "git rebase" },
+        { "kind": "git-commits-count", "equals": 1 },
+        { "kind": "git-no-error" }
+      ]
+    },
+    {
+      "id": "t2",
+      "type": "git",
+      "prompt": "Сделай 2 коммита в feature-ветке, затем выполните интерактивный rebase для squash первого и второго в один.",
+      "starter": "",
+      "hints": [
+        "git add file → git commit -m \"first\" → git add file2 → git commit -m \"second\"",
+        "git rebase -i HEAD~2 → выберите squash для второго коммита"
+      ],
+      "checks": [
+        { "kind": "git-command-used", "command": "git rebase" },
+        { "kind": "git-commits-count", "equals": 1 },
+        { "kind": "git-no-error" }
+      ]
+    },
+    {
+      "id": "t3",
+      "type": "git",
+      "prompt": "Выполни rebase с конфликтом: создай конфликт в файле, исправь его и продолжи rebase.",
+      "starter": "",
+      "hints": [
+        "Создайте конфликт: измените один и тот же файл в main и feature",
+        "Во время конфликта: исправьте файл → git add → git rebase --continue"
+      ],
+      "checks": [
+        { "kind": "git-command-used", "command": "git rebase" },
+        { "kind": "git-command-used", "command": "git add" },
+        { "kind": "git-no-error" }
+      ]
+    },
+    {
+      "id": "t4",
+      "type": "git",
+      "prompt": "Ты ошибся в сообщении коммита, которое уже запушено, но никто ещё не пуллнул. Исправь через интерактивный rebase.",
+      "starter": "",
+      "hints": [
+        "git rebase -i HEAD~1 → измените pick на reword → исправьте сообщение",
+        "git push --force-with-lease обновит удалённый"
+      ],
+      "checks": [
+        { "kind": "git-command-used", "command": "git rebase" },
+        { "kind": "git-no-error" },
+        { "kind": "git-commits-count", "equals": 1 }
+      ]
+    },
+    {
+      "id": "t5",
+      "type": "git",
+      "prompt": "Полный rebase workflow: создай main с коммитом, создай feature с 2 коммитами, добавь новый коммит в main, выполни rebase feature на main, затем merge в main.",
+      "starter": "",
+      "hints": [
+        "git init → git add → git commit -m \"init\"",
+        "git checkout -b feature → git add → git commit -m \"feat 1\" → git add → git commit -m \"feat 2\"",
+        "git checkout main → git add → git commit -m \"main update\"",
+        "git checkout feature → git rebase main → git checkout main → git merge feature"
+      ],
+      "checks": [
+        { "kind": "git-command-used", "command": "git rebase" },
+        { "kind": "git-command-used", "command": "git merge" },
+        { "kind": "git-commits-count", "min": 3 }
+      ]
+    }
+  ],
+  "recap": [
+    "Rebase переносит ваши коммиты поверх target — линейная история без merge commit",
+    "После rebase история main можно слить fast-forward merge",
+    "Интерактивный rebase (rebase -i) позволяет squash, reword, edit, drop и reorder",
+    "Никогда не rebase опубликованных коммитов — ломаете историю для коллег",
+    "При конфликте rebase: исправьте файл, git add, git rebase --continue или --abort"
+  ],
+  "quiz": [
+    {
+      "q": "В чём главное преимущество rebase перед merge?",
+      "options": [
+        "Rebase быстрее выполняется",
+        "Rebase создаёт линейную историю без merge commit",
+        "Rebase не требует разрешения конфликтов",
+        "Rebase работает только с текстовыми файлами"
+      ],
+      "answer": 1,
+      "explain": "Rebase переносит ваши коммиты поверх целевой ветки, создавая линейную историю. Это упрощает просмотр git log и использование git bisect."
+    },
+    {
+      "q": "Можно ли использовать rebase на опубликованных коммитах?",
+      "options": [
+        "Да, это безопасно",
+        "Только если вы один разработчик",
+        "Нет — это сломает историю для коллег",
+        "Только для feature-веток"
+      ],
+      "answer": 2,
+      "explain": "Rebase переписывает историю, меняя хеши коммитов. Если коммиты уже отправлены в origin и другие коллеги их получили, rebase сломает их локальную историю."
+    },
+    {
+      "q": "Что делает git rebase -i?",
+      "options": [
+        "Интерактивный rebase с выбором действий с коммитами",
+        "Автоматически склеивает все коммиты",
+        "Отменяет последний rebase",
+        "Показывает diff конфликтов"
+      ],
+      "answer": 0,
+      "explain": "git rebase -i (interactive) открывает редактор с инструкциями для каждого коммита: pick, reword, edit, squash, drop. Позволяет переставлять и изменять коммиты."
+    },
+    {
+      "q": "При конфликте rebase что делать после исправления файла?",
+      "options": [
+        "git commit",
+        "git merge --continue",
+        "git rebase --continue",
+        "git reset --hard"
+      ],
+      "answer": 2,
+      "explain": "После исправления конфликта при rebase: удалите маркеры, git add <file>, затем git rebase --continue чтобы продолжить применение оставшихся коммитов."
+    }
+  ]
+}

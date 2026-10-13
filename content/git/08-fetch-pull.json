@@ -1,0 +1,224 @@
+{
+  "id": "git-08-fetch-pull",
+  "title": "Fetch и pull",
+  "goal": "Освоить git fetch, git pull, pull --rebase для безопасной синхронизации",
+  "prereq": ["git-07-remote"],
+  "duration": 12,
+  "theory": [
+    {
+      "type": "hook",
+      "content": "Ваши коллеги внесли изменения в main. Как получить их к себе локально? Выбор: fetch (безопасно, без слияния) или pull (fetch + merge сразу)."
+    },
+    {
+      "type": "heading",
+      "content": "git fetch: скачать без слияния"
+    },
+    {
+      "type": "text",
+      "content": "git fetch скачивает новые коммиты и обновляет remote-tracking branches (origin/main), но НЕ сливает их с вашими ветками."
+    },
+    {
+      "type": "code",
+      "content": "$ git fetch origin\nremote: Counting objects: 5, done.\nUnpacking objects: 100% (5/5), done.\nFrom github.com:username/project\n   a1b2c3d..e4a9f3c  main       -> origin/main"
+    },
+    {
+      "type": "predict",
+      "code": "$ git fetch && git log --oneline main..origin/main",
+      "question": "Что покажет вторая команда?",
+      "options": [
+        "Все коммиты origin/main",
+        "Коммиты, которые есть в origin/main, но нет в main",
+        "Разницу между working и индексом",
+        "Ошибка"
+      ],
+      "answer": 1,
+      "explain": "git log main..origin/main показывает коммиты, которые есть в origin/main, но отсутствуют в вашей локальной main. Это новые изменения коллег."
+    },
+    {
+      "type": "heading",
+      "content": "git pull: fetch + merge"
+    },
+    {
+      "type": "text",
+      "content": "git pull — это сокращение от git fetch + git merge."
+    },
+    {
+      "type": "code",
+      "content": "$ git pull origin main\nMerge made by the 'recursive' strategy.\n file.txt | 1 +\n 1 file changed, 1 insertion(+)"
+    },
+    {
+      "type": "note",
+      "content": "Git pull по умолчанию создаёт merge commit. Это может загрязнять историю."
+    },
+    {
+      "type": "warning",
+      "content": "Всегда используйте git pull --rebase для чистой линейной истории. Обычный git pull создаёт лишние merge commit-ы."
+    },
+    {
+      "type": "heading",
+      "content": "git pull --rebase: линейная история"
+    },
+    {
+      "type": "text",
+      "content": "С флагом --rebase Git выполняет не merge, а rebase: переносит ваши коммиты поверх изменений коллег. История остаётся линейной."
+    },
+    {
+      "type": "code",
+      "content": "$ git pull --rebase origin main\nFirst, rewinding head your branch is up to date with 'origin/main'.\nApplying: my feature commit"
+    },
+    {
+      "type": "predict",
+      "code": "$ git pull --rebase",
+      "question": "В чём преимущество git pull --rebase?",
+      "options": [
+        "Создаёт merge commit",
+        "Переносит ваши коммиты поверх изменений, сохраняет линейную историю",
+        "Быстрее обычного pull",
+        "Удаляет ваши коммиты"
+      ],
+      "answer": 1,
+      "explain": "git pull --rebase переносит ваши незапушенные коммиты поверх изменений из удалённой ветки. Вместо merge commit вы получаете линейную историю, что упрощает git bisect и просмотр логов."
+    },
+    {
+      "type": "heading",
+      "content": "Разрешение конфликтов при pull --rebase"
+    },
+    {
+      "type": "text",
+      "content": "Если rebase останавливается с конфликтом, исправьте файлы, затем git rebase --continue или git rebase --abort."
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t1",
+      "type": "git",
+      "prompt": "Получи изменения из удалённого репозитория с помощью git fetch. Проверь статус.",
+      "starter": "",
+      "hints": [
+        "git fetch origin скачает новые коммиты",
+        "git status покажет состояние"
+      ],
+      "checks": [
+        { "kind": "git-command-used", "command": "git fetch" },
+        { "kind": "git-command-used", "command": "git status" },
+        { "kind": "git-no-error" }
+      ]
+    },
+    {
+      "id": "t2",
+      "type": "git",
+      "prompt": "Выполни git pull, чтобы получить и сразу слить изменения с локальной веткой.",
+      "starter": "",
+      "hints": [
+        "git pull origin main выполнит fetch + merge",
+        "git log покажет новые коммиты"
+      ],
+      "checks": [
+        { "kind": "git-command-used", "command": "git pull" },
+        { "kind": "git-command-used", "command": "git log" },
+        { "kind": "git-no-error" }
+      ]
+    },
+    {
+      "id": "t3",
+      "type": "git",
+      "prompt": "Выполни git pull --rebase, чтобы получить изменения с сохранением линейной истории.",
+      "starter": "",
+      "hints": [
+        "git pull --rebase origin main выполнит fetch + rebase",
+        "git log --oneline покажет линейную историю"
+      ],
+      "checks": [
+        { "kind": "git-command-used", "command": "git pull" },
+        { "kind": "git-no-error" },
+        { "kind": "git-commits-count", "min": 1 }
+      ]
+    },
+    {
+      "id": "t4",
+      "type": "git",
+      "prompt": "Во время git pull --rebase произошёл конфликт. Исправь его и продолжи rebase.",
+      "starter": "",
+      "hints": [
+        "Исправьте файлы, удалив маркеры конфликта",
+        "git add <file>",
+        "git rebase --continue"
+      ],
+      "checks": [
+        { "kind": "git-command-used", "command": "git pull" },
+        { "kind": "git-command-used", "command": "git rebase" },
+        { "kind": "git-no-error" }
+      ]
+    },
+    {
+      "id": "t5",
+      "type": "git",
+      "prompt": "Полный цикл синхронизации: создай локальный коммит, fetch изменений, сравни через git log main..origin/main, затем pull --rebase для слияния с линейной историей.",
+      "starter": "",
+      "hints": [
+        "git add file → git commit -m \"local change\"",
+        "git fetch origin",
+        "git log --oneline main..origin/main",
+        "git pull --rebase"
+      ],
+      "checks": [
+        { "kind": "git-command-used", "command": "git fetch" },
+        { "kind": "git-command-used", "command": "git pull" },
+        { "kind": "git-commits-count", "min": 2 }
+      ]
+    }
+  ],
+  "recap": [
+    "git fetch скачивает изменения, но не сливает — безопасно для просмотра",
+    "git log main..origin/main показывает коммиты, которых нет в локальной ветке",
+    "git pull = fetch + merge; создаёт merge commit (может загрязнять историю)",
+    "git pull --rebase переносит ваши коммиты поверх изменений — линейная история",
+    "Если rebase конфликтует: исправьте файлы, git add, git rebase --continue или --abort"
+  ],
+  "quiz": [
+    {
+      "q": "В чём разница между fetch и pull?",
+      "options": [
+        "fetch быстрее, pull медленнее",
+        "fetch скачивает без слияния, pull = fetch + merge",
+        "Разницы нет",
+        "fetch требует удалённый, pull нет"
+      ],
+      "answer": 1,
+      "explain": "git fetch скачивает новые коммиты и обновляет origin/main, но не сливает с вашей веткой. git pull = fetch + merge — получает и сразу сливает изменения."
+    },
+    {
+      "q": "Зачем использовать pull --rebase вместо обычного pull?",
+      "options": [
+        "Rebase создаёт merge commit",
+        "Rebase сохраняет линейную историю коммитов",
+        "Rebase быстрее",
+        "Rebase удаляет дубликаты"
+      ],
+      "answer": 1,
+      "explain": "git pull --rebase переносит ваши коммиты поверх изменений коллег, создавая линейную историю вместо merge commit. Это облегчает просмотр git log и использование git bisect."
+    },
+    {
+      "q": "Как увидеть новые коммиты из origin/main, которых нет в main?",
+      "options": [
+        "git log origin/main",
+        "git log main..origin/main",
+        "git diff main origin/main",
+        "git branch -r"
+      ],
+      "answer": 1,
+      "explain": "git log main..origin/main показывает коммиты, которые есть в origin/main, но отсутствуют в local main. Это алиас для \"коммиты, добавленные коллегами\"."
+    },
+    {
+      "q": "Что делает git rebase --abort при конфликте?",
+      "options": [
+        "Пропускает конфликтующий коммит",
+        "Отменяет rebase и возвращает исходное состояние",
+        "Автоматически разрешает конфликт",
+        "Переходим на следующий коммит"
+      ],
+      "answer": 1,
+      "explain": "git rebase --abort полностью отменяет rebase и возвращает репозиторий в состояние до его начала. Это безопасный способ отменить неудачный rebase при конфликте."
+    }
+  ]
+}

@@ -1,5 +1,7 @@
 {
   "lessons": [
-    { "id": "01-docker-intro", "title": "Docker: базовые концепции", "summary": "Что такое контейнер, зачем нужен Docker, образ vs контейнер" }
+    { "id": "01-docker-intro", "title": "Docker: контейнеры вместо ВМ", "summary": "Что такое контейнер, зачем Docker, образ vs контейнер, первые команды" },
+    { "id": "02-docker-run", "title": "Запуск и управление контейнерами", "summary": "docker run, ps, stop, start, rm, -d, --rm, имена" },
+    { "id": "03-dockerfile", "title": "Dockerfile и сборка образов", "summary": "FROM, RUN, COPY, WORKDIR, CMD, ENTRYPOINT, слои" }
   ]
 }

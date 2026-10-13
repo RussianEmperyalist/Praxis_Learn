@@ -5,6 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Praxis Learn — Изучай код как нетраннер</title>
   <meta name="theme-color" content="#0a0e14">
+  <style>
+    html { visibility: hidden; }
+    html.ready { visibility: visible; }
+  </style>
+  <script>
+    window.addEventListener('load', function() {
+      document.documentElement.classList.add('ready');
+    });
+  </script>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,25 +22,27 @@
   <link rel="stylesheet" href="./styles/layout.css">
   <script src="./js/highlighter.js" defer></script>
 </head>
-<body>
+ <body>
+  <canvas id="matrix-bg"></canvas>
   <header class="app-header"></header>
 
   <section class="hero">
-    <h1 class="hero-title">> SYSTEM ONLINE</h1>
-    <p class="subtitle">Платформа для изучения Python, Git и DevOps до уровня Junior+</p>
+    <h1 class="hero-logo glitch" data-text="PRAXIS LEARN">PRAXIS LEARN</h1>
+    <h1 class="hero-title"></h1>
+    <p class="subtitle"></p>
     <div class="cta">
       <a href="#courses" class="btn btn-primary">Начать обучение</a>
       <a href="./login.html" class="btn btn-ghost">Войти</a>
     </div>
   </section>
 
-  <h2 class="section-title">// Доступные модули</h2>
+  <h2 class="section-title">Доступные модули</h2>
   <div class="cards-grid" id="coursesGrid">
     <div class="card"><span class="spinner"></span> Загрузка...</div>
   </div>
 
   <footer class="footer">
-    <p>PRAXIS LEARN v0.1 · данные хранятся локально в <code>data/db.json</code></p>
+    <p>PRAXIS LEARN</code></p>
   </footer>
 
   <div id="toasts"></div>
@@ -64,8 +75,61 @@
   </script>
 
   <script>
-    if ('serviceWorker' in navigator) {
+    (function matrix() {
+      const canvas = document.getElementById('matrix-bg');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      let w, h, cols, drops;
+      const chars = '01アイウエオカキクケコサシスセソタチツテト';
+      const fontSize = 16;
+
+      function resize() {
+        w = canvas.width = window.innerWidth;
+        h = canvas.height = window.innerHeight;
+        cols = Math.floor(w / fontSize);
+        drops = Array(cols).fill(0).map(() => Math.random() * -100);
+      }
+
+      function draw() {
+        ctx.fillStyle = 'rgba(5, 7, 10, 0.06)';
+        ctx.fillRect(0, 0, w, h);
+
+        ctx.fillStyle = '#00f0ff';
+        ctx.font = fontSize + 'px JetBrains Mono, monospace';
+        ctx.textAlign = 'center';
+
+        for (let i = 0; i < cols; i++) {
+          const ch = chars[Math.floor(Math.random() * chars.length)];
+          const x = i * fontSize + fontSize / 2;
+          const y = drops[i] * fontSize;
+
+          ctx.fillText(ch, x, y);
+
+          if (y > h && Math.random() > 0.975) {
+            drops[i] = 0;
+          }
+          drops[i]++;
+        }
+      }
+
+      resize();
+      window.addEventListener('resize', resize);
+      setInterval(draw, 60);
+    })();
+  </script>
+
+   <script>
+    if ('serviceWorker' in navigator &&
+        location.hostname !== 'localhost' &&
+        location.hostname !== '127.0.0.1') {
       navigator.serviceWorker.register('./service-worker.js');
+    } else if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(rs => {
+        rs.forEach(r => r.unregister());
+      });
+      if (window.caches) {
+        caches.keys().then(ks => ks.forEach(k => caches.delete(k)));
+      }
     }
   </script>
 </body>
