@@ -13,10 +13,12 @@
       document.documentElement.classList.add('ready');
     });
   </script>
-  <link rel="stylesheet" href="./styles/cyberpunk.css">
-  <link rel="stylesheet" href="./styles/layout.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="./styles/cyberpunk.css?v=43">
+  <link rel="stylesheet" href="./styles/layout.css?v=43">
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-     <script src="./js/highlighter.js" defer></script>
+      <script src="./js/highlighter.js?v=43" defer></script>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
 </head>
 <body>
@@ -35,13 +37,13 @@
   <div id="toasts"></div>
 
   <script type="module">
-    import { renderHeader, getQuery, toast } from './scripts/app.js';
-    import { content } from './scripts/content.js';
-    import { auth } from './scripts/auth.js';
-    import { progress } from './scripts/progress.js';
-     import { createPlayground } from './scripts/editor.js';
-     import { createGitTerminal } from './scripts/git-terminal.js';
-     import { createDockerTerminal } from './scripts/docker-terminal.js';
+    import { renderHeader, getQuery, toast } from './scripts/app.js?v=43';
+    import { content } from './scripts/content.js?v=43';
+    import { auth } from './scripts/auth.js?v=43';
+    import { progress } from './scripts/progress.js?v=43';
+    import { createPlayground } from './scripts/editor.js?v=43';
+    import { createGitTerminal } from './scripts/git-terminal.js?v=43';
+    import { createDockerTerminal } from './scripts/docker-terminal.js?v=43';
 
     renderHeader('home');
 
@@ -294,7 +296,7 @@
           ...opts,
           onDockerPass: opts.onPass,
           parseDockerfile: async (text) => {
-            const { parseDockerfile } = await import('./scripts/dockerfile-parser.js');
+            const { parseDockerfile } = await import('./scripts/dockerfile-parser.js?v=43');
             return parseDockerfile(text);
           },
         });
@@ -303,7 +305,7 @@
         if (checkBtn && ta) {
           checkBtn.onclick = async () => {
             const dockerfileText = ta.value;
-            const { parseDockerfile } = await import('./scripts/dockerfile-parser.js');
+            const { parseDockerfile } = await import('./scripts/dockerfile-parser.js?v=43');
             const result = parseDockerfile(dockerfileText);
             terminal.getSim()._dockerfileResult = result;
             if (originalClick) originalClick();
@@ -490,11 +492,33 @@
     })();
   </script>
 
-  <script>
+   <script>
     if ('serviceWorker' in navigator &&
         location.hostname !== 'localhost' &&
         location.hostname !== '127.0.0.1') {
-      navigator.serviceWorker.register('./service-worker.js');
+      navigator.serviceWorker.register('./service-worker.js?v=43').then(reg => {
+        reg.addEventListener('updatefound', () => {
+          const newSW = reg.installing;
+          if (newSW) {
+            newSW.addEventListener('statechange', () => {
+              if (newSW.state === 'activated' && reg.active) {
+                const refreshing = sessionStorage.getItem('refreshing');
+                if (!refreshing) {
+                  sessionStorage.setItem('refreshing', '1');
+                  window.location.reload();
+                }
+              }
+            });
+          }
+        });
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          const refreshing = sessionStorage.getItem('refreshing');
+          if (!refreshing) {
+            sessionStorage.setItem('refreshing', '1');
+            window.location.reload();
+          }
+        });
+      });
     } else if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(rs => {
         rs.forEach(r => r.unregister());
