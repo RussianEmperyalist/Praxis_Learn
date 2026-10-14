@@ -122,10 +122,12 @@ export class DockerSim {
       rm: () => this._cmdRm(rest),
       logs: () => this._cmdLogs(rest),
       exec: () => this._cmdExec(rest),
-      inspect: () => this._cmdInspect(rest),
-      help: () => this._cmdHelp(),
-      prune: () => this._cmdPrune(),
-    };
+       inspect: () => this._cmdInspect(rest),
+       volume: () => this._cmdVolume(rest),
+       network: () => this._cmdNetwork(rest),
+       help: () => this._cmdHelp(),
+       prune: () => this._cmdPrune(),
+     };
 
     if (!sub) {
       this._cmdHelp();
@@ -292,6 +294,184 @@ export class DockerSim {
     this.state.output.push('Successfully tagged ' + name);
   }
 
+  _findVolume(name) {
+    return this.state.volumes.find(v => v.name === name) || null;
+  }
+
+  _findNetwork(name) {
+    return this.state.networks.find(n => n.name === name) || null;
+  }
+
+  _cmdVolume(args) {
+    const sub = args[0];
+    const rest2 = args.slice(1);
+
+    if (sub === 'ls' || !sub) {
+      this.state.output.push('DRIVER   VOLUME NAME');
+      if (this.state.volumes.length === 0) {
+        this.state.output.push('local    (no volumes)');
+      } else {
+        this.state.volumes.forEach(v => {
+          this.state.output.push(v.driver + '     ' + v.name);
+        });
+      }
+    } else if (sub === 'create') {
+      const name = rest2[0];
+      if (!name) {
+        this._setError('не указано имя volume. Используйте: docker volume create <name>');
+        return;
+      }
+      if (this._findVolume(name)) {
+        this._setError('volume already exists: ' + name);
+        return;
+      }
+      this.state.volumes.push({ name, driver: 'local', usedBy: [] });
+      this.state.output.push(name);
+    } else if (sub === 'inspect') {
+      const name = rest2[0];
+      if (!name) {
+        this._setError('не указано имя volume');
+        return;
+      }
+      const vol = this._findVolume(name);
+      if (!vol) {
+        this._setError('No such volume: ' + name);
+        return;
+      }
+      this.state.output.push(JSON.stringify([{
+        Name: vol.name,
+        Driver: vol.driver,
+        Mountpoint: '/var/lib/docker/volumes/' + vol.name,
+        Labels: {},
+        Scope: 'local',
+        Options: {},
+        UsageData: { RefCount: vol.usedBy.length, Data: { 'apparentSize': 0 } },
+      }], null, 2));
+    } else if (sub === 'rm') {
+      const name = rest2[0];
+      if (!name) {
+        this._setError('не указано имя volume');
+        return;
+      }
+      const vol = this._findVolume(name);
+      if (!vol) {
+        this._setError('No such volume: ' + name);
+        return;
+      }
+      if (vol.usedBy.length > 0) {
+        this._setError('volume is in use by container: ' + vol.usedBy.join(', '));
+        return;
+      }
+      const idx = this.state.volumes.indexOf(vol);
+      this.state.volumes.splice(idx, 1);
+      this.state.output.push('Removed volume: ' + name);
+    } else {
+      this.state.output.push("docker: '" + sub + "' не поддерживается для volume");
+    }
+  }
+
+  _cmdNetwork(args) {
+    const sub = args[0];
+    const rest2 = args.slice(1);
+
+    if (sub === 'ls' || !sub) {
+      this.state.output.push('NETWORK ID   NAME       DRIVER   SCOPE');
+      this.state.networks.forEach(n => {
+        const id = _hash().slice(0, 12);
+        this.state.output.push(id + '   ' + (n.name + '       ').substring(0, 8) + (n.driver + '    ').substring(0, 8) + 'local');
+      });
+    } else if (sub === 'create') {
+      const name = rest2[0];
+      if (!name) {
+        this._setError('не указано имя network. Используйте: docker network create <name>');
+        return;
+      }
+      if (this._findNetwork(name)) {
+        this._setError('network already exists: ' + name);
+        return;
+      }
+      this.state.networks.push({ name, driver: 'bridge', ipam: { config: [{ subnet: '172.' + (2 + this.state.networks.length) + '.0.0/16' }] }, containers: [] });
+      this.state.output.push(_hash());
+    } else if (sub === 'inspect') {
+      const name = rest2[0];
+      if (!name) {
+        this._setError('не указано имя network');
+        return;
+      }
+      const net = this._findNetwork(name);
+      if (!net) {
+        this._setError('No such network: ' + name);
+        return;
+      }
+      this.state.output.push(JSON.stringify([{
+        Name: net.name,
+        Driver: net.driver,
+        IPAM: net.ipam,
+        Containers: net.containers,
+        Scope: 'local',
+      }], null, 2));
+    } else if (sub === 'rm') {
+      const name = rest2[0];
+      if (!name) {
+        this._setError('не указано имя network');
+        return;
+      }
+      const net = this._findNetwork(name);
+      if (!net) {
+        this._setError('No such network: ' + name);
+        return;
+      }
+      if (name === 'bridge') {
+        this._setError('cannot remove default bridge network');
+        return;
+      }
+      const idx = this.state.networks.indexOf(net);
+      this.state.networks.splice(idx, 1);
+      this.state.output.push('Removed network: ' + name);
+    } else if (sub === 'connect') {
+      const netName = rest2[0];
+      const contName = rest2[1];
+      if (!netName || !contName) {
+        this._setError('docker network connect требует <network> <container>');
+        return;
+      }
+      const net = this._findNetwork(netName);
+      if (!net) {
+        this._setError('No such network: ' + netName);
+        return;
+      }
+      const cont = this._findContainer(contName);
+      if (!cont) {
+        this._setError('No such container: ' + contName);
+        return;
+      }
+      if (!net.containers.includes(cont.name)) {
+        net.containers.push(cont.name);
+        if (!cont.networks) cont.networks = [];
+        if (!cont.networks.includes(netName)) cont.networks.push(netName);
+      }
+    } else {
+      this.state.output.push("docker: '" + sub + "' не поддерживается для network");
+    }
+  }
+
+  _findVolumeRef(name) {
+    return this.state.volumes.find(v => v.name === name) || null;
+  }
+
+  _registerVolumeMount(container, source, target) {
+    const isBind = source.startsWith('./') || source.startsWith('/') || source.includes('/');
+    if (!isBind) {
+      let vol = this._findVolume(source);
+      if (!vol) {
+        vol = { name: source, driver: 'local', usedBy: [] };
+        this.state.volumes.push(vol);
+      }
+      if (!vol.usedBy.includes(container.name)) vol.usedBy.push(container.name);
+    }
+    return isBind;
+  }
+
   _cmdRun(args) {
     let detached = false;
     let name = null;
@@ -301,6 +481,7 @@ export class DockerSim {
     let rm = false;
     let imageSpec = null;
     let cmd = null;
+    let networkName = null;
 
     let i = 0;
     while (i < args.length) {
@@ -321,6 +502,9 @@ export class DockerSim {
       } else if (arg === '-v' || arg === '--volume') {
         const mapping = args[i + 1];
         if (mapping) volumes.push(mapping);
+        i += 2;
+      } else if (arg === '--network') {
+        networkName = args[i + 1];
         i += 2;
       } else if (arg === '-e' || arg === '--env') {
         const kv = args[i + 1];
@@ -367,6 +551,11 @@ export class DockerSim {
       }
     }
 
+    if (networkName && !this._findNetwork(networkName)) {
+      this._setError('network not found: ' + networkName);
+      return;
+    }
+
     const containerName = name || image.name.replace(/[-:.]/g, '_') + '_' + _hash().slice(0, 6);
     const container = {
       id: _hash(),
@@ -374,13 +563,36 @@ export class DockerSim {
       name: containerName,
       status: 'running',
       ports: ports,
-      volumes: volumes,
+      volumes: [],
       env: env,
+      networks: [],
       exitCode: null,
       logs: this._generateLogs(image.name, imageSpec),
       createdAt: Date.now(),
       rm: rm,
     };
+
+    for (const volMapping of volumes) {
+      const parts = volMapping.split(':');
+      const source = parts[0];
+      const target = parts[1];
+      const isBind = this._registerVolumeMount(container, source, target);
+      container.volumes.push({
+        source: source,
+        target: target,
+        type: isBind ? 'bind' : 'volume',
+      });
+    }
+
+    if (networkName) {
+      const net = this._findNetwork(networkName);
+      if (net && !net.containers.includes(containerName)) {
+        net.containers.push(containerName);
+      }
+      if (!container.networks.includes(networkName)) {
+        container.networks.push(networkName);
+      }
+    }
 
     this.state.containers.push(container);
     this.state.output.push(container.id);
@@ -499,6 +711,24 @@ export class DockerSim {
     }
     const idx = this.state.containers.indexOf(container);
     this.state.containers.splice(idx, 1);
+
+    for (const vol of container.volumes) {
+      if (vol.type === 'volume' && vol.source && !vol.source.startsWith('/')) {
+        const v = this._findVolume(vol.source);
+        if (v) {
+          const vIdx = v.usedBy.indexOf(container.name);
+          if (vIdx !== -1) v.usedBy.splice(vIdx, 1);
+        }
+      }
+    }
+    for (const netName of container.networks) {
+      const net = this._findNetwork(netName);
+      if (net) {
+        const nIdx = net.containers.indexOf(container.name);
+        if (nIdx !== -1) net.containers.splice(nIdx, 1);
+      }
+    }
+
     this.state.output.push(container.id);
   }
 
@@ -662,5 +892,7 @@ export class DockerSim {
     this.state.output.push('  inspect Показать информацию о контейнере/образе');
     this.state.output.push('  rmi     Удалить образ');
     this.state.output.push('  prune   Очистить остановленные контейнеры и образы');
+    this.state.output.push('  volume  Управление volumes (ls, create, inspect, rm)');
+    this.state.output.push('  network Управление сетями (ls, create, inspect, rm, connect)');
   }
 }

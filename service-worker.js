@@ -1,25 +1,25 @@
-const CACHE_VERSION = 43;
+const CACHE_VERSION = 46;
 const CACHE_NAME = 'praxis-learn-v' + CACHE_VERSION;
 
 const PRECACHE_URLS = [
   './',
-  './styles/cyberpunk.css',
-  './styles/layout.css',
-  './js/highlighter.js',
-  './scripts/app.js',
-  './scripts/content.js',
-  './scripts/editor.js',
-  './scripts/pyodide-runner.js',
-  './scripts/storage.js',
-  './scripts/auth.js',
-  './scripts/progress.js',
-  './scripts/git-simulator.js',
-  './scripts/git-render.js',
-  './scripts/git-terminal.js',
+  './styles/cyberpunk.css?v=46',
+  './styles/layout.css?v=46',
+  './js/highlighter.js?v=46',
+  './scripts/app.js?v=46',
+  './scripts/content.js?v=46',
+  './scripts/editor.js?v=46',
+  './scripts/pyodide-runner.js?v=46',
+  './scripts/storage.js?v=46',
+  './scripts/auth.js?v=46',
+  './scripts/progress.js?v=46',
+  './scripts/git-simulator.js?v=46',
+  './scripts/git-render.js?v=46',
+  './scripts/git-terminal.js?v=46',
   './scripts/git-simulator.test.html',
-  './scripts/docker-simulator.js',
-  './scripts/docker-terminal.js',
-  './scripts/dockerfile-parser.js',
+  './scripts/docker-simulator.js?v=46',
+  './scripts/docker-terminal.js?v=46',
+  './scripts/dockerfile-parser.js?v=46',
   './scripts/docker-simulator.test.html',
   './content/courses.json',
   './content/python/index.json',
@@ -53,31 +53,28 @@ const PRECACHE_URLS = [
   './content/python/28-sqlite.json',
   './content/python/29-threading.json',
   './content/python/30-project.json',
-    './content/git/index.json',
-    './content/git/01-intro.json',
-    './content/git/02-status-add.json',
-    './content/git/03-commit.json',
-    './content/git/04-diff.json',
-    './content/git/05-branches.json',
-    './content/git/06-merge.json',
-    './content/git/07-remote.json',
-    './content/git/08-fetch-pull.json',
-    './content/git/09-pr.json',
-    './content/git/10-rebase.json',
-    './content/git/11-cherry-tag.json',
-    './content/git/12-stash.json',
-    './content/git/13-history.json',
-    './content/git/14-workflow.json',
-    './content/git/15-gitignore.json',
-    './scripts/git-simulator.js',
-    './scripts/git-render.js',
-    './scripts/git-terminal.js',
-    './scripts/git-simulator.test.html',
+  './content/git/index.json',
+  './content/git/01-intro.json',
+  './content/git/02-status-add.json',
+  './content/git/03-commit.json',
+  './content/git/04-diff.json',
+  './content/git/05-branches.json',
+  './content/git/06-merge.json',
+  './content/git/07-remote.json',
+  './content/git/08-fetch-pull.json',
+  './content/git/09-pr.json',
+  './content/git/10-rebase.json',
+  './content/git/11-cherry-tag.json',
+  './content/git/12-stash.json',
+  './content/git/13-history.json',
+  './content/git/14-workflow.json',
+  './content/git/15-gitignore.json',
   './content/devops/index.json',
-    './content/devops/01-docker-intro.json',
-    './content/devops/02-docker-run.json',
-    './content/devops/03-dockerfile.json',
-    './manifest.webmanifest'
+  './content/devops/01-docker-intro.json',
+  './content/devops/02-docker-run.json',
+  './content/devops/03-dockerfile.json',
+  './content/devops/04-docker-volumes.json',
+  './manifest.webmanifest'
 ];
 
 self.addEventListener('install', function (event) {
@@ -103,6 +100,12 @@ self.addEventListener('activate', function (event) {
     })
   );
   self.clients.claim();
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener('fetch', function (event) {

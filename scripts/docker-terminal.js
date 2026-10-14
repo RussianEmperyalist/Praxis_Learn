@@ -187,6 +187,36 @@ export function createDockerTerminal(mountEl, initialState) {
             actual: df ? (pass ? 'чистый' : df.warnings.join('; ')) : 'Dockerfile не найден',
           };
         }
+        case 'docker-volume-exists':
+          return {
+            pass: state.volumes.some(v => v.name === check.name),
+            expected: 'volume ' + check.name,
+            actual: state.volumes.some(v => v.name === check.name) ? 'существует' : 'отсутствует',
+          };
+        case 'docker-volume-mounted': {
+          const c = state.containers.find(cont => cont.name === check.container);
+          const mounted = c && c.volumes.some(v => v.source === check.source && v.target === check.target);
+          return {
+            pass: mounted,
+            expected: check.container + ': ' + check.source + ' -> ' + check.target,
+            actual: c ? (mounted ? 'примонтирован' : 'не найден') : 'контейнер не найден',
+          };
+        }
+        case 'docker-network-exists':
+          return {
+            pass: state.networks.some(n => n.name === check.name),
+            expected: 'network ' + check.name,
+            actual: state.networks.some(n => n.name === check.name) ? 'существует' : 'отсутствует',
+          };
+        case 'docker-container-in-network': {
+          const c = state.containers.find(cont => cont.name === check.container);
+          const isInNet = c && (c.networks || []).includes(check.network);
+          return {
+            pass: isInNet,
+            expected: check.container + ' в сети ' + check.network,
+            actual: c ? (isInNet ? 'подключён' : 'не подключён') : 'контейнер не найден',
+          };
+        }
         default:
           return { pass: true, expected: 'неизвестно', actual: 'ок' };
       }

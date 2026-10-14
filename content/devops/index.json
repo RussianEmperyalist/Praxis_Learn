@@ -2,6 +2,7 @@
   "lessons": [
     { "id": "01-docker-intro", "title": "Docker: контейнеры вместо ВМ", "summary": "Что такое контейнер, зачем Docker, образ vs контейнер, первые команды" },
     { "id": "02-docker-run", "title": "Запуск и управление контейнерами", "summary": "docker run, ps, stop, start, rm, -d, --rm, имена" },
-    { "id": "03-dockerfile", "title": "Dockerfile и сборка образов", "summary": "FROM, RUN, COPY, WORKDIR, CMD, ENTRYPOINT, слои" }
+    { "id": "03-dockerfile", "title": "Dockerfile и сборка образов", "summary": "FROM, RUN, COPY, WORKDIR, CMD, ENTRYPOINT, слои" },
+    { "id": "04-docker-volumes", "title": "Volumes и сети: сохранение данных и общение контейнеров", "summary": "Volume, bind mount, named volume, custom network, DNS имена" }
   ]
 }
