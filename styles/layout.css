@@ -891,13 +891,27 @@ body.menu-open::before {
     position: sticky;
     top: 62px;
     left: auto;
-    width: auto;
-    height: auto;
+    width: 260px;
+    min-width: 220px;
+    height: calc(100vh - 62px);
     border-right: 1px solid var(--border);
     border-bottom: none;
     max-height: calc(100vh - 62px);
     overflow-y: auto;
     overflow-x: hidden;
+    resize: horizontal;
+    cursor: auto;
+  }
+
+  /* Зона ресайза за правую грань */
+  .sidebar:hover {
+    border-right-color: var(--accent);
+  }
+
+  /* На время перетаскивания отключаем transition, чтобы не дёргалось */
+  .sidebar.resizing {
+    transition: none;
+    user-select: none;
   }
 
   .app-header { padding: 0 24px; }

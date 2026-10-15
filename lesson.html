@@ -50,6 +50,36 @@
 
     renderHeader('home');
 
+    // Ресайз левого сайдбара за правую грань (desktop)
+    (() => {
+      const sb = document.getElementById('sidebar');
+      if (!sb) return;
+      let dragging = false, startX = 0, startW = 0;
+      sb.addEventListener('mousedown', (e) => {
+        if (window.innerWidth < 900) return;   // на мобильном сайдбар — fixed overlay, не ресайзим
+        if (e.offsetX < sb.offsetWidth - 8) return; // только за правую грань (зона resize ~8px)
+        dragging = true;
+        startX = e.clientX;
+        startW = sb.offsetWidth;
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+        e.preventDefault();
+      });
+      window.addEventListener('mousemove', (e) => {
+        if (!dragging) return;
+        const w = Math.min(640, Math.max(220, startW + (e.clientX - startX)));
+        sb.classList.add('resizing');
+        sb.style.width = w + 'px';
+      });
+      window.addEventListener('mouseup', () => {
+        if (!dragging) return;
+        dragging = false;
+        sb.classList.remove('resizing');
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+      });
+    })();
+
     (async () => {
       const courseId = getQuery('course');
       const lessonId = getQuery('lesson');
