@@ -75,3 +75,4 @@ export const auth = {
     return user ? normalize(user) : null;
   },
 };
+

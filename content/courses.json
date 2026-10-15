@@ -6,7 +6,7 @@
       "description": "Основы Python: от print() до ООП",
       "icon": "🐍",
       "level": "Начальный",
-      "lessons": 3
+      "lessons": 30
     },
     {
       "id": "git",
@@ -14,7 +14,7 @@
       "description": "Контроль версий, ветки, PR, merge-конфликты",
       "icon": "🔀",
       "level": "Начальный",
-      "lessons": 1
+      "lessons": 15
     },
     {
       "id": "devops",
@@ -22,7 +22,7 @@
       "description": "Docker, CI/CD, деплой приложений",
       "icon": "🐳",
       "level": "Продвинутый",
-      "lessons": 1
+      "lessons": 7
     }
   ]
 }

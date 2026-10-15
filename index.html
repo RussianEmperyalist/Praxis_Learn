@@ -18,9 +18,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles/cyberpunk.css?v=46">
-  <link rel="stylesheet" href="./styles/layout.css?v=46">
-  <script src="./js/highlighter.js?v=46" defer></script>
+  <link rel="stylesheet" href="./styles/cyberpunk.css?v=50">
+  <link rel="stylesheet" href="./styles/layout.css?v=50">
+  <script src="./js/highlighter.js?v=50" defer></script>
 </head>
  <body>
   <canvas id="matrix-bg"></canvas>
@@ -28,8 +28,6 @@
 
   <section class="hero">
     <h1 class="hero-logo glitch" data-text="PRAXIS LEARN">PRAXIS LEARN</h1>
-    <h1 class="hero-title"></h1>
-    <p class="subtitle"></p>
     <div class="cta">
       <a href="#courses" class="btn btn-primary">Начать обучение</a>
       <a href="./login.html" class="btn btn-ghost">Войти</a>
@@ -122,7 +120,7 @@
     if ('serviceWorker' in navigator &&
         location.hostname !== 'localhost' &&
         location.hostname !== '127.0.0.1') {
-      navigator.serviceWorker.register('./service-worker.js?v=46').then(reg => {
+      navigator.serviceWorker.register('./service-worker.js?v=50').then(reg => {
         setInterval(() => reg.update(), 60000);
         if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
         reg.addEventListener('updatefound', () => {
@@ -158,3 +156,4 @@
   </script>
 </body>
 </html>
+

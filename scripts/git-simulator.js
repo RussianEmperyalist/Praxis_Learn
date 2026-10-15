@@ -1159,3 +1159,4 @@ export class GitSim {
     this.state.output.push(...cmds);
   }
 }
+

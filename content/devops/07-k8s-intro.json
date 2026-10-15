@@ -1,0 +1,269 @@
+{
+  "id": "devops-07-k8s-intro",
+  "title": "Kubernetes: оркестрация контейнеров",
+  "goal": "Понять зачем Kubernetes, как устроен кластер, чем Pod отличается от контейнера, управлять через kubectl",
+  "prereq": ["devops-06-docker-best"],
+  "duration": 20,
+  "theory": [
+    {
+      "type": "hook",
+      "content": "У вас 50 микросервисов в контейнерах. Один падает в 3 часа ночи. Как автоматически поднять его обратно?"
+    },
+    {
+      "type": "heading",
+      "content": "Слой 1: Зачем Kubernetes — проблемы Docker"
+    },
+    {
+      "type": "text",
+      "content": "Docker отлично справляется с одиночными контейнерами, но в продакшене у вас десятки сервисов — каждый в своём контейнере. Docker не решает: как поднять упавший контейнер, как распределить нагрузку, как обновлять без простоя, как масштабировать. Kubernetes решает все это."
+    },
+    {
+      "type": "code",
+      "content": "# Docker — один контейнер:\ndocker run -d --name web nginx:1.21\n\n# Kubernetes — кластер из 50 сервисов:\n# Deployment с 3 репликами, auto-перезапуск,\n# rolling update, auto-scaling\nkubectl apply -f web.yaml"
+    },
+    {
+      "type": "text",
+      "content": "Ключевые возможности Kubernetes: <b>self-healing</b> — перезапуск упавших подов, <b>auto-scaling</b> — добавление реплик при нагрузке, <b>rolling update</b> — обновление без простоя, <b>service discovery</b> — DNS для сервисов."
+    },
+    {
+      "type": "heading",
+      "content": "Слой 2: Архитектура кластера"
+    },
+    {
+      "type": "text",
+      "content": "Kubernetes — это <b>кластер</b>: главный узел (control plane / master) управляет рабочими узлами (nodes). На каждом node работает kubelet. Вы работаете с кластером через kubectl — утилиту командной строки. Обычно используют minikube или kind для локальной разработки."
+    },
+    {
+      "type": "code",
+      "content": "# Архитектура кластера:\n┌── Control Plane (master) ─────────────────┐\n│  API Server ← kubectl подключается сюда   │\n│  Scheduler — распределяет поды            │\n│  etcd — хранение конфигурации               │\n│  Controller Manager — следит за состоянием  │\n└──┬────────────────────────────────────────┘\n   │ up\n   ▼\n┌── Worker Node ───────────────────────────┐\n│  kubelet — агент                          │\n│  kube-proxy — сетевые правила             │\n│  Pod (containerd)                         │\n└──────────────────────────────────────────┘\n\n# minikube стартует один-узловый кластер:\nminikube start"
+    },
+    {
+      "type": "warning",
+      "content": "Control plane и worker node могут быть на одном сервере (minikube) или распределены по разным машинам (production). API Server всегда единая точка входа."
+    },
+    {
+      "type": "heading",
+      "content": "Слой 3: Pod — атомарная единица Kubernetes"
+    },
+    {
+      "type": "text",
+      "content": "<b>Pod</b> — это не контейнер. Pod — это <b>обёртка над одним или несколькими контейнерами</b>, которые работают вместе на одном узле. В Pod обычно помещают 1 основной контейнер + sidecars (логирование, прокси). Все контейнеры в Pod разделяют сеть и тома."
+    },
+    {
+      "type": "predict",
+      "code": "# Pod с двумя контейнерами:\napiVersion: v1\nkind: Pod\nmetadata:\n  name: web-app\nspec:\n  containers:\n  - name: app\n    image: nginx:1.21\n  - name: logger\n    image: fluentd:v1\n",
+      "question": "Чем Pod отличается от контейнера?",
+      "options": [
+        "Pod — это просто переименованный контейнер",
+        "Pod может содержать несколько контейнеров, которые разделяют сеть и тома",
+        "Pod всегда содержит ровно один контейнер",
+        "Pod и контейнер — это одно и то же"
+      ],
+      "answer": 1,
+      "explain": "Pod — это логическая единица, которая может содержать несколько контейнеров (app + sidecars). Все контейнеры в Pod используют одну сеть (один IP, одни порты) и могут разделять тома. Это как pod в Docker — группа контейнеров с общими ресурсами."
+    },
+    {
+      "type": "text",
+      "content": "Безопасный подход: в Pod кладут один основной контейнер и вспомогательные (sidecar). Sidecar не заменяет основной контейнер — они работают вместе. Например: <b>app</b> (nginx) + <b>sidecar</b> (log-collector)."
+    },
+    {
+      "type": "heading",
+      "content": "Слой 4: kubectl — работа с кластером"
+    },
+    {
+      "type": "text",
+      "content": "kubectl — это клиент, который отправляет запросы к API Server. Основные команды: <b>get</b> (список), <b>describe</b> (детали), <b>apply</b> (создать/обновить), <b>delete</b> (удалить), <b>logs</b> (логи), <b>exec</b> (выполнить команду)."
+    },
+    {
+      "type": "code",
+      "content": "# Основные команды kubectl:\nkubectl version                    # версия клиента и сервера\nkubectl get nodes                  # список узлов\nkubectl get pods                   # список подов (мн.число!)\nkubectl get deployments            # список деплоеек\nkubectl get services / svc         # список сервисов\nkubectl describe pod <name>         # детали пода\nkubectl get all -n <namespace>     # всё в namespace\nkubectl help                       # помощь"
+    },
+    {
+      "type": "note",
+      "content": "Обратите внимание: <b>kubectl get pods</b> (множественное число). <b>kubectl get pod</b> (единственное) — это ошибка. kubectl работает с типами объектов: pods, deployments, services, nodes."
+    },
+    {
+      "type": "heading",
+      "content": "Слой 5: Deployment и защита от падений"
+    },
+    {
+      "type": "text",
+      "content": "<b>Deployment</b> — это контроллер, который следит за тем, чтобы нужное количество реплик вашего Pod было запущено. Если под падает, Deployment автоматически создаёт новый. Если вы масштабируете — Deployment поддерживает нужное количество реплик."
+    },
+    {
+      "type": "code",
+      "content": "# Deployment с 3 репликами:\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: web\nspec:\n  replicas: 3               # три копии\n  selector:\n    matchLabels:\n      app: web              # как найти свои поды\n  template:\n    metadata:\n      labels:\n        app: web          # под меткой app=web\n    spec:\n      containers:\n      - name: nginx\n        image: nginx:1.21\n\n# Если один под упадёт → Deployment заменит его\n# через 30-60 секунд"
+    },
+    {
+      "type": "predict",
+      "code": "# Deployment с replicas: 1, под падает\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: web\nspec:\n  replicas: 1\n  ...\n\n# Под выключается (Ctrl+C / crash)\n",
+      "question": "Что произойдёт, если Pod в Deployment упадёт?",
+      "options": [
+        "Pod исчезает навсегда — сервис недоступен",
+        "Deployment автоматически создаст новый под, восстановив replicas",
+        "Kubernetes удалит и Deployment целиком",
+        "Pod сам перезапустится без участия Deployment"
+      ],
+      "answer": 1,
+      "describe": "Deployment — это контроллер, который непрерывно сравнивает desired (replicas: 1) и actual (0 запущенных). Если actual < desired, Deployment создаёт новый под.",
+      "explain": "Deployment работает по принципу наблюдателя (controller): он постоянно проверяет, сколько подов сейчас запущено. Если счётчик меньше desired.replicas — создаёт новый под. Это называется self-healing."
+    },
+    {
+      "type": "heading",
+      "content": "Слой 6: namespace — изоляция окружений"
+    },
+    {
+      "type": "text",
+      "content": "<b>namespace</b> — это логическая группа: default, kube-system, production, staging, development. Вы можете изолировать ресурсы: в namespace production только прод-поды, в development — тестовые. kubectl get pods -n production."
+    },
+    {
+      "type": "code",
+      "content": "# namespace:\nkubectl get pods                         # default namespace\nkubectl get pods -n kube-system               # системные поды\nkubectl get pods --all-namespaces             # все поды во всех namespace\nkubectl create namespace production            # создать namespace"
+    },
+    {
+      "type": "warning",
+      "content": "По умолчанию kubectl работает в namespace <b>default</b>. Если под создан в другом namespace — kubectl get pod не найдёт его. Всегда указывайте -n <namespace> для production/staging."
+    },
+    {
+      "type": "warning",
+      "content": "<b>kubectl run</b> создаёт под, но это не способ для production. Pod без Deployment — не self-healing. Используйте kubectl apply -f deployment.yaml или kubectl create deploy."
+    },
+    {
+      "type": "warning",
+      "content": "Не храните YAML-манифест в /tmp или случайном файле. Проверенные манифесты — в Git. Это позволяет откатиться и аудитировать изменения."
+    },
+    {
+      "type": "tip",
+      "content": "Для локальной разработки используйте minikube: <b>minikube start</b> → запустит одноузловый кластер. <b>minikube dashboard</b> → веб-интерфейс."
+    },
+    {
+      "type": "note",
+      "content": "K9s — это TUI-интерфейс для Kubernetes в терминале: навигация по подам, логи, describe прямо из CLI. Удобна для наблюдения за кластером."
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t1",
+      "type": "k8s",
+      "prompt": "Проверь версию kubectl и посмотри список нод.",
+      "starter": "",
+      "hints": [
+        "Введите: kubectl version",
+        "Введите: kubectl get nodes"
+      ],
+      "checks": [
+        { "kind": "k8s-command-used", "contains": "kubectl version" },
+        { "kind": "k8s-command-used", "contains": "kubectl get nodes" }
+      ]
+    },
+    {
+      "id": "t2",
+      "type": "k8s",
+      "prompt": "Посмотри список pods. Для нового кластера ответ — пустой список. Это нормально.",
+      "starter": "",
+      "hints": [
+        "Введите: kubectl get pods"
+      ],
+      "checks": [
+        { "kind": "k8s-command-used", "contains": "kubectl get pods" }
+      ]
+    },
+    {
+      "id": "t3",
+      "type": "k8s",
+      "prompt": "Посмотри список deployments и services — оба списка должны быть пустыми в новом кластере.",
+      "starter": "",
+      "hints": [
+        "Введите: kubectl get deployments",
+        "Введите: kubectl get services"
+      ],
+      "checks": [
+        { "kind": "k8s-command-used", "contains": "kubectl get deployments" },
+        { "kind": "k8s-command-used", "contains": "kubectl get services" }
+      ]
+    },
+    {
+      "id": "t4",
+      "type": "k8s",
+      "prompt": "Студент ввёл 'kubectl get pod' (единственное число) — команда упала. Исправьте на правильное множественное число.",
+      "starter": "kubectl get pod",
+      "hints": [
+        "Подсказка: kubectl работает с типами во множественном числе: pods, not pod",
+        "Введите: kubectl get pods"
+      ],
+      "checks": [
+        { "kind": "k8s-command-used", "contains": "kubectl get pods" }
+      ]
+    },
+    {
+      "id": "t5",
+      "type": "k8s",
+      "prompt": "Пройдите полный обзор кластера: version, nodes, pods. Что показывает каждый вывод?",
+      "starter": "",
+      "hints": [
+        "Введите: kubectl version",
+        "Введите: kubectl get nodes",
+        "Введите: kubectl get pods"
+      ],
+      "checks": [
+        { "kind": "k8s-command-used", "contains": "kubectl version" },
+        { "kind": "k8s-command-used", "contains": "kubectl get nodes" },
+        { "kind": "k8s-command-used", "contains": "kubectl get pods" }
+      ]
+    }
+  ],
+  "recap": [
+    "Kubernetes — это оркестратор контейнеров: управляет кластером из master + worker nodes",
+    "Pod — не контейнер: это обёртка над контейнерами с общей сетью и томами",
+    "Deployment обеспечивает self-healing и масштабирование: если под падает, Deployment создаёт новый",
+    "kubectl работает с типами во множественном числе: pods, deployments, services, nodes",
+    "namespace изолирует окружения: default, kube-system, production, staging",
+    "Для локальной разработки используйте minikube start"
+  ],
+  "quiz": [
+    {
+      "q": "Что такое control plane в Kubernetes?",
+      "options": [
+        "Сервер, где запущен Docker",
+        "Главный узел кластера: API Server, Scheduler, etcd, Controller Manager",
+        "Инструмент для логирования",
+        "Фаервол Kubernetes"
+      ],
+      "answer": 1,
+      "explain": "Control plane (master) — это набор компонентов: API Server (входная точка), Scheduler (распределение подов), etcd (хранилище конфигурации), Controller Manager (слежит за состоянием)."
+    },
+    {
+      "q": "Чем Pod отличается от контейнера?",
+      "options": [
+        "Pod — это переименованный контейнер",
+        "Pod может содержать несколько контейнеров с общей сетью и томами",
+        "Pod всегда содержит ровно один контейнер",
+        "Разницы нет"
+      ],
+      "answer": 1,
+      "explain": "Pod — логическая единица с одним или несколькими контейнерами. Все контейнеры Pod используют один IP-адрес, одни порты и могут разделять тома. Это позволяет sidecar-паттернам: app + logger в одном Pod."
+    },
+    {
+      "q": "Что делает Deployment?",
+      "options": [
+        "Создаёт под и удаляет его через 5 минут",
+        "Следит за количеством реплик и перезапускает упавшие поды",
+        "Настраивает сеть между подами",
+        "Собирает образ из Docker"
+      ],
+      "answer": 1,
+      "explain": "Deployment — это контроллер, который гарантирует, что нужное количество реплик (desired.replicas) будет запущено. Если под падает и actual < desired, Deployment создаёт новый под."
+    },
+    {
+      "q": "Какая команда покажет список узлов?",
+      "options": [
+        "kubectl get node",
+        "kubectl get nodes",
+        "kubectl list nodes",
+        "kubectl show nodes"
+      ],
+      "answer": 1,
+      "explain": "kubectl использует множественное число для типов ресурсов: pods, nodes, services, deployments. kubectl get node (единственное) — ошибка."
+    }
+  ]
+}

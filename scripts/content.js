@@ -31,3 +31,4 @@ export const content = {
     return loadJSON(`./content/${courseId}/${lessonId}.json`);
   },
 };
+

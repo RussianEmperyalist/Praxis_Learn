@@ -113,7 +113,7 @@
       "checks": [
         { "kind": "git-command-used", "command": "git init" },
         { "kind": "git-command-used", "command": "git branch" },
-        { "kind": "git-branch-exists", "branch": "feature" }
+        { "kind": "git-branch-exists", "name": "feature" }
       ]
     },
     {
@@ -128,7 +128,7 @@
       "checks": [
         { "kind": "git-command-used", "command": "git checkout" },
         { "kind": "git-head-branch", "branch": "develop" },
-        { "kind": "git-branch-exists", "branch": "develop" }
+        { "kind": "git-branch-exists", "name": "develop" }
       ]
     },
     {
@@ -142,7 +142,7 @@
       ],
       "checks": [
         { "kind": "git-branch-count", "min": 3 },
-        { "kind": "git-branch-exists", "branch": "develop" },
+        { "kind": "git-branch-exists", "name": "develop" },
         { "kind": "git-command-used", "command": "git branch" }
       ]
     },
@@ -158,7 +158,7 @@
       "checks": [
         { "kind": "git-command-used", "command": "git checkout" },
         { "kind": "git-command-used", "command": "git branch" },
-        { "kind": "git-branch-exists", "branch": "main" }
+        { "kind": "git-branch-exists", "name": "main" }
       ]
     },
     {

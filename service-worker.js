@@ -1,25 +1,29 @@
-const CACHE_VERSION = 46;
+const CACHE_VERSION = 50;
 const CACHE_NAME = 'praxis-learn-v' + CACHE_VERSION;
 
 const PRECACHE_URLS = [
   './',
-  './styles/cyberpunk.css?v=46',
-  './styles/layout.css?v=46',
-  './js/highlighter.js?v=46',
-  './scripts/app.js?v=46',
-  './scripts/content.js?v=46',
-  './scripts/editor.js?v=46',
-  './scripts/pyodide-runner.js?v=46',
-  './scripts/storage.js?v=46',
-  './scripts/auth.js?v=46',
-  './scripts/progress.js?v=46',
-  './scripts/git-simulator.js?v=46',
-  './scripts/git-render.js?v=46',
-  './scripts/git-terminal.js?v=46',
+  './styles/cyberpunk.css?v=50',
+  './styles/layout.css?v=50',
+  './js/highlighter.js?v=50',
+  './scripts/app.js?v=50',
+  './scripts/content.js?v=50',
+  './scripts/editor.js?v=50',
+  './scripts/pyodide-runner.js?v=50',
+  './scripts/storage.js?v=50',
+  './scripts/auth.js?v=50',
+  './scripts/progress.js?v=50',
+  './scripts/git-simulator.js?v=50',
+  './scripts/git-render.js?v=50',
+  './scripts/git-terminal.js?v=50',
+  './scripts/k8s-simulator.js?v=50',
+  './scripts/k8s-terminal.js?v=50',
   './scripts/git-simulator.test.html',
-  './scripts/docker-simulator.js?v=46',
-  './scripts/docker-terminal.js?v=46',
-  './scripts/dockerfile-parser.js?v=46',
+  './scripts/docker-simulator.js?v=50',
+  './scripts/docker-terminal.js?v=50',
+  './scripts/dockerfile-parser.js?v=50',
+  './scripts/yaml-validator.js?v=50',
+  './vendor/js-yaml.min.js?v=50',
   './scripts/docker-simulator.test.html',
   './content/courses.json',
   './content/python/index.json',
@@ -74,6 +78,9 @@ const PRECACHE_URLS = [
   './content/devops/02-docker-run.json',
   './content/devops/03-dockerfile.json',
   './content/devops/04-docker-volumes.json',
+  './content/devops/05-docker-compose.json',
+  './content/devops/06-docker-best.json',
+  './content/devops/07-k8s-intro.json',
   './manifest.webmanifest'
 ];
 
@@ -154,3 +161,4 @@ self.addEventListener('fetch', function (event) {
     })
   );
 });
+

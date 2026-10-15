@@ -13,6 +13,9 @@ export class DockerfileParser {
     let hasUser = false;
     let baseImage = null;
 
+    const stages = [];
+    let currentStage = null;
+
     for (let i = 0; i < lines.length; i++) {
       const raw = lines[i];
       const trimmed = raw.trim();
@@ -33,16 +36,27 @@ export class DockerfileParser {
         args,
         line: lineNum,
         raw: trimmed,
+        stage: currentStage ? currentStage.name : null,
       };
 
       if (instruction === 'FROM') {
         foundFrom = true;
-        const fromParts = args.split(/[: ]/);
-        baseImage = fromParts[0];
-        const tag = fromParts[1] || 'latest';
-        if (!baseImage) {
+        const fromMatch = args.match(/^(\S+)(?::([^ ]+))?(?: AS ([a-zA-Z0-9_-]+))?/);
+        const img = fromMatch ? fromMatch[1] : null;
+        const tag = fromMatch && fromMatch[2] ? fromMatch[2] : 'latest';
+        const stageName = fromMatch && fromMatch[3] ? fromMatch[3] : (stages.length.toString());
+
+        if (!img) {
           errors.push('FROM requires an image name');
+        } else if (!baseImage) {
+          baseImage = img + ':' + tag;
         }
+
+        currentStage = { name: stageName, image: img, tag: tag, baseImage: img + ':' + tag };
+        stages.push(currentStage);
+        entry.stageName = stageName;
+        entry.image = img;
+        entry.tag = tag;
       }
 
       if (instruction === 'RUN') {
@@ -116,8 +130,12 @@ export class DockerfileParser {
       warnings,
       layers: layerCount,
       baseImage,
+      stages: stages,
+      stageCount: stages.length,
+      hasUser,
     };
   }
 }
 
 export const parseDockerfile = (text) => new DockerfileParser().parse(text);
+

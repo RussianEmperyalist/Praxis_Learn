@@ -33,99 +33,38 @@ export async function createPlayground(mount, opts) {
   const resetBtn = mount.querySelector('[data-act="reset"]');
 
   const firstLine = opts.starter ?? '';
-  let codeGetValue = () => firstLine;
-  let editor = null;
   let saveT = null;
 
-  try {
-    const { EditorView, keymap, EditorView: EV } = await import('https://esm.sh/@codemirror/view@6');
-    const { EditorState } = await import('https://esm.sh/@codemirror/state@6');
-    const { python } = await import('https://esm.sh/@codemirror/lang-python@6');
-    const { indentWithTab } = await import('https://esm.sh/@codemirror/commands@6');
+  editorMount.innerHTML = '<textarea class="playground-textarea" spellcheck="false" autocapitalize="off"></textarea>';
+  const ta = editorMount.querySelector('textarea');
+  ta.value = firstLine || '# напишите ваш код здесь';
 
-    editor = new EditorView({
-      state: EditorState.create({
-        doc: firstLine || '# напишите ваш код здесь',
-        extensions: [
-          EditorState.tabIndent,
-          indentWithTab,
-          python(),
-          EditorView.lineWrapping,
-          keymap.of([
-            { key: 'Mod-Enter', run: () => { executeAndRun(); return true; } },
-          ]),
-          EditorView.updateListener.of((v) => {
-            if (v.docChanged && opts.userId && opts.taskId) {
-              clearTimeout(saveT);
-              saveT = setTimeout(() => {
-                storage.saveDraft(opts.userId, opts.taskId, v.state.doc.toString());
-              }, 400);
-            }
-          }),
-          EditorView.theme({
-            '&': {
-              backgroundColor: 'var(--code-bg)',
-              color: 'var(--code-text)',
-              fontSize: '0.92rem',
-              lineHeight: '1.55',
-            },
-            '&.cm-focused': { outline: 'none' },
-            '.cm-gutter': {
-              backgroundColor: 'var(--surface)',
-              color: 'var(--text-muted)',
-              fontFamily: 'var(--font-mono)',
-              fontSize: '0.85rem',
-              padding: '0 6px',
-            },
-            '.cm-activeLine': { backgroundColor: 'rgba(0, 240, 255, 0.04)' },
-            '.cm-activeLineGutter': { backgroundColor: 'var(--surface-2)' },
-            '.cm-cursor': { borderLeft: '2px solid var(--accent)' },
-            '.cm-scroller': { fontFamily: 'var(--font-mono)' },
-            '.cm-line': { lineHeight: '1.55' },
-            '&.cm-focused .cm-scroller': { outline: 'none' },
-          }, { dark: true }),
-        ],
-      }),
-      parent: editorMount,
-    });
-
-    codeGetValue = () => editor.state.doc.toString();
-  } catch (e) {
-    console.warn('CodeMirror 6 failed to load, falling back to textarea:', e);
-
-    editorMount.innerHTML = '<textarea spellcheck="false" autocapitalize="off"></textarea>';
-    const ta = editorMount.querySelector('textarea');
-    ta.value = firstLine || '# напишите ваш код здесь';
-    codeGetValue = () => ta.value;
-
-    ta.addEventListener('input', () => {
-      clearTimeout(saveT);
-      saveT = setTimeout(() => {
-        if (opts.userId && opts.taskId) {
-          storage.saveDraft(opts.userId, opts.taskId, ta.value);
-        }
-      }, 400);
-    });
-
-    ta.addEventListener('keydown', (e) => {
-      if (e.key === 'Tab') {
-        e.preventDefault();
-        const s = ta.selectionStart, end = ta.selectionEnd;
-        ta.value = ta.value.slice(0, s) + '    ' + ta.value.slice(end);
-        ta.selectionStart = ta.selectionEnd = s + 4;
+  ta.addEventListener('input', () => {
+    clearTimeout(saveT);
+    saveT = setTimeout(() => {
+      if (opts.userId && opts.taskId) {
+        storage.saveDraft(opts.userId, opts.taskId, ta.value);
       }
-      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-        e.preventDefault();
-        executeAndRun();
-      }
-    });
-  }
+    }, 400);
+  });
+
+  ta.addEventListener('keydown', (e) => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const s = ta.selectionStart, end = ta.selectionEnd;
+      ta.value = ta.value.slice(0, s) + '    ' + ta.value.slice(end);
+      ta.selectionStart = ta.selectionEnd = s + 4;
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      executeAndRun();
+    }
+  });
 
   // Load draft
   if (opts.userId && opts.taskId) {
     storage.getDraft(opts.userId, opts.taskId).then(code => {
-      if (!code || !editor) return;
-      editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: code } });
+      if (code) ta.value = code;
     }).catch(() => {});
   }
 
@@ -143,7 +82,7 @@ export async function createPlayground(mount, opts) {
   }
 
   async function execute() {
-    const code = codeGetValue();
+    const code = ta.value;
     runBtn.disabled = true;
     checkBtn.disabled = true;
     setStatus('Исполняется...', 'warning');
@@ -245,7 +184,7 @@ export async function createPlayground(mount, opts) {
       return;
     }
 
-    const results = evaluateChecks(checks, codeGetValue(), stdout, stderr, var_info);
+    const results = evaluateChecks(checks, ta.value, stdout, stderr, var_info);
     const allPass = results.every(r => r.pass);
 
     if (allPass) {
@@ -269,9 +208,7 @@ export async function createPlayground(mount, opts) {
   });
 
   resetBtn.addEventListener('click', () => {
-    if (editor) {
-      editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: firstLine || '# напишите ваш код здесь' } });
-    }
+    ta.value = firstLine || '# напишите ваш код здесь';
     out.innerHTML = '';
     out.classList.add('placeholder');
     out.textContent = 'Вывод появится здесь';

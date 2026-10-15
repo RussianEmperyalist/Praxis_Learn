@@ -180,11 +180,11 @@ export function createDockerTerminal(mountEl, initialState) {
         }
         case 'dockerfile-no-warnings': {
           const df = sim._dockerfileResult;
-          const pass = df && df.warnings.length === 0;
+          let pass = df && df.warnings.length === 0 && df.hasUser;
           return {
             pass,
-            expected: 'без предупреждений',
-            actual: df ? (pass ? 'чистый' : df.warnings.join('; ')) : 'Dockerfile не найден',
+            expected: 'без предупреждений + USER nonroot',
+            actual: df ? (pass ? 'чистый' : (df.warnings.join('; ') + (df.hasUser ? '' : '; нет USER'))) : 'Dockerfile не найден',
           };
         }
         case 'docker-volume-exists':
@@ -255,6 +255,7 @@ export function createDockerTerminal(mountEl, initialState) {
       output: [],
       commandHistory: [],
       lastError: null,
+      composeFile: null,
     };
     outputEl.innerHTML = '';
     statusPanelEl.innerHTML = '';
@@ -278,3 +279,4 @@ export function createDockerTerminal(mountEl, initialState) {
     container,
   };
 }
+

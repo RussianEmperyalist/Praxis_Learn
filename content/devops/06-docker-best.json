@@ -1,0 +1,279 @@
+{
+  "id": "devops-06-docker-best",
+  "title": "Оптимизация образов: multi-stage, Alpine, USER, .dockerignore",
+  "goal": "Писать оптимизированные Dockerfile: multi-stage сборка, минимальные базовые образы, USER nonroot, .dockerignore для уменьшения контекста",
+  "prereq": ["devops-05-docker-compose"],
+  "duration": 25,
+  "theory": [
+    {
+      "type": "hook",
+      "content": "Образ весит 1.2 ГБ, содержит gcc и весь build-toolchain в продакшене. Можно ли сделать его в 10 раз легче?"
+    },
+    {
+      "type": "heading",
+      "content": "Слой 1: Зачем оптимизировать образ"
+    },
+    {
+      "type": "text",
+      "content": "Большой образ = большие проблемы: дольше pull/push, больше CVE-уязвимостей, дороже registry. Если ваш production-образ весит 1.2 ГБ и содержит gcc, вы платите за это каждый deploy. Цель: минимальный runtime — только ваш код и его зависимости."
+    },
+    {
+      "type": "code",
+      "content": "# Без оптимизации:\nFROM node:20         # 1.2 GB (весь Node + dev tools)\nWORKDIR /app\nCOPY . .            # включая node_modules, .git, тесты\nRUN npm install\nCMD [\"node\", \"app.js\"]\n\n# Размер образа: >1 ГБ\n# Содержит: Node.js + все dev dependencies + ваш код\n\n# С оптимизацией:\n#  - multi-stage: builder + runtime\n#  - node:20-alpine: 80 МБ вместо 1.2 ГБ\n#  - USER nonroot: безопасность\n#  - .dockerignore: node_modules, .git\n# Размер: ~100 МБ"
+    },
+    {
+      "type": "warning",
+      "content": "Не помещайте build-toolchain (gcc, make, cargo) в production-образ. Если образ >500 МБ, скорее всего вы случайно включили dev-зависимости. Используйте multi-stage, чтобы собрать в одном образе, а запустить в другом."
+    },
+    {
+      "type": "heading",
+      "content": "Слой 2: Минимальные базовые образы"
+    },
+    {
+      "type": "text",
+      "content": "Вместо тяжёлых образов (node:20, python:3.12) используйте лёгкие варианты. Alpine Linux — это дистрибутив с BusyBox и musl libc, вместо glibc. Размер: node:20 ~900 МБ, node:20-alpine ~50 МБ. Distroless — даже минимум: только ваш runtime и ничего больше."
+    },
+    {
+      "type": "code",
+      "content": "# Размеры образов (пример):\nnode:20          → 1.2 GB\nnode:20-slim     → 150 MB\nnode:20-alpine   → 50 MB\n\npython:3.12      → 900 MB\npython:3.12-slim → 120 MB\npython:3.12-alpine → 45 MB\n\n# Distroless — минимум:\nFROM gcr.io/distroless/nodejs20\nCOPY . .\nCMD [\"app.js\"]\n# Нет shell, нет пакетного менеджера — только Node.js"
+    },
+    {
+      "type": "warning",
+      "content": "Alpine использует musl libc, а не glibc. Некоторые нативные модули (psycopg2, numpy с C-расширениями) могут сломаться. Проверяйте: если приложение падает на Alpine — используйте slim или distroless."
+    },
+    {
+      "type": "heading",
+      "content": "Слой 3: Multi-stage сборка"
+    },
+    {
+      "type": "text",
+      "content": "Multi-stage — это когда Dockerfile имеет несколько FROM. Первый (builder) собирает приложение, второй (runtime) содержит только результат сборки. Инструкция COPY --from=builder копирует файлы из предыдущего stage, а не с хоста."
+    },
+    {
+      "type": "code",
+      "content": "# Multi-stage для Node.js:\nFROM node:20 AS builder          # Stage 1: сборка\nWORKDIR /app\nCOPY package*.json ./\nRUN npm ci                   # установить ВСЕ зависимости (включая dev)\nCOPY . .\nRUN npm run build            # собрать приложение\n\nFROM node:20-alpine          # Stage 2: runtime\nWORKDIR /app\nCOPY --from=builder /app/dist ./dist    # только dist из builder\nCOPY package*.json ./\nRUN npm ci --omit=dev      # только production-зависимости\nUSER node                   # не root!\nCMD [\"node\", \"dist/index.js\"]\n\n# Образ: ~50-150 МБ вместо 1.2 ГБ"
+    },
+    {
+      "type": "predict",
+      "code": "# Почему не просто FROM alpine и копировать код?\nFROM python:3.12-alpine\nCOPY . .\nRUN pip install -r requirements.txt\n",
+      "question": "Зачем multi-stage, если можно просто FROM alpine и установить зависимости?",
+      "options": [
+        "Alpine всегда хватает — multi-stage не нужен",
+        "Alpine не включает build-toolchain (gcc, make) — сложно собрать C-расширения",
+        "multi-stage медленнее alpine",
+        "Python не работает на Alpine"
+      ],
+      "answer": 1,
+      "explain": "Alpine не содержит gcc, make и других build-toolchain. Если ваши зависимости требуют компиляции (psycopg2, lxml, cryptography), вы не сможете собрать их на Alpine. Multi-stage позволяет собрать в тяжёлом образе (node:20 или python:3.12), а результат перенести в Alpine."
+    },
+    {
+      "type": "predict",
+      "code": "# Dockerfile без .dockerignore\nFROM node:20\nWORKDIR /app\nCOPY . .\nRUN npm install\n",
+      "question": "Что произойдёт с образом без .dockerignore?",
+      "options": [
+        "Образ станет меньше (меньше файлов)",
+        "node_modules и .git попадут в образ — раздувают до ГБ",
+        "Сборка завершится ошибкой",
+        "Dockerfile не сработает без .dockerignore"
+      ],
+      "answer": 1,
+      "explain": "Без .dockerignore в контекст сборки попадают node_modules, .git, README, тесты и всё остальное. COPY . . скопирует всё это в образ. node_modules одного проекта может весить 500 МБ+. .dockerignore исключает мусор — меньше контекст, быстрее сборка, меньше образ."
+    },
+    {
+      "type": "heading",
+      "content": "Слой 4: .dockerignore и объединение RUN"
+    },
+    {
+      "type": "text",
+      "content": ".dockerignore работает как .gitignore для Docker: исключает файлы из контекста сборки. Помещайте туда node_modules, .git, тесты, docs — всё, что не нужно в образе. Объединение RUN через && уменьшает число слоёв: один RUN = один слой вместо трёх."
+    },
+    {
+      "type": "code",
+      "content": "# .dockerignore\nnode_modules\n.git\n.gitignore\nnpm-debug.log\ntests/\n__tests__/\n*.md\n.env\n\ndist/\n# dist/ можно исключить, если multi-stage"
+    },
+    {
+      "type": "code",
+      "content": "# ПЛОХО (3 слоя + каждый слой кэшируется отдельно):\nFROM python:3.12-slim\nRUN apt-get update\nRUN apt-get install -y curl\nRUN rm -rf /var/lib/apt/lists/*\n\n# ХОРОШО (1 слой, кэшируется целиком):\nFROM python:3.12-slim\nRUN apt-get update \\\n  && apt-get install -y curl \\\n  && rm -rf /var/lib/apt/lists/*\n# Обратите внимание: \\\n# в конце строк — перенос на новую строку"
+    },
+    {
+      "type": "warning",
+      "content": "Объединение RUN через &&: если одна команда падает, весь слой падает. Это не всегда удобно для отладки. Ставьте apt-get clean && rm -rf /var/lib/apt/lists/* в конец, чтобы не накапливать кэш apt."
+    },
+    {
+      "type": "heading",
+      "content": "Слой 5: USER nonroot и безопасность"
+    },
+    {
+      "type": "text",
+      "content": "Большинство базовых образов работают как root. Это критично для безопасности: если злоумышленник пробрасывает уязвимость, он получает root прямо в контейнере. USER nonroot ограничивает права."
+    },
+    {
+      "type": "code",
+      "content": "# ПЛОХО — запуск от root:\nFROM node:20-alpine\nCOPY . .\n# Запускается как root → полный доступ\nCMD [\"node\", \"app.js\"]\n\n# ХОРОШО — USER nonroot:\nFROM node:20-alpine\nRUN addgroup -S app && adduser -S app -G app\nWORKDIR /app\nCOPY --chown app:app . .\nUSER app                    # ← переключаемся на nonroot\nCMD [\"node\", \"app.js\"]"
+    },
+    {
+      "type": "warning",
+      "content": "Секреты не храните в ARG или ENV: docker history покажет значение. Используйте --build-arg для передачи secrets на build-stage, удаляйте после, или используйте Docker BuildKit с --secret."
+    },
+    {
+      "type": "code",
+      "content": "# ПЛОХО — секрет виден в history:\nARG SECRET_KEY\nENV SECRET=${SECRET_KEY}\nRUN pip install\n\n# docker history покажет: SECRET_KEY=... (ваш секрет!)\n\n# ХОРОШО — BuildKit:\ndocker build --secret id=npmrc,src=.npmrc -t myapp ."
+    },
+    {
+      "type": "tip",
+      "content": "Проверяйте размер образа: docker images myapp. Если больше 200 МБ — ищите, что включили лишнего: gcc, make, .git, node_modules, логи."
+    },
+    {
+      "type": "note",
+      "content": "Distroless-образы (gcr.io/distroless/*) содержат только ваш runtime и ничего больше — ни shell, ни пакетный менеджер. Идеально для production. Сложнее дебажить — используйте для production, а не development."
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t1",
+      "type": "dockerfile",
+      "prompt": "Dockerfile на python:3.12-slim: WORKDIR /app, COPY requirements.txt, RUN pip install --no-cache-dir -r requirements.txt, COPY . ., USER app, CMD [\"python\", \"app.py\"]",
+      "starter": "FROM python:3.12-slim\n# добавь WORKDIR, COPY, RUN, USER, CMD",
+      "hints": [
+        "USER app — обязательный для security",
+        "pip install --no-cache-dir уменьшает слой"
+      ],
+      "checks": [
+        { "kind": "dockerfile-valid" },
+        { "kind": "dockerfile-has-instruction", "instruction": "WORKDIR" },
+        { "kind": "dockerfile-has-instruction", "instruction": "RUN" },
+        { "kind": "dockerfile-no-warnings" }
+      ]
+    },
+    {
+      "id": "t2",
+      "type": "dockerfile",
+      "prompt": "Multi-stage Dockerfile для Node.js: builder (node:20) собирает приложение, runtime (node:20-alpine) копирует только dist через COPY --from=builder и запускает через USER node",
+      "starter": "",
+      "hints": [
+        "FROM node:20 AS builder → RUN npm ci → RUN npm run build",
+        "FROM node:20-alpine → COPY --from=builder /app/dist ./dist",
+        "USER node на этапе runtime"
+      ],
+      "checks": [
+        { "kind": "dockerfile-valid" },
+        { "kind": "dockerfile-has-instruction", "instruction": "FROM" },
+        { "kind": "dockerfile-has-instruction", "instruction": "USER" },
+        { "kind": "dockerfile-has-instruction", "instruction": "COPY" }
+      ]
+    },
+    {
+      "id": "t3",
+      "type": "dockerfile",
+      "prompt": "Дан Dockerfile с 3 RUN-инструкциями подряд (apt update, apt install, apt clean). Объедини их в одну RUN через && и добавь rm -rf /var/lib/apt/lists/*",
+      "starter": "FROM python:3.12-slim\nRUN apt-get update\nRUN apt-get install -y curl\nRUN rm -rf /var/lib/apt/lists/*",
+      "hints": [
+        "Объедини: RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*",
+        "Добавь --no-install-recommends"
+      ],
+      "checks": [
+        { "kind": "dockerfile-valid" },
+        { "kind": "dockerfile-no-warnings" }
+      ]
+    },
+    {
+      "id": "t4",
+      "type": "dockerfile",
+      "prompt": "Dockerfile запускается от root и использует ADD для локальных файлов. Исправь: замени ADD на COPY, добавь USER app. Затем собери образ myapp.",
+      "starter": "FROM python:3.12-slim\nWORKDIR /app\nADD . .\nCMD [\"python\", \"app.py\"]",
+      "hints": [
+        "ADD → COPY для локальных файлов",
+        "Добавь: RUN adduser --disabled-password app",
+        "Добавь: USER app"
+      ],
+      "checks": [
+        { "kind": "dockerfile-no-warnings" },
+        { "kind": "docker-image-exists", "name": "myapp" },
+        { "kind": "docker-command-used", "contains": "docker build" }
+      ]
+    },
+    {
+      "id": "t5",
+      "type": ["dockerfile", "docker"],
+      "prompt": "Напиши multi-stage Dockerfile для Python: builder (python:3.12) ставит зависимости, runtime (python:3.12-slim) копирует из builder и запускает. USER app. Собери myapp:v1, запусти, проверь docker images.",
+      "starter": "",
+      "hints": [
+        "FROM python:3.12 AS builder → COPY requirements.txt . → RUN pip install --no-cache-dir -r requirements.txt",
+        "FROM python:3.12-slim → COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages → USER app → CMD",
+        "docker build -t myapp:v1 . → docker run myapp:v1 → docker images"
+      ],
+      "checks": [
+        { "kind": "dockerfile-valid" },
+        { "kind": "dockerfile-has-instruction", "instruction": "FROM" },
+        { "kind": "dockerfile-has-instruction", "instruction": "USER" },
+        { "kind": "docker-image-exists", "name": "myapp" },
+        { "kind": "docker-command-used", "contains": "docker build" }
+      ]
+    }
+  ],
+  "recap": [
+    "Multi-stage сборка: builder образ для сборки, runtime — только результат. Образ в 5-20 раз меньше",
+    "Alpine/slim/distroless вместо полных образов: 50 МБ вместо 1.2 ГБ",
+    ".dockerignore исключает node_modules, .git, тесты из контекста сборки",
+    "Объединяйте RUN через && — меньше слоёв, меньше образ",
+    "USER nonroot — обязательное правило безопасности",
+    "Секреты не в ARG/ENV — видны в docker history. Используйте BuildKit --secret"
+  ],
+  "quiz": [
+    {
+      "q": "Зачем multi-stage сборка?",
+      "options": [
+        "Чтобы образ весел меньше за счёт разделения builder и runtime",
+        "Чтобы добавить больше слоёв в образ",
+        "Для параллельной сборки нескольких образов",
+        "Multi-stage не даёт преимуществ"
+      ],
+      "answer": 0,
+      "explain": "Multi-stage позволяет собрать приложение в тяжёлом образе (с gcc, build-toolchain), а затем скопировать только артефакты в лёгкий runtime-образ. Образ становится 5-20 раз меньше — нет dev-зависимостей, gcc, .git."
+    },
+    {
+      "q": "Что не так с запуском контейнера от root?",
+      "options": [
+        "Root в контейнере = root на хосте, если экранирование сломано",
+        "Root медленнее nonroot",
+        "Root не поддерживается Docker",
+        "Ничего не так — root по умолчанию"
+      ],
+      "answer": 0,
+      "explain": "Хотя контейнеры используют user namespaces, если есть уязвимость в ядре или экранировании, злоумышленник может получить root на хосте. USER nonroot ограничивает blast radius — даже если контейнер скомпрометирован, доступ ограничен."
+    },
+    {
+      "q": "Зачем .dockerignore?",
+      "options": [
+        "Исключить node_modules, .git и тесты из контекста сборки — меньше данных, быстрее build",
+        "Защитить пароли от Docker",
+        "Отключить кэш сборки",
+        "Задать тайм-аут build"
+      ],
+      "answer": 0,
+      "explain": ".dockerignore исключает файлы из контекста сборки. Меньше данных передаётся на Docker daemon, сборка быстрее, образ меньше (не копируются лишние зависимости, .git и тесты)."
+    },
+    {
+      "q": "Что лучше для production: node:20 или node:20-alpine?",
+      "options": [
+        "node:20-alpine — меньше 50 МБ, быстрее pull",
+        "node:20 — совместимее с нативными модулями",
+        "Разницы нет",
+        "node:20-alpine не подходит для production"
+      ],
+      "answer": 0,
+      "explain": "node:20-alpine ~50 МБ против node:20 ~1.2 ГБ. Быстрее pull, меньше CVE. Но Alpine использует musl libc — некоторые нативные модули ломаются. Если ваше приложение работает на Alpine (большинство Node.js/Pure Python приложений работают) — выбирайте Alpine."
+    },
+    {
+      "q": "Почему apt-get install без --no-install-recommends плох?",
+      "options": [
+        "Устанавливает рекомендуемые пакеты — образ становится больше",
+        "Отключает интернет",
+        "Делает apt-get медленнее в 10 раз",
+        "Это безопасно — ничего страшного"
+      ],
+      "answer": 0,
+      "explain": "--no-install-recommends отключает установку рекомендуемых (но не обязательных) пакетов: man pages, документация, вспомогательные утилиты. Это значительно уменьшает размер образа."
+    }
+  ]
+}

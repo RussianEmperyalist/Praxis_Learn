@@ -125,6 +125,7 @@ export class DockerSim {
        inspect: () => this._cmdInspect(rest),
        volume: () => this._cmdVolume(rest),
        network: () => this._cmdNetwork(rest),
+       compose: () => this._cmdCompose(rest),
        help: () => this._cmdHelp(),
        prune: () => this._cmdPrune(),
      };
@@ -137,7 +138,7 @@ export class DockerSim {
     const handler = handlers[sub];
     if (!handler) {
       this.state.output.push("docker: '" + sub + "' не поддерживается симулятором");
-      this.state.output.push('Поддерживаются: pull, images, rmi, build, run, ps, stop, start, restart, rm, logs, exec, inspect, prune, help, version');
+      this.state.output.push('Поддерживаются: pull, images, rmi, build, run, ps, stop, start, restart, rm, logs, exec, inspect, prune, help, version, volume, network, compose');
       return this._result();
     }
 
@@ -457,6 +458,199 @@ export class DockerSim {
 
   _findVolumeRef(name) {
     return this.state.volumes.find(v => v.name === name) || null;
+  }
+
+  _cmdCompose(args) {
+    const sub = args[0];
+    if (!sub) {
+      this._setError('docker compose требует подкоманду: up|down|ps|logs|config');
+      return;
+    }
+
+    if (sub === 'up') {
+      const detached = args.includes('-d') || args.includes('--detach');
+      const compose = this.state.composeFile;
+      if (!compose) {
+        this._setError('docker compose: compose file not found. Set compose file first.');
+        return;
+      }
+      const services = compose.services || {};
+      const serviceNames = Object.keys(services);
+      if (serviceNames.length === 0) {
+        this._setError('docker compose: no services defined');
+        return;
+      }
+
+      const startOrder = this._topologicalSort(services);
+      const created = [];
+
+      for (const svcName of startOrder) {
+        const svc = services[svcName];
+        const imageSpec = svc.image || svc.build;
+        if (!imageSpec) {
+          this._setError('service ' + svcName + ' has no image or build');
+          return;
+        }
+
+        const image = this._findImage(imageSpec);
+        if (!image) {
+          this._setError('image not found: ' + imageSpec + '. Pull with: docker pull ' + imageSpec);
+          return;
+        }
+
+        const existing = this._findContainer(svcName);
+        if (existing) {
+          this.state.output.push('Контейнер уже запущен: ' + svcName);
+          created.push(svcName);
+          continue;
+        }
+
+        const ports = {};
+        if (Array.isArray(svc.ports)) {
+          svc.ports.forEach(p => {
+            const parts = p.split(':');
+            if (parts.length >= 2) ports[parts[0]] = parts[1];
+          });
+        }
+
+        for (const hostPort of Object.keys(ports)) {
+          const conflict = this._findPort(hostPort);
+          if (conflict) {
+            this._setError('port already in use: ' + hostPort + ' is bound to ' + conflict.name);
+            return;
+          }
+        }
+
+        const volumes = [];
+        const env = Object.assign({}, svc.environment || {});
+
+        const container = {
+          id: _hash(),
+          image: image.name + ':' + image.tag,
+          name: svcName,
+          status: 'running',
+          ports: ports,
+          volumes: [],
+          env: env,
+          networks: [],
+          exitCode: null,
+          logs: this._generateLogs(image.name, imageSpec),
+          createdAt: Date.now(),
+          rm: false,
+          composeService: svcName,
+        };
+
+        if (svc.volumes && Array.isArray(svc.volumes)) {
+          svc.volumes.forEach(vol => {
+            const parts = vol.split(':');
+            const source = parts[0];
+            const target = parts[1];
+            const isBind = this._registerVolumeMount(container, source, target);
+            container.volumes.push({
+              source: source,
+              target: target,
+              type: isBind ? 'bind' : 'volume',
+            });
+          });
+        }
+
+        this.state.containers.push(container);
+        created.push(svcName);
+        this.state.output.push(svcName);
+
+        if (!detached) {
+          this.state.output.push('Attaching to ' + svcName);
+        }
+      }
+      if (detached) {
+        this.state.output.push('Созданы контейнеры: ' + created.join(', '));
+      }
+    } else if (sub === 'down') {
+      const composeServices = this.state.containers
+        .filter(c => c.composeService)
+        .map(c => c.name);
+
+      composeServices.forEach(name => {
+        const c = this._findContainer(name);
+        if (c) {
+          c.status = 'exited';
+          c.exitCode = 0;
+        }
+      });
+      composeServices.forEach(name => {
+        const c = this._findContainer(name);
+        if (c) {
+          const idx = this.state.containers.indexOf(c);
+          this.state.containers.splice(idx, 1);
+        }
+      });
+      this.state.output.push('Остановлены и удалены контейнеры из compose');
+    } else if (sub === 'ps') {
+      this.state.output.push('NAME                 IMAGE          COMMAND           STATUS          PORTS');
+      const composeContainers = this.state.containers.filter(c => c.composeService);
+      if (composeContainers.length === 0) {
+        this.state.output.push('(none)');
+      } else {
+        composeContainers.forEach(c => {
+          const ports = Object.keys(c.ports).length > 0
+            ? Object.entries(c.ports).map(([h, t]) => '0.0.0.0:' + h + '->' + t + '/tcp').join(', ')
+            : '';
+          const line = (c.name + '   ').substring(0, 17) +
+                       (c.image + '   ').substring(0, 14) +
+                       ('docker-entrypoint' + '   ').substring(0, 16) +
+                       (c.status + '        ').substring(0, 15) +
+                       ports;
+          this.state.output.push(line);
+        });
+      }
+    } else if (sub === 'logs') {
+      const svcName = args[1];
+      if (svcName) {
+        const c = this._findContainer(svcName);
+        if (c && c.logs && c.logs.length > 0) {
+          c.logs.forEach(l => this.state.output.push(svcName + ': ' + l));
+        } else {
+          this.state.output.push('Нет логов для ' + svcName);
+        }
+      } else {
+        const composeContainers = this.state.containers.filter(c => c.composeService);
+        composeContainers.forEach(c => {
+          if (c.logs && c.logs.length > 0) {
+            this.state.output.push('--- ' + c.name + ' ---');
+            c.logs.forEach(l => this.state.output.push(l));
+          }
+        });
+      }
+    } else if (sub === 'config') {
+      const compose = this.state.composeFile;
+      if (!compose) {
+        this._setError('no compose file loaded');
+        return;
+      }
+      this.state.output.push(JSON.stringify(compose, null, 2));
+    } else {
+      this.state.output.push("docker compose: '" + sub + "' не поддерживается. Доступно: up, down, ps, logs, config");
+    }
+  }
+
+  _topologicalSort(services) {
+    const visited = new Set();
+    const result = [];
+
+    function visit(name) {
+      if (visited.has(name)) return;
+      visited.add(name);
+      const svc = services[name];
+      if (svc && svc.depends_on && Array.isArray(svc.depends_on)) {
+        svc.depends_on.forEach(dep => {
+          if (services[dep]) visit(dep);
+        });
+      }
+      result.push(name);
+    }
+
+    Object.keys(services).forEach(name => visit(name));
+    return result;
   }
 
   _registerVolumeMount(container, source, target) {
@@ -896,3 +1090,4 @@ export class DockerSim {
     this.state.output.push('  network Управление сетями (ls, create, inspect, rm, connect)');
   }
 }
+

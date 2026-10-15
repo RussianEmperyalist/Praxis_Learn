@@ -129,7 +129,7 @@
         },
         {
           "kind": "git-branch-exists",
-          "branch": "main"
+          "name": "main"
         },
         {
           "kind": "git-no-error"

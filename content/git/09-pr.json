@@ -105,7 +105,7 @@
       ],
       "checks": [
         { "kind": "git-command-used", "command": "git checkout" },
-        { "kind": "git-branch-exists", "branch": "feature/new-feature" },
+        { "kind": "git-branch-exists", "name": "feature/new-feature" },
         { "kind": "git-commits-count", "equals": 1 }
       ]
     },

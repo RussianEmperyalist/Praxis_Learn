@@ -108,3 +108,4 @@ export const storage = {
     return r ? r.value : null;
   },
 };
+

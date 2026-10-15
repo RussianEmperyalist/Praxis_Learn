@@ -218,3 +218,4 @@ export function clearGraph(container) {
     container.classList.remove('git-graph', 'git-graph-scroll');
   }
 }
+

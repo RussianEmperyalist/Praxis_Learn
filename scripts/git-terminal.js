@@ -116,12 +116,14 @@ export function createGitTerminal(mountEl, initialState) {
             expected: check.equals + ' коммитов',
             actual: state.commits.length + ' коммитов',
           };
-        case 'git-branch-exists':
+        case 'git-branch-exists': {
+          const branchName = check.name || check.branch;
           return {
-            pass: check.name in state.branches,
-            expected: 'ветка ' + check.name,
-            actual: (check.name in state.branches) ? 'существует' : 'не существует',
+            pass: branchName in state.branches,
+            expected: 'ветка ' + branchName,
+            actual: (branchName in state.branches) ? 'существует' : 'не существует',
           };
+        }
         case 'git-branch-count':
           return {
             pass: Object.keys(state.branches).length === check.equals,
@@ -237,3 +239,4 @@ export function createGitTerminal(mountEl, initialState) {
     container,
   };
 }
+

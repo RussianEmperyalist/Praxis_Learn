@@ -31,7 +31,7 @@ import sys, io
 _buf_out = io.StringIO()
 _buf_err = io.StringIO()
 _old_out, _old_err = sys.stdout, sys.stderr
-sys.stdout, stderr = _buf_out, _buf_err
+sys.stdout, sys.stderr = _buf_out, _buf_err
 try:
     _ns = {'__name__': '__main__'}
     exec(compile(${escaped}, '<lesson>', 'exec'), _ns)
@@ -55,3 +55,4 @@ _result = {'stdout': _buf_out.getvalue(), 'stderr': _buf_err.getvalue(), 'var_in
   const { stdout, stderr, var_info } = result.toJs ? result.toJs() : result;
   return { stdout: stdout || '', stderr: stderr || '', var_info: var_info || {} };
 }
+

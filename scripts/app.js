@@ -23,7 +23,7 @@ export async function renderHeader(active) {
   if (!header) return;
 
   header.innerHTML = `
-    <button class="menu-toggle" id="menuToggle" aria-label="Меню" aria-expanded="false">☰</button>
+    ${document.querySelector('.sidebar') ? '<button class="menu-toggle" id="menuToggle" aria-label="Меню" aria-expanded="false">☰</button>' : ''}
     <a href="./index.html" class="logo" aria-label="Praxis Learn — главная">
       <span class="logo-text">PRAXIS LEARN</span>
     </a>
@@ -51,8 +51,19 @@ export async function renderHeader(active) {
 
   const menuToggle = header.querySelector('#menuToggle');
   if (menuToggle) {
-    menuToggle.addEventListener('click', () => {
-      document.body.classList.toggle('menu-open');
+    menuToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = document.body.classList.toggle('menu-open');
+      menuToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+    document.addEventListener('click', (e) => {
+      if (!document.body.classList.contains('menu-open')) return;
+      const t = e.target;
+      if (t.nodeType !== 1) return;
+      if (t.closest('.sidebar')) return;
+      if (t.closest('#menuToggle')) return;
+      document.body.classList.remove('menu-open');
+      menuToggle.setAttribute('aria-expanded', 'false');
     });
   }
 }
@@ -63,3 +74,4 @@ export function qsa(sel, root = document) { return [...root.querySelectorAll(sel
 export function getQuery(name) {
   return new URLSearchParams(location.search).get(name);
 }
+

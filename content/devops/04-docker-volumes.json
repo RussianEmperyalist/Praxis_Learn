@@ -99,18 +99,28 @@
     },
     {
       "type": "predict",
-      "content": "docker run -d --name db -v mydata:/data postgres:15. Затем docker rm db. Volume mydata остался?"
-    },
-    {
-      "answer": true,
+      "code": "docker run -d --name db -v mydata:/data postgres:15\ndocker rm db",
+      "question": "После удаления контейнера db останется ли named volume mydata?",
+      "options": [
+        "Да — named volume сохраняется независимо от контейнера",
+        "Нет — volume удаляется вместе с контейнером",
+        "Ошибка: volume не может существовать без контейнера",
+        "docker rm не выполнится без остановки контейнера"
+      ],
+      "answer": 0,
       "explain": "Да — named volume живёт независимо от контейнера. docker rm удаляет только контейнер, но volume остаётся. Проверьте: docker volume ls всё ещё покажет mydata."
     },
     {
       "type": "predict",
-      "content": "Два контейнера пытаются запуститься с -p 8080:80 на одном хосте. Что произойдёт?"
-    },
-    {
-      "answer": false,
+      "code": "docker run -d --name web1 -p 8080:80 nginx\ndocker run -d --name web2 -p 8080:80 nginx",
+      "question": "Два контейнера пытаются запуститься с -p 8080:80 на одном хосте. Что произойдёт?",
+      "options": [
+        "Оба контейнера запустятся — Docker распределит порт",
+        "Ошибка: порт 8080 уже используется",
+        "Первый контейнер остановится автоматически",
+        "Docker создаст виртуальные IP для каждого контейнера"
+      ],
+      "answer": 1,
       "explain": "Ошибка: 'port already in use: 8080'. Хост-порт 8080 может быть занят только одним контейнером. Container-to-container общение внутри сети — по внутреннему порту, но -p на хосте уникален."
     },
     {
