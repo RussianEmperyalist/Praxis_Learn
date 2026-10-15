@@ -417,6 +417,12 @@ label {
   margin-bottom: 12px;
 }
 
+@media (max-width: 500px) {
+  .predict-options {
+    grid-template-columns: 1fr;
+  }
+}
+
 .predict-option {
   display: block;
   padding: 12px 16px;

@@ -15,11 +15,11 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="./styles/cyberpunk.css?v=50">
-  <link rel="stylesheet" href="./styles/layout.css?v=50">
+  <link rel="stylesheet" href="./styles/cyberpunk.css?v=51">
+  <link rel="stylesheet" href="./styles/layout.css?v=51">
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-      <script src="./js/highlighter.js?v=50" defer></script>
-    <script src="./vendor/js-yaml.min.js?v=50"></script>
+      <script src="./js/highlighter.js?v=51" defer></script>
+    <script src="./vendor/js-yaml.min.js?v=51"></script>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
 </head>
 <body>
@@ -38,15 +38,15 @@
   <div id="toasts"></div>
 
   <script type="module">
-    import { renderHeader, getQuery, toast } from './scripts/app.js?v=50';
-    import { content } from './scripts/content.js?v=50';
-    import { auth } from './scripts/auth.js?v=50';
-    import { progress } from './scripts/progress.js?v=50';
-    import { createPlayground } from './scripts/editor.js?v=50';
-    import { createGitTerminal } from './scripts/git-terminal.js?v=50';
-    import { createDockerTerminal } from './scripts/docker-terminal.js?v=50';
-    import { createK8sTerminal } from './scripts/k8s-terminal.js?v=50';
-    import { parseYaml, validateCompose } from './scripts/yaml-validator.js?v=50';
+    import { renderHeader, getQuery, toast } from './scripts/app.js?v=51';
+    import { content } from './scripts/content.js?v=51';
+    import { auth } from './scripts/auth.js?v=51';
+    import { progress } from './scripts/progress.js?v=51';
+    import { createPlayground } from './scripts/editor.js?v=51';
+    import { createGitTerminal } from './scripts/git-terminal.js?v=51';
+    import { createDockerTerminal } from './scripts/docker-terminal.js?v=51';
+    import { createK8sTerminal } from './scripts/k8s-terminal.js?v=51';
+    import { parseYaml, validateCompose } from './scripts/yaml-validator.js?v=51';
 
     renderHeader('home');
 
@@ -381,7 +381,7 @@
           ...opts,
           onDockerPass: opts.onPass,
           parseDockerfile: async (text) => {
-            const { parseDockerfile } = await import('./scripts/dockerfile-parser.js?v=50');
+            const { parseDockerfile } = await import('./scripts/dockerfile-parser.js?v=51');
             return parseDockerfile(text);
           },
         });
@@ -390,7 +390,7 @@
         if (checkBtn && ta) {
           checkBtn.onclick = async () => {
             const dockerfileText = ta.value;
-            const { parseDockerfile } = await import('./scripts/dockerfile-parser.js?v=50');
+            const { parseDockerfile } = await import('./scripts/dockerfile-parser.js?v=51');
             const result = parseDockerfile(dockerfileText);
             terminal.getSim()._dockerfileResult = result;
             if (originalClick) originalClick();
@@ -756,7 +756,7 @@
     if ('serviceWorker' in navigator &&
         location.hostname !== 'localhost' &&
         location.hostname !== '127.0.0.1') {
-      navigator.serviceWorker.register('./service-worker.js?v=50').then(reg => {
+      navigator.serviceWorker.register('./service-worker.js?v=51').then(reg => {
         setInterval(() => reg.update(), 60000);
         if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
         reg.addEventListener('updatefound', () => {
