@@ -28,8 +28,9 @@
 
   <section class="hero">
     <h1 class="hero-logo glitch" data-text="PRAXIS LEARN">PRAXIS LEARN</h1>
-    <div class="cta">
-      <a href="#courses" class="btn btn-primary">Начать обучение</a>
+    <p class="subtitle">Изучай Python, Git и DevOps в стиле киберпанк</p>
+    <div class="cta" id="heroCta">
+      <a href="./login.html" class="btn btn-primary">Создать аккаунт</a>
       <a href="./login.html" class="btn btn-ghost">Войти</a>
     </div>
   </section>
@@ -48,8 +49,17 @@
   <script type="module">
     import { renderHeader, toast } from './scripts/app.js';
     import { content } from './scripts/content.js';
+    import { auth } from './scripts/auth.js';
 
     renderHeader('home');
+
+    (async () => {
+      const user = await auth.current();
+      const cta = document.getElementById('heroCta');
+      if (cta && user) {
+        cta.innerHTML = `<a href="./dashboard.html" class="btn btn-primary">Мой кабинет</a>`;
+      }
+    })();
 
     (async () => {
       try {
