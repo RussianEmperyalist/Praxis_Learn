@@ -171,6 +171,7 @@
       const totalQuiz = lesson.quiz?.length || 0;
       let completedTasks = 0;
       let completedQuiz = 0;
+      const passedTasks = new Set();
       toc.innerHTML = tocHtml + `
         <div class="lesson-progress-card">
           <div class="stat-row"><span>Задач решено</span> <b id="tasksProgress">0 / ${totalTasks}</b></div>
@@ -247,40 +248,43 @@
              userId: user?.id,
              taskId: task.id,
              currentLessonId: lesson.id,
-             onPass: () => {
-               toast('Задача решена ✓', 'success');
-               completedTasks++;
-               updateProgress();
-               markLessonProgress();
-             },
-           });
-         } else if (task.type === 'docker') {
+            onPass: () => {
+              if (!passedTasks.add(task.id)) return;
+              toast('Задача решена ✓', 'success');
+              completedTasks++;
+              updateProgress();
+              markLessonProgress();
+            },
+          });
+        } else if (task.type === 'docker') {
            await createDockerPlayground(mount, {
              checks: task.checks || [],
              initialState: task.initialState || null,
              userId: user?.id,
              taskId: task.id,
              currentLessonId: lesson.id,
-             onPass: () => {
-               toast('Задача решена ✓', 'success');
-               completedTasks++;
-               updateProgress();
-               markLessonProgress();
-             },
-           });
-         } else if (task.type === 'dockerfile') {
+            onPass: () => {
+              if (!passedTasks.add(task.id)) return;
+              toast('Задача решена ✓', 'success');
+              completedTasks++;
+              updateProgress();
+              markLessonProgress();
+            },
+          });
+        } else if (task.type === 'dockerfile') {
            await createDockerfilePlayground(mount, task, {
              userId: user?.id,
              taskId: task.id,
              currentLessonId: lesson.id,
-             onPass: () => {
-               toast('Задача решена ✓', 'success');
-               completedTasks++;
-               updateProgress();
-               markLessonProgress();
-             },
-           });
-         } else if (task.type === 'yaml' || (Array.isArray(task.type) && task.type.includes('yaml'))) {
+              onPass: () => {
+              if (!passedTasks.add(task.id)) return;
+              toast('Задача решена ✓', 'success');
+              completedTasks++;
+              updateProgress();
+              markLessonProgress();
+            },
+          });
+        } else if (task.type === 'yaml' || (Array.isArray(task.type) && task.type.includes('yaml'))) {
            const yamlMount = document.createElement('div');
            mount.appendChild(yamlMount);
            const yamlTerminal = await createYamlPlayground(yamlMount, task, {});
@@ -302,11 +306,12 @@
                userId: user?.id,
                taskId: task.id,
                currentLessonId: lesson.id,
-               onPass: () => {
-                 toast('Задача решена ✓', 'success');
-                 completedTasks++;
-                 updateProgress();
-                 markLessonProgress();
+            onPass: () => {
+                  if (!passedTasks.add(task.id)) return;
+                  toast('Задача решена ✓', 'success');
+                  completedTasks++;
+                  updateProgress();
+                  markLessonProgress();
                },
              });
            }
@@ -339,13 +344,14 @@
                  dockerTerminal.getSim().state.composeFile = data;
                  dockerMount.style.display = 'block';
                  return;
-               }
+                }
 
-               toast('Задача решена ✓', 'success');
-               completedTasks++;
-               updateProgress();
-               markLessonProgress();
-             };
+                if (!passedTasks.add(task.id)) return;
+                toast('Задача решена ✓', 'success');
+                completedTasks++;
+                updateProgress();
+                markLessonProgress();
+              };
            }
           } else if (task.type === 'k8s' || task.type === 'k8s-yaml' || (Array.isArray(task.type) && (task.type.includes('k8s') || task.type.includes('k8s-yaml')))) {
             const isYaml = task.type === 'k8s-yaml' || (Array.isArray(task.type) && task.type.includes('k8s-yaml'));
@@ -357,6 +363,7 @@
               isYaml: isYaml,
               isCombined: isCombinedK8s,
               onPass: () => {
+                if (!passedTasks.add(task.id)) return;
                 toast('Задача решена ✓', 'success');
                 completedTasks++;
                 updateProgress();
@@ -372,6 +379,7 @@
             taskId: task.id,
             currentLessonId: lesson.id,
             onPass: () => {
+              if (!passedTasks.add(task.id)) return;
               toast('Задача решена ✓', 'success');
               completedTasks++;
               updateProgress();

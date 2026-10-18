@@ -93,7 +93,7 @@ export async function createPlayground(mount, opts) {
       let html = '';
       if (stdout) html += `<span class="ok">${escapeHtml(stdout)}</span>`;
       if (stderr) html += (html ? '\n' : '') + `<span class="err">${escapeHtml(stderr)}</span>`;
-      out.innerHTML = html || '';
+      out.innerHTML = html || 'Нет вывода';
       return { stdout, stderr, var_info };
     } catch (err) {
       out.innerHTML = `<span class="err">${escapeHtml(err.message)}</span>`;

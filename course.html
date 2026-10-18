@@ -54,8 +54,11 @@
         const map = new Map(allProgress.map(p => [p.lessonId, p]));
 
         document.title = `${course.title} · Praxis Learn`;
-        const status = course.status || (map.size > 0 ? 'in-progress' : 'not-started');
-        const percent = status === 'completed' ? 100 : status === 'in-progress' ? 30 : 0;
+        const lessonIds = idx.lessons.map(l => l.id);
+        const courseProgress = allProgress.filter(p => lessonIds.includes(p.lessonId));
+        const completedLessons = courseProgress.filter(p => p.status === 'completed').length;
+        const percent = idx.lessons.length ? Math.round((completedLessons / idx.lessons.length) * 100) : 0;
+        const status = completedLessons === 0 ? 'not-started' : completedLessons === idx.lessons.length ? 'completed' : 'in-progress';
 
         document.getElementById('courseHeader').innerHTML = `
           <div class="card course-header-inner">
