@@ -1,12 +1,11 @@
 #!/usr/bin/env node
 /**
- * Praxis Learn — локальный сервер.
+ * Amber Learn — локальный сервер.
  *
  * Раздаёт статику и реализует API:
  *   /api/auth/register  — регистрация
  *   /api/auth/login     — вход
  *   /api/progress       — прогресс (GET/POST)
- *   /api/drafts         — черновики (GET/POST)
  *   /api/export         — скачивание дампа базы
  *   /api/import         — восстановление из дампа
  *
@@ -74,7 +73,7 @@ const server = http.createServer((req, res) => {
 
 server.listen(PORT, () => {
   console.log('');
-  console.log('  Praxis Learn // LOCAL SERVER');
+  console.log('  Amber Learn // LOCAL SERVER');
   console.log(`  http://localhost:${PORT}`);
   console.log(`  база данных: ${path.join(ROOT, 'data', 'db.json')}`);
   console.log('');

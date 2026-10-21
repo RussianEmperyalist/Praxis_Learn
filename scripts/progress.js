@@ -1,3 +1,7 @@
+/**
+ * Amber Learn — прогресс через IndexedDB (storage.js).
+ */
+
 import { storage } from './storage.js';
 
 export const progress = {

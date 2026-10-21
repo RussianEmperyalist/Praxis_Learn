@@ -1,5 +1,5 @@
 /**
- * Praxis Learn — авторизация через IndexedDB + WebCrypto.
+ * Amber Learn — авторизация через IndexedDB + WebCrypto.
  */
 
 import { storage } from './storage.js';
@@ -75,4 +75,3 @@ export const auth = {
     return user ? normalize(user) : null;
   },
 };
-

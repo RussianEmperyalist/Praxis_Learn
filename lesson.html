@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Урок · Praxis Learn</title>
+  <title>Урок · Amber Learn</title>
   <style>
     html { visibility: hidden; }
     html.ready { visibility: visible; }
@@ -15,12 +15,10 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="./styles/cyberpunk.css?v=51">
-  <link rel="stylesheet" href="./styles/layout.css?v=51">
+  <link rel="stylesheet" href="./styles/cyberpunk.css?v=3">
+  <link rel="stylesheet" href="./styles/layout.css?v=3">
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-      <script src="./js/highlighter.js?v=51" defer></script>
-    <script src="./vendor/js-yaml.min.js?v=51"></script>
-    <script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+  <script src="./js/highlighter.js?v=3" defer></script>
 </head>
 <body>
   <header class="app-header"></header>
@@ -38,17 +36,13 @@
   <div id="toasts"></div>
 
   <script type="module">
-    import { renderHeader, getQuery, toast } from './scripts/app.js?v=51';
-    import { content } from './scripts/content.js?v=51';
-    import { auth } from './scripts/auth.js?v=51';
-    import { progress } from './scripts/progress.js?v=51';
-    import { createPlayground } from './scripts/editor.js?v=51';
-    import { createGitTerminal } from './scripts/git-terminal.js?v=51';
-    import { createDockerTerminal } from './scripts/docker-terminal.js?v=51';
-    import { createK8sTerminal } from './scripts/k8s-terminal.js?v=51';
-    import { parseYaml, validateCompose } from './scripts/yaml-validator.js?v=51';
+    import { renderHeader, getQuery, toast } from './scripts/app.js?v=3';
+    import { content } from './scripts/content.js?v=3';
+    import { auth } from './scripts/auth.js?v=3';
+    import { progress } from './scripts/progress.js?v=3';
+    import { createPlayground } from './scripts/editor.js?v=3';
 
-    renderHeader('home');
+    renderHeader('home').catch(() => {});
 
     // Ресайз левого сайдбара за правую грань (desktop)
     (() => {
@@ -100,7 +94,7 @@
             <a href="./course.html?id=${courseId}" class="btn">← Вернуться к курсу</a>
           </div>
         `;
-        document.title = 'Урок не найден · Praxis Learn';
+        document.title = 'Урок не найден · Amber Learn';
         return;
       }
 
@@ -241,373 +235,24 @@
         const hintsContainer = wrap.querySelector('.hints-container');
         renderHints(hintsContainer, task.hints || []);
 
-         if (task.type === 'git') {
-           await createGitPlayground(mount, {
-             checks: task.checks || [],
-             initialState: task.initialState || null,
-             userId: user?.id,
-             taskId: task.id,
-             currentLessonId: lesson.id,
-            onPass: () => {
-              if (!passedTasks.add(task.id)) return;
-              toast('Задача решена ✓', 'success');
-              completedTasks++;
-              updateProgress();
-              markLessonProgress();
-            },
-          });
-        } else if (task.type === 'docker') {
-           await createDockerPlayground(mount, {
-             checks: task.checks || [],
-             initialState: task.initialState || null,
-             userId: user?.id,
-             taskId: task.id,
-             currentLessonId: lesson.id,
-            onPass: () => {
-              if (!passedTasks.add(task.id)) return;
-              toast('Задача решена ✓', 'success');
-              completedTasks++;
-              updateProgress();
-              markLessonProgress();
-            },
-          });
-        } else if (task.type === 'dockerfile') {
-           await createDockerfilePlayground(mount, task, {
-             userId: user?.id,
-             taskId: task.id,
-             currentLessonId: lesson.id,
-              onPass: () => {
-              if (!passedTasks.add(task.id)) return;
-              toast('Задача решена ✓', 'success');
-              completedTasks++;
-              updateProgress();
-              markLessonProgress();
-            },
-          });
-        } else if (task.type === 'yaml' || (Array.isArray(task.type) && task.type.includes('yaml'))) {
-           const yamlMount = document.createElement('div');
-           mount.appendChild(yamlMount);
-           const yamlTerminal = await createYamlPlayground(yamlMount, task, {});
-
-           const yamlChecks = task.checks.filter(c => c.kind.startsWith('yaml-'));
-           const dockerChecks = task.checks.filter(c => !c.kind.startsWith('yaml-'));
-           const isCombined = Array.isArray(task.type) && task.type.includes('docker');
-
-           let dockerMount = null;
-           let dockerTerminal = null;
-
-           if (isCombined) {
-             dockerMount = document.createElement('div');
-             dockerMount.style.display = 'none';
-             mount.appendChild(dockerMount);
-             dockerTerminal = await createDockerPlayground(dockerMount, {
-               checks: dockerChecks,
-               initialState: task.initialState || null,
-               userId: user?.id,
-               taskId: task.id,
-               currentLessonId: lesson.id,
-            onPass: () => {
-                  if (!passedTasks.add(task.id)) return;
-                  toast('Задача решена ✓', 'success');
-                  completedTasks++;
-                  updateProgress();
-                  markLessonProgress();
-               },
-             });
-           }
-
-           const checkBtn = yamlMount.querySelector('button');
-           if (checkBtn) {
-             checkBtn.onclick = () => {
-               const text = yamlTerminal.getYaml();
-               const { data, error } = parseYaml(text);
-
-               if (error) {
-                 toast('✗ Ошибка парсинга YAML', 'error');
-                 return;
-               }
-
-               if (!data || !data.services) {
-                 toast('✗ services обязательно', 'error');
-                 return;
-               }
-
-               const results = evaluateYamlChecks(data, yamlChecks);
-               const allPass = results.every(r => r.pass);
-               if (!allPass) {
-                 const failed = results.filter(r => !r.pass);
-                 toast('✗ ' + failed[0].expected, 'error');
-                 return;
-               }
-
-               if (isCombined) {
-                 dockerTerminal.getSim().state.composeFile = data;
-                 dockerMount.style.display = 'block';
-                 return;
-                }
-
-                if (!passedTasks.add(task.id)) return;
-                toast('Задача решена ✓', 'success');
-                completedTasks++;
-                updateProgress();
-                markLessonProgress();
-              };
-           }
-          } else if (task.type === 'k8s' || task.type === 'k8s-yaml' || (Array.isArray(task.type) && (task.type.includes('k8s') || task.type.includes('k8s-yaml')))) {
-            const isYaml = task.type === 'k8s-yaml' || (Array.isArray(task.type) && task.type.includes('k8s-yaml'));
-            const isCombinedK8s = isYaml && (task.type === 'k8s' || (Array.isArray(task.type) && task.type.includes('k8s')));
-            await createK8sPlayground(mount, task, {
-              userId: user?.id,
-              taskId: task.id,
-              currentLessonId: lesson.id,
-              isYaml: isYaml,
-              isCombined: isCombinedK8s,
-              onPass: () => {
-                if (!passedTasks.add(task.id)) return;
-                toast('Задача решена ✓', 'success');
-                completedTasks++;
-                updateProgress();
-                markLessonProgress();
-              },
-            });
-          } else {
-           await createPlayground(mount, {
-            starter: task.starter || '',
-            checks: task.checks || [],
-            tests: task.tests || [],
-            userId: user?.id,
-            taskId: task.id,
-            currentLessonId: lesson.id,
-            onPass: () => {
-              if (!passedTasks.add(task.id)) return;
-              toast('Задача решена ✓', 'success');
-              completedTasks++;
-              updateProgress();
-              markLessonProgress();
-            },
-          });
-        }
-      }
-
-      function createGitPlayground(mountEl, opts) {
-        const terminal = createGitTerminal(mountEl, opts.initialState);
-        mountEl.classList.add('git-task-playground');
-        terminal.setOpts({ ...opts, onGitPass: opts.onPass });
-      }
-
-      function createDockerPlayground(mountEl, opts) {
-        const terminal = createDockerTerminal(mountEl, opts.initialState);
-        mountEl.classList.add('docker-task-playground');
-        terminal.setOpts({ ...opts, onDockerPass: opts.onPass });
-      }
-
-      async function createDockerfilePlayground(mountEl, task, opts) {
-        mountEl.classList.add('dockerfile-task-playground');
-        mountEl.innerHTML = `
-          <div class="dockerfile-split">
-            <div class="dockerfile-editor">
-              <label>Dockerfile</label>
-              <textarea id="dockerfile-${task.id}" class="dockerfile-input" placeholder="Напишите Dockerfile здесь...">${task.starter || ''}</textarea>
-            </div>
-            <div class="dockerfile-terminal" id="dockerfile-term-${task.id}"></div>
-          </div>
-        `;
-        const ta = mountEl.querySelector('.dockerfile-input');
-        const termMount = mountEl.querySelector('#dockerfile-term-' + task.id);
-        const terminal = createDockerTerminal(termMount, opts.initialState);
-        terminal.setOpts({
-          ...opts,
-          onDockerPass: opts.onPass,
-          parseDockerfile: async (text) => {
-            const { parseDockerfile } = await import('./scripts/dockerfile-parser.js?v=51');
-            return parseDockerfile(text);
+        await createPlayground(mount, {
+          starter: task.starter || '',
+          checks: task.checks || [],
+          tests: task.tests || [],
+          userId: user?.id,
+          taskId: task.id,
+          currentLessonId: lesson.id,
+          onPass: () => {
+            if (!passedTasks.add(task.id)) return;
+            toast('Задача решена ✓', 'success');
+            completedTasks++;
+            updateProgress();
+            markLessonProgress();
           },
         });
-        const checkBtn = termMount.querySelector('#dockerCheckBtn');
-        const originalClick = checkBtn.onclick;
-        if (checkBtn && ta) {
-          checkBtn.onclick = async () => {
-            const dockerfileText = ta.value;
-            const { parseDockerfile } = await import('./scripts/dockerfile-parser.js?v=51');
-            const result = parseDockerfile(dockerfileText);
-            terminal.getSim()._dockerfileResult = result;
-            if (originalClick) originalClick();
-          };
-      }
-    }
-
-    function createYamlPlayground(mountEl, task, opts) {
-      mountEl.classList.add('yaml-task-playground');
-      mountEl.innerHTML = `
-        <div class="dockerfile-split">
-          <div class="dockerfile-editor">
-            <label>docker-compose.yml</label>
-            <textarea id="yaml-${task.id}" class="dockerfile-input" placeholder="Введите YAML здесь...">${task.starter || ''}</textarea>
-          </div>
-          <div class="yaml-result" id="yaml-result-${task.id}">
-            <div class="docker-status-title">Результат валидации</div>
-            <div id="yaml-validation-${task.id}" class="docker-status-section">Нажмите «Проверить»</div>
-          </div>
-        </div>
-        <div class="docker-terminal-footer">
-          <button class="btn btn-primary btn-sm" id="yamlCheckBtn-${task.id}">Проверить</button>
-          <span class="docker-status" id="yamlStatus-${task.id}"></span>
-        </div>
-      `;
-      const ta = mountEl.querySelector('#yaml-' + task.id);
-      const resultEl = mountEl.querySelector('#yaml-validation-' + task.id);
-      const statusEl = mountEl.querySelector('#yamlStatus-' + task.id);
-      const checkBtn = mountEl.querySelector('#yamlCheckBtn-' + task.id);
-
-      let _yamlResult = null;
-
-      checkBtn.addEventListener('click', () => {
-        const text = ta.value;
-        const { data, error } = parseYaml(text);
-        _yamlResult = { data, error };
-
-        if (error) {
-          resultEl.innerHTML = '<span style="color:var(--red);">Ошибка парсинга: ' + error + '</span>';
-          statusEl.textContent = '✗ Ошибка парсинга';
-          statusEl.style.color = 'var(--red)';
-          return;
-        }
-
-        if (!data || !data.services) {
-          resultEl.innerHTML = '<span style="color:var(--red);">Ошибка: services обязателен</span>';
-          statusEl.textContent = '✗ services обязателен';
-          statusEl.style.color = 'var(--red)';
-          return;
-        }
-
-        const validation = validateCompose(data);
-        let html = '';
-        if (validation.errors.length > 0) {
-          html += '<span style="color:var(--red);">Ошибки: ' + validation.errors.join(', ') + '</span><br>';
-        }
-        if (validation.warnings.length > 0) {
-          html += '<span style="color:var(--accent);">Предупреждения: ' + validation.warnings.join(', ') + '</span><br>';
-        }
-        if (validation.errors.length === 0) {
-          html += '<span style="color:var(--green);">YAML валиден</span><br>';
-          html += 'Сервисы: ' + Object.keys(data.services).join(', ');
-        }
-        resultEl.innerHTML = html;
-
-        if (validation.errors.length === 0) {
-          statusEl.textContent = '✓ Валидно';
-          statusEl.style.color = 'var(--green)';
-        } else {
-          statusEl.textContent = '✗ Есть ошибки';
-          statusEl.style.color = 'var(--red)';
-        }
-      });
-
-      return {
-        getYaml: () => ta.value,
-        getYamlResult: () => _yamlResult,
-        setChecks: (checks) => {
-          const checkFn = mountEl.querySelector('#yamlCheckBtn-' + task.id);
-          checkFn._checks = checks;
-        }
-      };
-    }
-
-    function createK8sPlayground(mountEl, task, opts) {
-      const isYaml = opts.isYaml || false;
-      const isCombined = opts.isCombined || false;
-
-      mountEl.classList.add('k8s-task-playground');
-
-      let yamlTextarea = null;
-
-      if (isYaml) {
-        mountEl.innerHTML = `
-          <div class="dockerfile-split">
-            <div class="dockerfile-editor">
-              <label>YAML-манифест:</label>
-              <textarea id="k8s-yaml-${task.id}" class="dockerfile-input" placeholder="apiVersion: v1&#10;kind: Pod&#10;metadata:&#10;  name: my-pod...">${task.starter || ''}</textarea>
-            </div>
-            <div id="k8s-term-${task.id}"></div>
-          </div>
-        `;
-        yamlTextarea = mountEl.querySelector('#k8s-yaml-' + task.id);
-      } else {
-        mountEl.innerHTML = `
-          <div id="k8s-term-${task.id}"></div>
-        `;
       }
 
-      const termMount = mountEl.querySelector('#k8s-term-' + task.id);
-      const terminal = createK8sTerminal(termMount, task.initialState || null);
-      terminal.setOpts({ ...opts, checks: task.checks || [] });
-
-      if (yamlTextarea) {
-        yamlTextarea.addEventListener('input', (e) => {
-          terminal.getSim().setManifest(e.target.value);
-        });
-      }
-
-      const checkBtn = termMount.querySelector('#k8sCheckBtn');
-      if (checkBtn && yamlTextarea) {
-        const originalClick = checkBtn.onclick;
-        checkBtn.onclick = (e) => {
-          if (yamlTextarea.value.trim()) {
-            terminal.getSim().setManifest(yamlTextarea.value);
-          }
-          if (originalClick) {
-            originalClick(e);
-          }
-        };
-      }
-
-      return terminal;
-    }
-
-    function evaluateYamlChecks(data, checks) {
-      return checks.map(check => {
-        switch (check.kind) {
-          case 'yaml-valid':
-            return { pass: true, expected: 'YAML валиден', actual: 'валиден' };
-          case 'yaml-has-service':
-            return {
-              pass: data && data.services && data.services[check.name],
-              expected: 'сервис ' + check.name,
-              actual: data && data.services && data.services[check.name] ? 'существует' : 'не найден',
-            };
-          case 'yaml-service-image': {
-            const svc = data && data.services && data.services[check.service];
-            return {
-              pass: svc && svc.image === check.image,
-              expected: check.service + '.image = ' + check.image,
-              actual: svc ? (svc.image === check.image ? 'совпадает' : 'равен ' + svc.image) : 'сервис не найден',
-            };
-          }
-          case 'yaml-service-ports': {
-            const svc = data && data.services && data.services[check.service];
-            const hasPort = svc && Array.isArray(svc.ports) && svc.ports.some(p => p.includes(check.contains));
-            return {
-              pass: hasPort,
-              expected: check.service + ' ports содержит ' + check.contains,
-              actual: svc ? (hasPort ? 'найден' : 'не найден') : 'сервис не найден',
-            };
-          }
-          case 'yaml-service-depends-on': {
-            const svc = data && data.services && data.services[check.service];
-            const hasDep = svc && Array.isArray(svc.depends_on) && svc.depends_on.includes(check.dependsOn);
-            return {
-              pass: hasDep,
-              expected: check.service + ' depends_on включает ' + check.dependsOn,
-              actual: svc ? (hasDep ? 'есть' : 'нет') : 'сервис не найден',
-            };
-          }
-          default:
-            return { pass: true, expected: 'неизвестно', actual: 'ок' };
-        }
-      });
-    }
-
-    function renderHints(container, hints) {
+      function renderHints(container, hints) {
         if (!hints.length) return;
         let html = '';
         hints.forEach((h, hi) => {
@@ -723,7 +368,7 @@
         if (b.type === 'text') return `<p>${b.content}</p>`;
         if (b.type === 'html') return b.content;
         if (b.type === 'code') {
-          const lang = b.lang || 'python';
+          const lang = b.lang || 'javascript';
           return `<pre class="language-${lang}"><code class="language-${lang}">${escapeHtml(b.content)}</code></pre>`;
         }
         if (b.type === 'note') return `<div class="aside-block"><strong>Примечание</strong> ${b.content}</div>`;
@@ -794,7 +439,7 @@
     if ('serviceWorker' in navigator &&
         location.hostname !== 'localhost' &&
         location.hostname !== '127.0.0.1') {
-      navigator.serviceWorker.register('./service-worker.js?v=51').then(reg => {
+      navigator.serviceWorker.register('./service-worker.js?v=3').then(reg => {
         setInterval(() => reg.update(), 60000);
         if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
         reg.addEventListener('updatefound', () => {

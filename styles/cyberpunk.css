@@ -1,31 +1,26 @@
 :root {
-  --bg: #0a0e14;
-  --surface: #11151c;
-  --surface-2: #1a1f2e;
-  --border: rgba(255, 255, 255, 0.09);
-  --text: #e0e6f0;
-  --text-muted: #7a8294;
-
-  --accent: #00f0ff;
-  --accent-dim: #00b8cc;
+  --bg: #0a0a0a;
+  --surface: #141414;
+  --surface-2: #1e1e1e;
+  --border: #2a2a2a;
+  --accent: #fcee0a;
+  --accent-dim: #b8a800;
+  --text: #f0f0f0;
+  --text-muted: #808080;
+  --code-bg: #000000;
+  --code-text: #d0d0d0;
+  --code-comment: #5a5a5a;
 
   --green: #00ff9f;
-  --red: #ff003c;
+  --red: #ff3344;
   --yellow: #fcee0a;
-
-  --code-bg: #0d1117;
-  --code-text: #d5e4ff;
-    --code-comment: #7a8a9e;
 
   --font-sans: 'Rajdhani', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
   --font-display: 'Rajdhani', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 
   --radius: 4px;
-  --transition: 0.15s ease;
-
-  --glow-cyan: 0 0 10px rgba(0, 240, 255, 0.5), 0 0 20px rgba(0, 240, 255, 0.3);
-  --cyan: #00f0ff;
+  --transition: 0.2s ease;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -81,7 +76,7 @@ a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-
 code, pre, .mono { font-family: var(--font-mono); }
 
 code:not(pre code) {
-  background: rgba(0, 240, 255, 0.06);
+  background: rgba(252, 238, 10, 0.06);
   border: 1px solid var(--border);
   border-radius: 2px;
   padding: 1px 5px;
@@ -128,8 +123,8 @@ pre::before {
 .token.function   { color: #00ff9f; }
 .token.comment    { color: var(--code-comment); font-style: italic; }
 .token.operator   { color: var(--accent); }
-.token.builtin    { color: #ff003c; }
-.token.boolean    { color: #ff003c; }
+.token.builtin    { color: #ff3344; }
+.token.boolean    { color: #ff3344; }
 .token.punctuation { color: #a0a8b8; }
 
 /* ===== Кнопки ===== */
@@ -137,7 +132,7 @@ pre::before {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 10px 18px;
+  padding: 10px 20px;
   background: transparent;
   border: 1px solid var(--border);
   color: var(--text);
@@ -147,13 +142,12 @@ pre::before {
   cursor: pointer;
   transition: var(--transition);
   text-decoration: none;
-  border-radius: var(--radius);
+  border-radius: 4px;
 }
 
 .btn:hover {
-  background: var(--accent);
-  color: var(--bg);
   border-color: var(--accent);
+  color: var(--accent);
 }
 
 .btn:focus-visible {
@@ -176,16 +170,15 @@ pre::before {
 }
 
 .btn-primary {
-  background: var(--accent);
   border-color: var(--accent);
-  color: var(--bg);
+  color: var(--accent);
+  background: transparent;
   font-weight: 700;
 }
 
 .btn-primary:hover {
-  background: var(--accent-dim);
-  border-color: var(--accent-dim);
-  color: var(--bg);
+  background: var(--accent);
+  color: #000;
 }
 
 .btn-ghost {
@@ -258,11 +251,11 @@ label {
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 20px;
+  border-radius: 6px;
+  padding: 24px;
 }
 
-.card:hover { border-color: rgba(0, 240, 255, 0.12); }
+.card:hover { border-color: var(--accent-dim); }
 
 /* ===== Бейджи ===== */
 .badge {
@@ -305,7 +298,7 @@ label {
   padding: 14px 18px;
   border-radius: 0 var(--radius) var(--radius) 0;
   border-left: 3px solid var(--accent);
-  background: rgba(0, 240, 255, 0.03);
+  background: rgba(252, 238, 10, 0.03);
   font-size: 0.95rem;
   line-height: 1.6;
 }
@@ -350,7 +343,7 @@ label {
   font-size: 0.9rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--cyan);
+  color: var(--accent);
   margin: 0 0 8px;
   text-align: center;
 }
@@ -359,7 +352,7 @@ label {
   padding: 12px 16px;
   background: var(--bg);
   border: 1px solid var(--border);
-  border-left: 2px solid var(--cyan);
+  border-left: 2px solid var(--accent);
   border-radius: 4px;
   font-family: var(--font-mono);
   font-size: 0.85rem;
@@ -444,7 +437,7 @@ label {
   display: none;
   margin-top: 12px;
   padding: 12px 16px;
-  background: rgba(0, 240, 255, 0.03);
+  background: rgba(252, 238, 10, 0.03);
   border-left: 3px solid var(--accent);
   font-size: 0.9rem;
   border-radius: 0 var(--radius) var(--radius) 0;
@@ -643,4 +636,17 @@ label {
 
 .playground-textarea:focus {
   box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+/* ===== Жёлтая сетка на фоне ===== */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(252,238,10,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(252,238,10,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
 }

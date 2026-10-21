@@ -1,9 +1,9 @@
 /**
- * Praxis Learn — хранилище на IndexedDB.
+ * Amber Learn — хранилище на IndexedDB.
  * Аккаунты и прогресс живут локально в браузере, без сервера.
  */
 
-const DB_NAME = 'praxis-learn';
+const DB_NAME = 'amber-learn';
 const DB_VERSION = 1;
 let dbPromise = null;
 
@@ -108,4 +108,3 @@ export const storage = {
     return r ? r.value : null;
   },
 };
-

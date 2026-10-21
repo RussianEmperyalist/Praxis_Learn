@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
@@ -15,8 +15,8 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="./styles/cyberpunk.css?v=51">
-  <link rel="stylesheet" href="./styles/layout.css?v=51">
+  <link rel="stylesheet" href="./styles/cyberpunk.css?v=3">
+  <link rel="stylesheet" href="./styles/layout.css?v=3">
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -103,7 +103,7 @@
     if ('serviceWorker' in navigator &&
         location.hostname !== 'localhost' &&
         location.hostname !== '127.0.0.1') {
-      navigator.serviceWorker.register('./service-worker.js?v=51').then(reg => {
+      navigator.serviceWorker.register('./service-worker.js?v=3').then(reg => {
         setInterval(() => reg.update(), 60000);
         if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
         reg.addEventListener('updatefound', () => {

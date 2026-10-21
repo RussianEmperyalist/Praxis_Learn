@@ -1,4 +1,13 @@
+/**
+ * Amber Learn — общие утилиты.
+ */
+
 import { auth } from './auth.js';
+
+export function getQuery(param) {
+  const url = new URL(window.location.href);
+  return url.searchParams.get(param);
+}
 
 export function toast(message, type = 'info') {
   let host = document.getElementById('toasts');
@@ -24,8 +33,8 @@ export async function renderHeader(active) {
 
   header.innerHTML = `
     ${document.querySelector('.sidebar') ? '<button class="menu-toggle" id="menuToggle" aria-label="Меню" aria-expanded="false">☰</button>' : ''}
-    <a href="./index.html" class="logo" aria-label="Praxis Learn — главная">
-      <span class="logo-text">PRAXIS LEARN</span>
+    <a href="./index.html" class="logo" aria-label="Amber Learn — главная">
+      <span class="logo-text"><span style="color:#f0f0f0">AMBER</span> <span style="color:#fcee0a">LEARN</span></span>
     </a>
     <nav>
       <a href="./index.html" class="${active === 'home' ? 'active' : ''}">Курсы</a>
@@ -58,20 +67,9 @@ export async function renderHeader(active) {
     });
     document.addEventListener('click', (e) => {
       if (!document.body.classList.contains('menu-open')) return;
-      const t = e.target;
-      if (t.nodeType !== 1) return;
-      if (t.closest('.sidebar')) return;
-      if (t.closest('#menuToggle')) return;
+      if (e.target.closest('.sidebar') || e.target.closest('#menuToggle')) return;
       document.body.classList.remove('menu-open');
       menuToggle.setAttribute('aria-expanded', 'false');
     });
   }
 }
-
-export function qs(sel, root = document) { return root.querySelector(sel); }
-export function qsa(sel, root = document) { return [...root.querySelectorAll(sel)]; }
-
-export function getQuery(name) {
-  return new URLSearchParams(location.search).get(name);
-}
-

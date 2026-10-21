@@ -1,34 +1,31 @@
-const CACHE = new Map();
+/**
+ * Amber Learn — загрузка контента.
+ */
 
-async function loadJSON(path) {
-  if (CACHE.has(path)) return CACHE.get(path);
-  const res = await fetch(path, { cache: 'force-cache' });
-  if (!res.ok) throw new Error(`Не удалось загрузить ${path}: ${res.status}`);
-  const data = await res.json();
-  CACHE.set(path, data);
-  return data;
+const BASE = './content';
+
+async function fetchJson(path) {
+  const res = await fetch(`${BASE}/${path}`);
+  if (!res.ok) throw new Error(`Failed to load ${path}: ${res.status}`);
+  return res.json();
 }
 
 export const content = {
   async getCourses() {
-    const idx = await loadJSON('./content/courses.json');
-    return idx.courses;
+    const data = await fetchJson('courses.json');
+    return data.courses || [];
   },
 
   async getCourse(courseId) {
     const courses = await this.getCourses();
-    const c = courses.find(x => x.id === courseId);
-    if (!c) throw new Error(`Курс "${courseId}" не найден`);
-    return c;
+    return courses.find(c => c.id === courseId);
   },
 
   async getLessonsIndex(courseId) {
-    const course = await this.getCourse(courseId);
-    return loadJSON(`./content/${courseId}/index.json`);
+    return fetchJson(`${courseId}/index.json`);
   },
 
   async getLesson(courseId, lessonId) {
-    return loadJSON(`./content/${courseId}/${lessonId}.json`);
-  },
+    return fetchJson(`${courseId}/${lessonId}.json`);
+  }
 };
-
